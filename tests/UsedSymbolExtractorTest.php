@@ -4,6 +4,7 @@ namespace ShipMonk\Composer;
 
 use PHPUnit\Framework\TestCase;
 use function file_get_contents;
+use const PHP_VERSION_ID;
 
 class UsedSymbolExtractorTest extends TestCase
 {
@@ -14,13 +15,18 @@ class UsedSymbolExtractorTest extends TestCase
         self::assertNotFalse($code);
 
         $extractor = new UsedSymbolExtractor($code);
-        self::assertSame([
+        $expected = [
             'GlobalClassname',
             'Regular\Classname',
             'Aliased\Classname',
             'Aliased\Classname2',
-            'Fully\Qualified\ClassName',
-        ], $extractor->parseUsedSymbols());
+        ];
+
+        if (PHP_VERSION_ID >= 80000) {
+            $expected[] = 'Fully\Qualified\ClassName';
+        }
+
+        self::assertSame($expected, $extractor->parseUsedSymbols());
     }
 
 }

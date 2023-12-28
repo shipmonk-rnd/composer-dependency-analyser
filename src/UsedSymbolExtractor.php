@@ -61,7 +61,7 @@ class UsedSymbolExtractor
                 }
             }
 
-            if ($token[0] === T_NAME_FULLY_QUALIFIED) {
+            if (PHP_VERSION_ID >= 80000 && $token[0] === T_NAME_FULLY_QUALIFIED) {
                 $statements[] = $this->normalizeBackslash($token[1]);
             }
         }
