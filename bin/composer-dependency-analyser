@@ -31,8 +31,19 @@ foreach ($autoloadFiles as $autoloadFile) {
     }
 }
 
-$colorize = static function (string $input): string {
-    return str_replace(["<red>", "<green>", "</red>", "</green>"], ["\033[31m", "\033[32m", "\033[0m", "\033[0m"], $input);
+$colorMap = [
+    "<red>" => "\033[31m",
+    "<green>" => "\033[32m",
+    "<orange>" => "\033[33m",
+    "<gray>" => "\033[37m",
+    "</red>" => "\033[0m",
+    "</green>" => "\033[0m",
+    "</orange>" => "\033[0m",
+    "</gray>" => "\033[0m",
+];
+
+$colorize = static function (string $input) use ($colorMap): string {
+    return str_replace(array_keys($colorMap), array_values($colorMap), $input);
 };
 
 $echo = static function (string $input) use ($colorize): void {
@@ -104,7 +115,7 @@ if (count($requiredPackages) === 0 && count($requiredDevPackages) === 0) {
 
 $dependencies = array_merge(
     array_fill_keys(array_keys(array_filter($requiredPackages, $filterPackages, ARRAY_FILTER_USE_KEY)), false),
-    array_fill_keys(array_keys(array_filter($requiredPackages, $filterPackages, ARRAY_FILTER_USE_KEY)), true)
+    array_fill_keys(array_keys(array_filter($requiredDevPackages, $filterPackages, ARRAY_FILTER_USE_KEY)), true)
 );
 
 $loaders = ClassLoader::getRegisteredLoaders();
@@ -158,7 +169,7 @@ if (count($errors) > 0) {
         foreach ($shadowDependencyErrors as $error) {
             $echo("  - {$error->getSymbolName()} (belongs to {$error->getPackageName()})");
             if ($verbose) {
-                $echo("    > used e.g. in: {$error->getExampleUsageFilepath()}");
+                $echo("    in: {$error->getExampleUsageFilepath()}");
             }
         }
     }
