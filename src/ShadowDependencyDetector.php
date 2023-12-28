@@ -64,16 +64,10 @@ class ShadowDependencyDetector
     )
     {
         foreach ($optimizedClassmap as $className => $filePath) {
-            $realPath = realpath($filePath);
-
-            if ($realPath === false) {
-                throw new LogicException("Invalid path in classmap, unable to realpath '$filePath'");
-            }
-
-            $this->optimizedClassmap[$className] = $realPath;
+            $this->optimizedClassmap[$className] = $this->realPath($filePath);
         }
 
-        $this->vendorDir = $vendorDir;
+        $this->vendorDir = $this->realPath($vendorDir);
         $this->composerJsonDependencies = $composerJsonDependencies;
         $this->extensionsToCheck = $extensionsToCheck;
     }
@@ -193,6 +187,17 @@ class ShadowDependencyDetector
     private function isLocalClass(string $realPath): bool
     {
         return substr($realPath, 0, strlen($this->vendorDir)) !== $this->vendorDir;
+    }
+
+    private function realPath(string $filePath): string
+    {
+        $realPath = realpath($filePath);
+
+        if ($realPath === false) {
+            throw new LogicException("Unable to realpath '$filePath'");
+        }
+
+        return $realPath;
     }
 
 }
