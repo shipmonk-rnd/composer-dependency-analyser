@@ -8,9 +8,10 @@ use LogicException;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use ReflectionClass;
+use ShipMonk\Composer\Error\ClassmapEntryMissingError;
+use ShipMonk\Composer\Error\ShadowDependencyError;
+use ShipMonk\Composer\Error\SymbolError;
 use UnexpectedValueException;
-use function array_keys;
-use function array_merge;
 use function class_exists;
 use function explode;
 use function file_get_contents;
@@ -23,7 +24,7 @@ use function substr;
 use function trim;
 use const DIRECTORY_SEPARATOR;
 
-class ShadowDependencyDetector
+class ComposerDependencyAnalyser
 {
 
     /**
@@ -75,44 +76,40 @@ class ShadowDependencyDetector
 
     /**
      * @param list<string> $scanPaths
-     * @return list<string>
+     * @return array<string, SymbolError>
      */
     public function scan(array $scanPaths): array
     {
         $errors = [];
 
-        $usedClasses = [];
-
         foreach ($scanPaths as $scanPath) {
             foreach ($this->listPhpFilesIn($scanPath) as $filePath) {
-                $usedClasses = array_merge($usedClasses, $this->getUsesInFile($filePath));
+                foreach ($this->getUsesInFile($filePath) as $usedClass) {
+                    if ($this->isInternalClass($usedClass)) {
+                        continue;
+                    }
+
+                    if (!isset($this->optimizedClassmap[$usedClass])) {
+                        $errors[$usedClass] = new ClassmapEntryMissingError($usedClass, $filePath);
+                        continue;
+                    }
+
+                    $classmapPath = $this->optimizedClassmap[$usedClass];
+
+                    if (!$this->isVendorPath($classmapPath)) {
+                        continue; // local class
+                    }
+
+                    $packageName = $this->getPackageNameFromVendorPath($classmapPath);
+
+                    if ($this->isShadowDependency($packageName)) {
+                        $errors[$usedClass] = new ShadowDependencyError($usedClass, $packageName, $filePath);
+                    }
+                }
             }
         }
 
-        foreach ($usedClasses as $usedClass) {
-            if ($this->isInternalClass($usedClass)) {
-                continue;
-            }
-
-            if (!isset($this->optimizedClassmap[$usedClass])) {
-                $errors["$usedClass not found in classmap (precondition violated?)"] = true;
-                continue;
-            }
-
-            $filePath = $this->optimizedClassmap[$usedClass];
-
-            if ($this->isLocalClass($filePath)) {
-                continue;
-            }
-
-            $packageName = $this->getPackageNameFromVendorPath($filePath);
-
-            if ($this->isShadowDependency($packageName)) {
-                $errors["$usedClass used as shadow dependency (belongs to $packageName)"] = true;
-            }
-        }
-
-        return array_keys($errors);
+        return $errors;
     }
 
     private function isShadowDependency(string $packageName): bool
@@ -185,9 +182,9 @@ class ShadowDependencyDetector
         return false;
     }
 
-    private function isLocalClass(string $realPath): bool
+    private function isVendorPath(string $realPath): bool
     {
-        return substr($realPath, 0, strlen($this->vendorDir)) !== $this->vendorDir;
+        return substr($realPath, 0, strlen($this->vendorDir)) === $this->vendorDir;
     }
 
     private function realPath(string $filePath): string

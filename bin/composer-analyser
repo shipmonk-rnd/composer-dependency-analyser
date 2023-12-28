@@ -2,7 +2,10 @@
 <?php declare(strict_types=1);
 
 use Composer\Autoload\ClassLoader;
-use ShipMonk\Composer\ShadowDependencyDetector;
+use ShipMonk\Composer\ComposerDependencyAnalyser;
+use ShipMonk\Composer\Error\ClassmapEntryMissingError;
+use ShipMonk\Composer\Error\ShadowDependencyError;
+use ShipMonk\Composer\Error\SymbolError;
 
 $usage = <<<EOD
 
@@ -11,6 +14,7 @@ Usage:
 
 Options:
     --help                      Print this help text and exit.
+    --verbose                   Print verbose output
     --composer_json <path>      Provide custom path to composer.json
 
 EOD;
@@ -27,16 +31,24 @@ foreach ($autoloadFiles as $autoloadFile) {
     }
 }
 
+$colorize = static function (string $input): string {
+    return str_replace(["<red>", "<green>", "</red>", "</green>"], ["\033[31m", "\033[32m", "\033[0m", "\033[0m"], $input);
+};
+
+$echo = static function (string $input) use ($colorize): void {
+    echo $colorize($input) . PHP_EOL;
+};
+
 /**
  * @return never
  */
-$exit = static function (string $message): void {
-    echo "ERROR: $message" . PHP_EOL . PHP_EOL;
+$exit = static function (string $message) use ($echo): void {
+    $echo("<red>$message</red>" . PHP_EOL);
     exit(255);
 };
 
 /** @var int $restIndex */
-$providedOptions = getopt('', ['help', 'composer_json:'], $restIndex);
+$providedOptions = getopt('', ['help', 'verbose', 'composer_json:'], $restIndex);
 
 $cwd = getcwd();
 $relativePaths = array_slice($argv, $restIndex);
@@ -49,6 +61,8 @@ if (isset($providedOptions['help'])) {
 if ($relativePaths === []) {
     $exit("No paths given to scan.");
 }
+
+$verbose = isset($providedOptions['verbose']);
 
 /** @var non-empty-string $cwd */
 $cwd = getcwd();
@@ -90,7 +104,7 @@ if (count($requiredPackages) === 0 && count($requiredDevPackages) === 0) {
 
 $dependencies = array_merge(
     array_fill_keys(array_keys(array_filter($requiredPackages, $filterPackages, ARRAY_FILTER_USE_KEY)), false),
-    array_fill_keys(array_keys($requiredDevPackages), true)
+    array_fill_keys(array_keys(array_filter($requiredPackages, $filterPackages, ARRAY_FILTER_USE_KEY)), true)
 );
 
 $loaders = ClassLoader::getRegisteredLoaders();
@@ -112,12 +126,45 @@ foreach ($relativePaths as $relativePath) {
     $absolutePaths[] = $absolutePath;
 }
 
-$detector = new ShadowDependencyDetector($vendorDir, $loaders[$vendorDir]->getClassMap(), $dependencies, ['php']);
+$detector = new ComposerDependencyAnalyser($vendorDir, $loaders[$vendorDir]->getClassMap(), $dependencies, ['php']);
 $errors = $detector->scan($absolutePaths);
 
 if (count($errors) > 0) {
-    $exit(implode(PHP_EOL, $errors) . PHP_EOL);
+    /** @var ClassmapEntryMissingError[] $classmapErrors */
+    $classmapErrors = array_filter($errors, static function (SymbolError $error): bool {
+        return $error instanceof ClassmapEntryMissingError;
+    });
+    /** @var ShadowDependencyError[] $shadowDependencyErrors */
+    $shadowDependencyErrors = array_filter($errors, static function (SymbolError $error): bool {
+        return $error instanceof ShadowDependencyError;
+    });
+
+    if (count($classmapErrors) > 0) {
+        $echo("<red>Classes not found in classmap</red>:");
+        $echo(" > this usually means that preconditions are not met, see readme" . PHP_EOL);
+
+        foreach ($classmapErrors as $error) {
+            $echo("  - {$error->getSymbolName()}");
+            if ($verbose) {
+                $echo("    > used e.g. in: {$error->getExampleUsageFilepath()}");
+            }
+        }
+    }
+
+    if (count($shadowDependencyErrors) > 0) {
+        $echo("<red>Shadow dependencies</red>:");
+        $echo(" > those are used, but not listed as dependency in composer.json" . PHP_EOL);
+
+        foreach ($shadowDependencyErrors as $error) {
+            $echo("  - {$error->getSymbolName()} (belongs to {$error->getPackageName()})");
+            if ($verbose) {
+                $echo("    > used e.g. in: {$error->getExampleUsageFilepath()}");
+            }
+        }
+    }
+
+    exit(255);
 
 } else {
-    echo "No shadow dependencies found" . PHP_EOL;
+    $echo("<green>No shadow dependencies found</green>");
 }

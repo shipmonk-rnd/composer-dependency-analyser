@@ -3,8 +3,10 @@
 namespace ShipMonk\Composer;
 
 use PHPUnit\Framework\TestCase;
+use ShipMonk\Composer\Error\ClassmapEntryMissingError;
+use ShipMonk\Composer\Error\ShadowDependencyError;
 
-class ShadowDependencyDetectorTest extends TestCase
+class ComposerDependencyAnalyserTest extends TestCase
 {
 
     public function test(): void
@@ -21,16 +23,17 @@ class ShadowDependencyDetectorTest extends TestCase
             'regular/package' => false,
             'dev/package' => true,
         ];
-        $detector = new ShadowDependencyDetector(
+        $detector = new ComposerDependencyAnalyser(
             $vendorDir,
             $classmap,
             $dependencies
         );
-        $result = $detector->scan([__DIR__ . '/data/shadow-dependencies.php']);
+        $scanPath = __DIR__ . '/data/shadow-dependencies.php';
+        $result = $detector->scan([$scanPath]);
 
-        self::assertSame([
-            'Regular\Package not found in classmap (precondition violated?)',
-            'Shadow\Package\Clazz used as shadow dependency (belongs to shadow/package)',
+        self::assertEquals([
+            'Regular\Package' => new ClassmapEntryMissingError('Regular\Package', $scanPath),
+            'Shadow\Package\Clazz' => new ShadowDependencyError('Shadow\Package\Clazz', 'shadow/package', $scanPath),
         ], $result);
     }
 

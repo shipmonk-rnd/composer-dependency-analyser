@@ -27,6 +27,7 @@ class BinTest extends TestCase
         $this->runCommand('composer dump-autoload --classmap-authoritative', $rootDir, 0, 'Generated optimized autoload files');
 
         $this->runCommand('php bin/composer-analyser src', $rootDir, 0, $okOutput);
+        $this->runCommand('php bin/composer-analyser --verbose src', $rootDir, 0, $okOutput);
         $this->runCommand('php ../bin/composer-analyser src', $testsDir, 255, $noComposerJsonError);
         $this->runCommand('php bin/composer-analyser --help', $rootDir, 0, $helpOutput);
         $this->runCommand('php ../bin/composer-analyser --help', $testsDir, 0, $helpOutput);
@@ -36,6 +37,7 @@ class BinTest extends TestCase
         $this->runCommand('php ../bin/composer-analyser --composer_json=composer.json src', $testsDir, 255, $noComposerJsonError);
         $this->runCommand('php ../bin/composer-analyser --composer_json=../composer.json ../src', $testsDir, 0, $okOutput);
         $this->runCommand('php bin/composer-analyser tests', $rootDir, 255, $notInClassmapError);
+        $this->runCommand('php bin/composer-analyser --verbose tests', $rootDir, 255, $notInClassmapError);
         $this->runCommand('php ../bin/composer-analyser tests', $testsDir, 255, $noComposerJsonError);
     }
 
