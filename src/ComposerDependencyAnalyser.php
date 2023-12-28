@@ -17,6 +17,7 @@ use function explode;
 use function file_get_contents;
 use function interface_exists;
 use function is_file;
+use function ksort;
 use function realpath;
 use function str_replace;
 use function strlen;
@@ -108,6 +109,8 @@ class ComposerDependencyAnalyser
                 }
             }
         }
+
+        ksort($errors);
 
         return $errors;
     }
