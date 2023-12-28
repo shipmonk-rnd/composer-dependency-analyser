@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ce2c3ef00c720e12b18daa15de9f06d8",
+    "content-hash": "dca6dd911fe9da2ab0536e05e3537950",
     "packages": [
         {
             "name": "nikic/php-parser",
@@ -2777,63 +2777,6 @@
                 "source": "https://github.com/shipmonk-rnd/name-collision-detector/tree/2.1.0"
             },
             "time": "2023-10-09T12:15:58+00:00"
-        },
-        {
-            "name": "shipmonk/phpstan-rules",
-            "version": "2.11.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/shipmonk-rnd/phpstan-rules.git",
-                "reference": "3c286cecafb1c4399a16392f9f0d86c56c4965c6"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/shipmonk-rnd/phpstan-rules/zipball/3c286cecafb1c4399a16392f9f0d86c56c4965c6",
-                "reference": "3c286cecafb1c4399a16392f9f0d86c56c4965c6",
-                "shasum": ""
-            },
-            "require": {
-                "nikic/php-parser": "^4.14.0",
-                "php": "^7.4 || ^8.0",
-                "phpstan/phpstan": "^1.10.30"
-            },
-            "require-dev": {
-                "editorconfig-checker/editorconfig-checker": "^10.3.0",
-                "ergebnis/composer-normalize": "^2.28",
-                "nette/neon": "^3.3.1",
-                "phpstan/phpstan-phpunit": "^1.1.1",
-                "phpstan/phpstan-strict-rules": "^1.2.3",
-                "phpunit/phpunit": "^9.5.20",
-                "shipmonk/name-collision-detector": "^2.0.0",
-                "slevomat/coding-standard": "^8.0.1"
-            },
-            "type": "phpstan-extension",
-            "extra": {
-                "phpstan": {
-                    "includes": [
-                        "rules.neon"
-                    ]
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "ShipMonk\\PHPStan\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "Various extra strict PHPStan rules we found useful in ShipMonk.",
-            "keywords": [
-                "PHPStan",
-                "static analysis"
-            ],
-            "support": {
-                "issues": "https://github.com/shipmonk-rnd/phpstan-rules/issues",
-                "source": "https://github.com/shipmonk-rnd/phpstan-rules/tree/2.11.1"
-            },
-            "time": "2023-12-22T11:51:20+00:00"
         },
         {
             "name": "slevomat/coding-standard",

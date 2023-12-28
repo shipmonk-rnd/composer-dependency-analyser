@@ -4,7 +4,6 @@ includes:
     - ./vendor/phpstan/phpstan-strict-rules/rules.neon
     - ./vendor/phpstan/phpstan-phpunit/extension.neon
     - ./vendor/phpstan/phpstan-phpunit/rules.neon
-    - ./vendor/shipmonk/phpstan-rules/rules.neon
 
 parameters:
     phpVersion: 70200
@@ -28,7 +27,3 @@ parameters:
         implicitThrows: false
         uncheckedExceptionClasses:
             - LogicException
-
-    shipmonkRules:
-        forbidAssignmentNotMatchingVarDoc:
-            enabled: false # native check is better now; this rule will be dropped / reworked in 3.0
