@@ -24,17 +24,19 @@ class BinTest extends TestCase
         $okOutput = 'No shadow dependencies found';
         $helpOutput = 'Usage:';
 
-        $this->runCommand(__DIR__ . '/../bin/composer-analyser src', $rootDir, 0, $okOutput);
-        $this->runCommand(__DIR__ . '/../bin/composer-analyser src', $testsDir, 255, $noComposerJsonError);
-        $this->runCommand(__DIR__ . '/../bin/composer-analyser --help', $rootDir, 0, $helpOutput);
-        $this->runCommand(__DIR__ . '/../bin/composer-analyser --help', $testsDir, 0, $helpOutput);
-        $this->runCommand(__DIR__ . '/../bin/composer-analyser --composer_json=composer.json src', $rootDir, 0, $okOutput);
-        $this->runCommand(__DIR__ . '/../bin/composer-analyser --composer_json=composer.lock src', $rootDir, 255, $noPackagesError);
-        $this->runCommand(__DIR__ . '/../bin/composer-analyser --composer_json=README.md src', $rootDir, 255, $parseError);
-        $this->runCommand(__DIR__ . '/../bin/composer-analyser --composer_json=composer.json src', $testsDir, 255, $noComposerJsonError);
-        $this->runCommand(__DIR__ . '/../bin/composer-analyser --composer_json=../composer.json ../src', $testsDir, 0, $okOutput);
-        $this->runCommand(__DIR__ . '/../bin/composer-analyser tests', $rootDir, 255, $notInClassmapError);
-        $this->runCommand(__DIR__ . '/../bin/composer-analyser tests', $testsDir, 255, $noComposerJsonError);
+        $this->runCommand('composer dump-autoload --classmap-authoritative', $rootDir, 0, 'Generated optimized autoload files');
+
+        $this->runCommand('php bin/composer-analyser src', $rootDir, 0, $okOutput);
+        $this->runCommand('php ../bin/composer-analyser src', $testsDir, 255, $noComposerJsonError);
+        $this->runCommand('php bin/composer-analyser --help', $rootDir, 0, $helpOutput);
+        $this->runCommand('php ../bin/composer-analyser --help', $testsDir, 0, $helpOutput);
+        $this->runCommand('php bin/composer-analyser --composer_json=composer.json src', $rootDir, 0, $okOutput);
+        $this->runCommand('php bin/composer-analyser --composer_json=composer.lock src', $rootDir, 255, $noPackagesError);
+        $this->runCommand('php bin/composer-analyser --composer_json=README.md src', $rootDir, 255, $parseError);
+        $this->runCommand('php ../bin/composer-analyser --composer_json=composer.json src', $testsDir, 255, $noComposerJsonError);
+        $this->runCommand('php ../bin/composer-analyser --composer_json=../composer.json ../src', $testsDir, 0, $okOutput);
+        $this->runCommand('php bin/composer-analyser tests', $rootDir, 255, $notInClassmapError);
+        $this->runCommand('php ../bin/composer-analyser tests', $testsDir, 255, $noComposerJsonError);
     }
 
     private function runCommand(
@@ -50,7 +52,7 @@ class BinTest extends TestCase
             ['pipe', 'w'],
         ];
 
-        $procHandle = proc_open('php ' . $command, $desc, $pipes, $cwd);
+        $procHandle = proc_open($command, $desc, $pipes, $cwd);
         self::assertNotFalse($procHandle);
 
         /** @var list<resource> $pipes */

@@ -46,7 +46,7 @@ jobs:
                     php-version: ${{ matrix.php-version }}
             -
                 name: Update dependencies
-                run: composer update --no-progress --${{ matrix.dependency-version }} --prefer-dist --no-interaction --optimize-autoloader
+                run: composer update --no-progress --${{ matrix.dependency-version }} --prefer-dist --no-interaction
             -
                 name: Run tests
                 run: composer check:tests
