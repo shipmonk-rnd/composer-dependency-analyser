@@ -8,7 +8,7 @@ includes:
 parameters:
     phpVersion: 70200
     paths:
-        - bin/composer-analyser
+        - bin/composer-dependency-analyser
         - src
         - tests
     excludePaths:

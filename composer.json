@@ -35,7 +35,7 @@
         ]
     },
     "bin": [
-        "bin/composer-analyser"
+        "bin/composer-dependency-analyser"
     ],
     "config": {
         "allow-plugins": {
@@ -51,12 +51,14 @@
             "@check:cs",
             "@check:types",
             "@check:tests",
+            "@check:self",
             "@check:collisions"
         ],
         "check:collisions": "detect-collisions src tests",
         "check:composer": "composer normalize --dry-run --no-check-lock --no-update-lock",
         "check:cs": "phpcs",
         "check:ec": "ec src tests",
+        "check:self": "bin/composer-dependency-analyser src",
         "check:tests": "phpunit -vvv tests",
         "check:types": "phpstan analyse -vvv --ansi",
         "fix:cs": "phpcbf"

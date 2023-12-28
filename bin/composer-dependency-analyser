@@ -166,5 +166,5 @@ if (count($errors) > 0) {
     exit(255);
 
 } else {
-    $echo("<green>No shadow dependencies found</green>");
+    $echo("<green>No shadow dependencies found</green>" . PHP_EOL);
 }
