@@ -30,7 +30,7 @@ class ShadowDependencyDetectorTest extends TestCase
 
         self::assertSame([
             'Regular\Package not found in classmap (precondition violated?)',
-            'Shadow\Package\Clazz used as shadow dependency!',
+            'Shadow\Package\Clazz used as shadow dependency (belongs to shadow/package)',
         ], $result);
     }
 

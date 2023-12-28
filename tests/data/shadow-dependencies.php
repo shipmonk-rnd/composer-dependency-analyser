@@ -7,3 +7,5 @@ use Shadow\Package\Clazz as ShadowClazz;
 use Dev\Package\Clazz as DevClazz;
 use DateTimeImmutable;
 use DateTimeInterface;
+
+new \Shadow\Package\Clazz();

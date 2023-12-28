@@ -4,6 +4,17 @@
 use Composer\Autoload\ClassLoader;
 use ShipMonk\Composer\ShadowDependencyDetector;
 
+$usage = <<<EOD
+
+Usage:
+    vendor/bin/composer-analyser dir-to-scan
+
+Options:
+    --help                      Print this help text and exit.
+    --composer_json <path>      Provide custom path to composer.json
+
+EOD;
+
 $autoloadFiles = [
     __DIR__ . '/../vendor/autoload.php',
     __DIR__ . '/../../../autoload.php',
@@ -31,17 +42,12 @@ $cwd = getcwd();
 $relativePaths = array_slice($argv, $restIndex);
 
 if (isset($providedOptions['help'])) {
-    echo <<<EOD
-
-Usage:
-    vendor/bin/composer-analyser dir-to-scan
-
-Options:
-    --help                      Print this help text and exit.
-    --composer_json <path>      Provide custom path to composer.json
-
-EOD;
+    echo $usage;
     exit;
+}
+
+if ($relativePaths === []) {
+    $exit("No paths given to scan.");
 }
 
 /** @var non-empty-string $cwd */

@@ -9,6 +9,7 @@ use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use ReflectionClass;
 use UnexpectedValueException;
+use function array_keys;
 use function array_merge;
 use function class_exists;
 use function explode;
@@ -94,7 +95,7 @@ class ShadowDependencyDetector
             }
 
             if (!isset($this->optimizedClassmap[$usedClass])) {
-                $errors[] = $usedClass . ' not found in classmap (precondition violated?)';
+                $errors["$usedClass not found in classmap (precondition violated?)"] = true;
                 continue;
             }
 
@@ -104,18 +105,18 @@ class ShadowDependencyDetector
                 continue;
             }
 
-            if ($this->isShadowDependency($filePath)) {
-                $errors[] = "$usedClass used as shadow dependency!";
+            $packageName = $this->getPackageNameFromVendorPath($filePath);
+
+            if ($this->isShadowDependency($packageName)) {
+                $errors["$usedClass used as shadow dependency (belongs to $packageName)"] = true;
             }
         }
 
-        return $errors;
+        return array_keys($errors);
     }
 
-    private function isShadowDependency(string $realPath): bool
+    private function isShadowDependency(string $packageName): bool
     {
-        $packageName = $this->getPackageNameFromVendorPath($realPath);
-
         return !isset($this->composerJsonDependencies[$packageName]);
     }
 
