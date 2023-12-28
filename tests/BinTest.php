@@ -17,7 +17,7 @@ class BinTest extends TestCase
         $testsDir = __DIR__;
 
         $noComposerJsonError = 'File composer.json not found';
-        $notInClassmapError = 'not found in classmap';
+        $notInClassmapError = 'not found in composer classmap';
         $noPackagesError = 'No packages found';
         $parseError = 'Failure while parsing';
 

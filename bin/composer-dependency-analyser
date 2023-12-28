@@ -151,27 +151,31 @@ if (count($errors) > 0) {
     });
 
     if (count($classmapErrors) > 0) {
-        $echo("<red>Classes not found in classmap</red>:");
-        $echo(" > this usually means that preconditions are not met, see readme" . PHP_EOL);
+        $echo('');
+        $echo("<red>Classes not found in composer classmap!</red>");
+        $echo("<gray>(this usually means that preconditions are not met, see readme)</gray>" . PHP_EOL);
 
         foreach ($classmapErrors as $error) {
-            $echo("  - {$error->getSymbolName()}");
+            $echo("  • <orange>{$error->getSymbolName()}</orange>");
             if ($verbose) {
-                $echo("    > used e.g. in: {$error->getExampleUsageFilepath()}");
+                $echo("    <gray>first usage in {$error->getExampleUsageFilepath()}</gray>" . PHP_EOL);
             }
         }
+        $echo('');
     }
 
     if (count($shadowDependencyErrors) > 0) {
-        $echo("<red>Shadow dependencies</red>:");
-        $echo(" > those are used, but not listed as dependency in composer.json" . PHP_EOL);
+        $echo('');
+        $echo("<red>Found shadow dependencies!</red>");
+        $echo("<gray>(those are used, but not listed as dependency in composer.json)</gray>" . PHP_EOL);
 
         foreach ($shadowDependencyErrors as $error) {
-            $echo("  - {$error->getSymbolName()} (belongs to {$error->getPackageName()})");
+            $echo("  • <orange>{$error->getSymbolName()}</orange> ({$error->getPackageName()})");
             if ($verbose) {
-                $echo("    in: {$error->getExampleUsageFilepath()}");
+                $echo("    <gray>first usage in {$error->getExampleUsageFilepath()}</gray>" . PHP_EOL);
             }
         }
+        $echo('');
     }
 
     exit(255);
