@@ -100,7 +100,7 @@ class ShadowDependencyDetector
             }
 
             if (!isset($this->optimizedClassmap[$usedClass])) {
-                $errors[] = $usedClass . " not found in classmap (precondition violated?)\n";
+                $errors[] = $usedClass . ' not found in classmap (precondition violated?)';
                 continue;
             }
 
@@ -111,7 +111,7 @@ class ShadowDependencyDetector
             }
 
             if ($this->isShadowDependency($filePath)) {
-                $errors[] = "$usedClass used as shadow dependency!\n";
+                $errors[] = "$usedClass used as shadow dependency!";
             }
         }
 

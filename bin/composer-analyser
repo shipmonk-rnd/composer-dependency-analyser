@@ -110,7 +110,7 @@ $detector = new ShadowDependencyDetector($vendorDir, $loaders[$vendorDir]->getCl
 $errors = $detector->scan($absolutePaths);
 
 if (count($errors) > 0) {
-    $exit(implode(PHP_EOL, $errors));
+    $exit(implode(PHP_EOL, $errors) . PHP_EOL);
 
 } else {
     echo "No shadow dependencies found" . PHP_EOL;

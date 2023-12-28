@@ -29,8 +29,8 @@ class ShadowDependencyDetectorTest extends TestCase
         $result = $detector->scan([__DIR__ . '/data/shadow-dependencies.php']);
 
         self::assertSame([
-            "Regular\Package not found in classmap (precondition violated?)\n",
-            "Shadow\Package\Clazz used as shadow dependency!\n",
+            'Regular\Package not found in classmap (precondition violated?)',
+            'Shadow\Package\Clazz used as shadow dependency!',
         ], $result);
     }
 
