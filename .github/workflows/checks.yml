@@ -1,0 +1,52 @@
+name: Checks
+on:
+    pull_request:
+    push:
+        branches:
+            - "master"
+            - "v[0-9]"
+jobs:
+    checks:
+        runs-on: ubuntu-latest
+        strategy:
+            fail-fast: false
+        steps:
+            -
+                name: Checkout code
+                uses: actions/checkout@v4
+            -
+                name: Setup PHP
+                uses: shivammathur/setup-php@v2
+                with:
+                    php-version: 8.2
+            -
+                name: Install dependencies
+                run: composer install --no-progress --prefer-dist --no-interaction
+
+            -
+                name: Run checks
+                run: composer check
+
+    tests:
+        runs-on: ${{ matrix.operating-system }}
+        strategy:
+            fail-fast: false
+            matrix:
+                php-version: [ '7.2', '7.3', '7.4', '8.0', '8.1', '8.2', '8.3' ]
+                dependency-version: [ prefer-lowest, prefer-stable ]
+                operating-system: [ ubuntu-latest, windows-latest ]
+        steps:
+            -
+                name: Checkout code
+                uses: actions/checkout@v2
+            -
+                name: Setup PHP
+                uses: shivammathur/setup-php@v2
+                with:
+                    php-version: ${{ matrix.php-version }}
+            -
+                name: Update dependencies
+                run: composer update --no-progress --${{ matrix.dependency-version }} --prefer-dist --no-interaction --optimize-autoloader
+            -
+                name: Run tests
+                run: composer check:tests

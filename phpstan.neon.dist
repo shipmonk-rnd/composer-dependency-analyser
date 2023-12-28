@@ -1,0 +1,34 @@
+includes:
+    - phar://phpstan.phar/conf/config.levelmax.neon
+    - phar://phpstan.phar/conf/bleedingEdge.neon
+    - ./vendor/phpstan/phpstan-strict-rules/rules.neon
+    - ./vendor/phpstan/phpstan-phpunit/extension.neon
+    - ./vendor/phpstan/phpstan-phpunit/rules.neon
+    - ./vendor/shipmonk/phpstan-rules/rules.neon
+
+parameters:
+    phpVersion: 70200
+    paths:
+        - bin/composer-analyser
+        - src
+        - tests
+    excludePaths:
+        analyseAndScan:
+            - tests/data/*
+    tmpDir: cache/phpstan/
+    checkMissingCallableSignature: true
+    checkUninitializedProperties: true
+    checkBenevolentUnionTypes: true
+    checkImplicitMixed: true
+    checkTooWideReturnTypesInProtectedAndPublicMethods: true
+    exceptions:
+        check:
+            missingCheckedExceptionInThrows: true
+            tooWideThrowType: true
+        implicitThrows: false
+        uncheckedExceptionClasses:
+            - LogicException
+
+    shipmonkRules:
+        forbidAssignmentNotMatchingVarDoc:
+            enabled: false # native check is better now; this rule will be dropped / reworked in 3.0
