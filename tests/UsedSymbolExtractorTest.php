@@ -67,6 +67,13 @@ class UsedSymbolExtractorTest extends TestCase
                 'strlen',
             ]
         ];
+
+        yield 'relative namespace' => [
+            __DIR__ . '/data/used-symbols/relative-namespace.php',
+            [
+                'DateTimeImmutable',
+            ]
+        ];
     }
 
 }
