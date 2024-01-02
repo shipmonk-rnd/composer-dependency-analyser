@@ -47,3 +47,6 @@ new Not\Fully\Qualified\ClassName();
 namespace Bar {
     use WithinBracketNamespace; // not supported
 }
+
+
+\DIRECTORY_SEPARATOR;
