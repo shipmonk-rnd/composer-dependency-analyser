@@ -34,4 +34,9 @@ class ClassmapEntryMissingError implements SymbolError
         return $this->exampleUsageFilepath;
     }
 
+    public function getPackageName(): ?string
+    {
+        return null;
+    }
+
 }

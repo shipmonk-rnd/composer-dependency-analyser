@@ -31,7 +31,11 @@
             "ShipMonk\\Composer\\": "tests/"
         },
         "classmap": [
-            "tests/data"
+            "tests/vendor/",
+            "tests/app/"
+        ],
+        "exclude-from-classmap": [
+            "tests/data/"
         ]
     },
     "bin": [

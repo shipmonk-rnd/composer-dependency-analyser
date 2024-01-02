@@ -3,10 +3,12 @@
 
 use Composer\Autoload\ClassLoader;
 use ShipMonk\Composer\ComposerDependencyAnalyser;
+use ShipMonk\Composer\ComposerJson;
 use ShipMonk\Composer\Error\ClassmapEntryMissingError;
 use ShipMonk\Composer\Error\DevDependencyInProductionCodeError;
 use ShipMonk\Composer\Error\ShadowDependencyError;
 use ShipMonk\Composer\Error\SymbolError;
+use ShipMonk\Composer\Printer;
 
 $usage = <<<EOD
 
@@ -32,30 +34,13 @@ foreach ($autoloadFiles as $autoloadFile) {
     }
 }
 
-$colorMap = [
-    "<red>" => "\033[31m",
-    "<green>" => "\033[32m",
-    "<orange>" => "\033[33m",
-    "<gray>" => "\033[37m",
-    "</red>" => "\033[0m",
-    "</green>" => "\033[0m",
-    "</orange>" => "\033[0m",
-    "</gray>" => "\033[0m",
-];
-
-$colorize = static function (string $input) use ($colorMap): string {
-    return str_replace(array_keys($colorMap), array_values($colorMap), $input);
-};
-
-$echo = static function (string $input) use ($colorize): void {
-    echo $colorize($input) . PHP_EOL;
-};
+$printer = new Printer();
 
 /**
  * @return never
  */
-$exit = static function (string $message) use ($echo): void {
-    $echo("<red>$message</red>" . PHP_EOL);
+$exit = static function (string $message) use ($printer): void {
+    $printer->printLine("<red>$message</red>" . PHP_EOL);
     exit(255);
 };
 
@@ -90,7 +75,6 @@ if ($composerJsonRawData === false) {
     $exit("Failure while reading $composerJsonPath file.");
 }
 
-/** @var array{require?: array<string, string>, require-dev?: array<string, string>} $composerJsonData */
 $composerJsonData = json_decode($composerJsonRawData, true);
 
 $jsonError = json_last_error();
@@ -99,39 +83,11 @@ if ($jsonError !== JSON_ERROR_NONE) {
     $exit("Failure while parsing $composerJsonPath file: " . json_last_error_msg());
 }
 
-$filterPackages = static function (string $package): bool {
-    return strpos($package, '/') !== false;
-};
+$composerJson = new ComposerJson($composerJsonData); // @phpstan-ignore-line ignore mixed given
 
-$requiredPackages = $composerJsonData['require'] ?? [];
-$requiredDevPackages = $composerJsonData['require-dev'] ?? [];
-
-if (count($requiredPackages) === 0 && count($requiredDevPackages) === 0) {
+if (count($composerJson->dependencies) === 0) {
     $exit("No packages found in $composerJsonPath file.");
 }
-
-// autodetect paths from composer autoload // TODO use some parser, properly resolve relative path based on where composer.json is
-if ($providedPaths === []) {
-    $relativeProductionPaths = array_merge(
-        array_values($composerJsonData['autoload']['psr-4'] ?? []), // TODO support both list & single item
-        $composerJsonData['autoload']['classmap'] ?? []
-    );
-    $relativeDevPaths = array_merge(
-        array_values($composerJsonData['autoload-dev']['psr-4'] ?? []),
-        $composerJsonData['autoload-dev']['classmap'] ?? []
-    );
-    $relativePaths = array_merge(
-        array_fill_keys($relativeProductionPaths, false),
-        array_fill_keys($relativeDevPaths, true)
-    );
-} else {
-    $relativePaths = array_fill_keys($providedPaths, true); // TODO detect from composer if that one is dev or not?
-}
-
-$dependencies = array_merge(
-    array_fill_keys(array_keys(array_filter($requiredPackages, $filterPackages, ARRAY_FILTER_USE_KEY)), false),
-    array_fill_keys(array_keys(array_filter($requiredDevPackages, $filterPackages, ARRAY_FILTER_USE_KEY)), true)
-);
 
 $loaders = ClassLoader::getRegisteredLoaders();
 if (count($loaders) !== 1) {
@@ -144,75 +100,18 @@ if (!$loaders[$vendorDir]->isClassMapAuthoritative()) {
 }
 
 $absolutePaths = [];
-foreach ($relativePaths as $relativePath => $isDevPath) {
-    $absolutePath = $cwd . '/' . $relativePath;
+foreach ($composerJson->autoloadPaths as $relativePath => $isDevPath) {
+    $absolutePath = dirname($composerJsonPath) . '/' . $relativePath;
     if (!is_dir($absolutePath) && !is_file($absolutePath)) {
-        $exit("Invalid path given, $absolutePath is not a file nor directory.");
+        $exit("Unexpected path detected, $absolutePath is not a file nor directory.");
     }
     $absolutePaths[$absolutePath] = $isDevPath;
 }
 
-$detector = new ComposerDependencyAnalyser($vendorDir, $loaders[$vendorDir]->getClassMap(), $dependencies, ['php']);
+$detector = new ComposerDependencyAnalyser($vendorDir, $loaders[$vendorDir]->getClassMap(), $composerJson->dependencies, ['php']);
 $errors = $detector->scan($absolutePaths);
 
-if (count($errors) > 0) {
-    /** @var ClassmapEntryMissingError[] $classmapErrors */
-    $classmapErrors = array_filter($errors, static function (SymbolError $error): bool {
-        return $error instanceof ClassmapEntryMissingError;
-    });
-    /** @var ShadowDependencyError[] $shadowDependencyErrors */
-    $shadowDependencyErrors = array_filter($errors, static function (SymbolError $error): bool {
-        return $error instanceof ShadowDependencyError;
-    });
-    /** @var DevDependencyInProductionCodeError[] $devDependencyInProductionErrors */
-    $devDependencyInProductionErrors = array_filter($errors, static function (SymbolError $error): bool {
-        return $error instanceof DevDependencyInProductionCodeError;
-    });
+$exitCode = $printer->printResult(array_values($errors), $verbose);
+exit($exitCode);
 
-    if (count($classmapErrors) > 0) {
-        $echo('');
-        $echo("<red>Classes not found in composer classmap!</red>");
-        $echo("<gray>(this usually means that preconditions are not met, see readme)</gray>" . PHP_EOL);
 
-        foreach ($classmapErrors as $error) {
-            $echo("  • <orange>{$error->getSymbolName()}</orange>");
-            if ($verbose) {
-                $echo("    <gray>first usage in {$error->getExampleUsageFilepath()}</gray>" . PHP_EOL);
-            }
-        }
-        $echo('');
-    }
-
-    if (count($shadowDependencyErrors) > 0) {
-        $echo('');
-        $echo("<red>Found shadow dependencies!</red>");
-        $echo("<gray>(those are used, but not listed as dependency in composer.json)</gray>" . PHP_EOL);
-
-        foreach ($shadowDependencyErrors as $error) {
-            $echo("  • <orange>{$error->getSymbolName()}</orange> ({$error->getPackageName()})");
-            if ($verbose) {
-                $echo("    <gray>first usage in {$error->getExampleUsageFilepath()}</gray>" . PHP_EOL);
-            }
-        }
-        $echo('');
-    }
-
-    if (count($devDependencyInProductionErrors) > 0) {
-        $echo('');
-        $echo("<red>Found dev dependencies in production code!</red>");
-        $echo("<gray>(those are not listed as dev dependency in composer.json)</gray>" . PHP_EOL);
-
-        foreach ($devDependencyInProductionErrors as $error) {
-            $echo("  • <orange>{$error->getSymbolName()}</orange> ({$error->getPackageName()})");
-            if ($verbose) {
-                $echo("    <gray>first usage in {$error->getExampleUsageFilepath()}</gray>" . PHP_EOL);
-            }
-        }
-        $echo('');
-    }
-
-    exit(255);
-
-} else {
-    $echo("<green>No composer issues found</green>" . PHP_EOL);
-}

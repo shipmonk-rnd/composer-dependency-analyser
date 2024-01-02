@@ -1,18 +1,21 @@
 # Composer dependency analyser
 
-This package aims to detect shadowed composer dependencies in your project, fast!
-See comparison with existing projects:
+This package aims to detect composer dependency issues in your project, fast!
 
-| Project                                                                               | Analysis of 13k files |
-|---------------------------------------------------------------------------------------|-----------------------|
-| shipmonk/composer-dependency-analyser                                                 | 2 secs                |
-| [maglnet/composer-require-checker](https://github.com/maglnet/ComposerRequireChecker) | 124 secs              |
+For example, it detects shadowed depencencies similar to [maglnet/composer-require-checker](https://github.com/maglnet/ComposerRequireChecker), but **much faster**:
+
+| Project                               | Analysis of 13k files |
+|---------------------------------------|-----------------------|
+| shipmonk/composer-dependency-analyser | 2 secs                |
+| maglnet/composer-require-checker      | 124 secs              |
 
 ## Installation:
 
 ```sh
 composer require --dev shipmonk/composer-dependency-analyser
 ```
+
+*Note that this package itself has zero composer dependencies.*
 
 ## Usage:
 
@@ -35,18 +38,21 @@ Found shadow dependencies!
 
 You can add `--verbose` flag to see first usage of each class.
 
-## How it works:
-This tool extracts dependencies and autoloader paths from your composer.json and detects:
+## What it does:
+This tool reads your `composer.json` and scans all paths listed in both `autoload` sections while analysing:
 
 - Shadowed dependencies
-  - This stop working if such package gets removed in one of your dependencies
+  - Those are dependencies of your dependencies, which are not listed in `composer.json`
+  - Your code can break when your direct dependency gets updated to newer version which does not require that shadowed dependency anymore
+  - You should list all those classes within your dependencies
 - Dev dependencies used in production code
-  - Those stop working if you ever run your application with `composer install --no-dev`
+  - Your code can break once you run your application with `composer install --no-dev`
+  - You should move those to `require` from `require-dev`
 
-## Shadow dependency risks
-You are not in control of dependencies of your dependencies, so your code can break if you rely on such transitive dependency and your direct dependency will be updated to newer version which does not require that transitive dependency anymore.
+It is expected to run this tool in root of your project, where the `composer.json` is located.
+If you want to run it elsewhere, you can use `--composer_json=path/to/composer.json` option.
 
-Every used class should be listed in your `require` (or `require-dev`) section of `composer.json`.
+Currently, it only supports those autoload sections: `psr-4`, `psr-0`, `files`.
 
 ## Future scope:
 - Detecting dead dependencies
