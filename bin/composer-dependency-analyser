@@ -4,6 +4,7 @@
 use Composer\Autoload\ClassLoader;
 use ShipMonk\Composer\ComposerDependencyAnalyser;
 use ShipMonk\Composer\Error\ClassmapEntryMissingError;
+use ShipMonk\Composer\Error\DevDependencyInProductionCodeError;
 use ShipMonk\Composer\Error\ShadowDependencyError;
 use ShipMonk\Composer\Error\SymbolError;
 
@@ -62,15 +63,11 @@ $exit = static function (string $message) use ($echo): void {
 $providedOptions = getopt('', ['help', 'verbose', 'composer_json:'], $restIndex);
 
 $cwd = getcwd();
-$relativePaths = array_slice($argv, $restIndex);
+$providedPaths = array_slice($argv, $restIndex);
 
 if (isset($providedOptions['help'])) {
     echo $usage;
     exit;
-}
-
-if ($relativePaths === []) {
-    $exit("No paths given to scan.");
 }
 
 $verbose = isset($providedOptions['verbose']);
@@ -113,6 +110,24 @@ if (count($requiredPackages) === 0 && count($requiredDevPackages) === 0) {
     $exit("No packages found in $composerJsonPath file.");
 }
 
+// autodetect paths from composer autoload // TODO use some parser, properly resolve relative path based on where composer.json is
+if ($providedPaths === []) {
+    $relativeProductionPaths = array_merge(
+        array_values($composerJsonData['autoload']['psr-4'] ?? []), // TODO support both list & single item
+        $composerJsonData['autoload']['classmap'] ?? []
+    );
+    $relativeDevPaths = array_merge(
+        array_values($composerJsonData['autoload-dev']['psr-4'] ?? []),
+        $composerJsonData['autoload-dev']['classmap'] ?? []
+    );
+    $relativePaths = array_merge(
+        array_fill_keys($relativeProductionPaths, false),
+        array_fill_keys($relativeDevPaths, true)
+    );
+} else {
+    $relativePaths = array_fill_keys($providedPaths, true); // TODO detect from composer if that one is dev or not?
+}
+
 $dependencies = array_merge(
     array_fill_keys(array_keys(array_filter($requiredPackages, $filterPackages, ARRAY_FILTER_USE_KEY)), false),
     array_fill_keys(array_keys(array_filter($requiredDevPackages, $filterPackages, ARRAY_FILTER_USE_KEY)), true)
@@ -129,12 +144,12 @@ if (!$loaders[$vendorDir]->isClassMapAuthoritative()) {
 }
 
 $absolutePaths = [];
-foreach ($relativePaths as $relativePath) {
+foreach ($relativePaths as $relativePath => $isDevPath) {
     $absolutePath = $cwd . '/' . $relativePath;
     if (!is_dir($absolutePath) && !is_file($absolutePath)) {
-        $exit("Invalid path given, $absolutePath is not a directory.");
+        $exit("Invalid path given, $absolutePath is not a file nor directory.");
     }
-    $absolutePaths[] = $absolutePath;
+    $absolutePaths[$absolutePath] = $isDevPath;
 }
 
 $detector = new ComposerDependencyAnalyser($vendorDir, $loaders[$vendorDir]->getClassMap(), $dependencies, ['php']);
@@ -148,6 +163,10 @@ if (count($errors) > 0) {
     /** @var ShadowDependencyError[] $shadowDependencyErrors */
     $shadowDependencyErrors = array_filter($errors, static function (SymbolError $error): bool {
         return $error instanceof ShadowDependencyError;
+    });
+    /** @var DevDependencyInProductionCodeError[] $devDependencyInProductionErrors */
+    $devDependencyInProductionErrors = array_filter($errors, static function (SymbolError $error): bool {
+        return $error instanceof DevDependencyInProductionCodeError;
     });
 
     if (count($classmapErrors) > 0) {
@@ -178,8 +197,22 @@ if (count($errors) > 0) {
         $echo('');
     }
 
+    if (count($devDependencyInProductionErrors) > 0) {
+        $echo('');
+        $echo("<red>Found dev dependencies in production code!</red>");
+        $echo("<gray>(those are not listed as dev dependency in composer.json)</gray>" . PHP_EOL);
+
+        foreach ($devDependencyInProductionErrors as $error) {
+            $echo("  • <orange>{$error->getSymbolName()}</orange> ({$error->getPackageName()})");
+            if ($verbose) {
+                $echo("    <gray>first usage in {$error->getExampleUsageFilepath()}</gray>" . PHP_EOL);
+            }
+        }
+        $echo('');
+    }
+
     exit(255);
 
 } else {
-    $echo("<green>No shadow dependencies found</green>" . PHP_EOL);
+    $echo("<green>No composer issues found</green>" . PHP_EOL);
 }

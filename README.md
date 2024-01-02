@@ -18,7 +18,7 @@ composer require --dev shipmonk/composer-dependency-analyser
 
 ```sh
 composer dump-autoload -o # we use composer's autoloader to detect which class belongs to which package
-vendor/bin/composer-dependency-analyser src
+vendor/bin/composer-dependency-analyser
 ```
 
 Example output:
@@ -35,6 +35,14 @@ Found shadow dependencies!
 
 You can add `--verbose` flag to see first usage of each class.
 
+## How it works:
+This tool extracts dependencies and autoloader paths from your composer.json and detects:
+
+- Shadowed dependencies
+  - This stop working if such package gets removed in one of your dependencies
+- Dev dependencies used in production code
+  - Those stop working if you ever run your application with `composer install --no-dev`
+
 ## Shadow dependency risks
 You are not in control of dependencies of your dependencies, so your code can break if you rely on such transitive dependency and your direct dependency will be updated to newer version which does not require that transitive dependency anymore.
 
@@ -42,7 +50,6 @@ Every used class should be listed in your `require` (or `require-dev`) section o
 
 ## Future scope:
 - Detecting dead dependencies
-- Detecting dev dependencies used in production code
 
 ## Limitations:
 - Files without namespace has limited support

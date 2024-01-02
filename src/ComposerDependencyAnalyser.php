@@ -9,6 +9,7 @@ use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use ReflectionClass;
 use ShipMonk\Composer\Error\ClassmapEntryMissingError;
+use ShipMonk\Composer\Error\DevDependencyInProductionCodeError;
 use ShipMonk\Composer\Error\ShadowDependencyError;
 use ShipMonk\Composer\Error\SymbolError;
 use UnexpectedValueException;
@@ -78,14 +79,14 @@ class ComposerDependencyAnalyser
     }
 
     /**
-     * @param list<string> $scanPaths
+     * @param array<string, bool> $scanPaths path => is dev path
      * @return array<string, SymbolError>
      */
     public function scan(array $scanPaths): array
     {
         $errors = [];
 
-        foreach ($scanPaths as $scanPath) {
+        foreach ($scanPaths as $scanPath => $isDevPath) {
             foreach ($this->listPhpFilesIn($scanPath) as $filePath) {
                 foreach ($this->getUsedSymbolsInFile($filePath) as $usedSymbol) {
                     if ($this->isInternalClass($usedSymbol)) {
@@ -111,6 +112,10 @@ class ComposerDependencyAnalyser
                     if ($this->isShadowDependency($packageName)) {
                         $errors[$usedSymbol] = new ShadowDependencyError($usedSymbol, $packageName, $filePath);
                     }
+
+                    if (!$isDevPath && $this->isDevDependency($packageName)) {
+                        $errors[$usedClass] = new DevDependencyInProductionCodeError($usedClass, $packageName, $filePath);
+                    }
                 }
             }
         }
@@ -123,6 +128,12 @@ class ComposerDependencyAnalyser
     private function isShadowDependency(string $packageName): bool
     {
         return !isset($this->composerJsonDependencies[$packageName]);
+    }
+
+    private function isDevDependency(string $packageName): bool
+    {
+        $isDevDependency = $this->composerJsonDependencies[$packageName] ?? null;
+        return $isDevDependency === true;
     }
 
     private function getPackageNameFromVendorPath(string $realPath): string

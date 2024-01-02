@@ -20,7 +20,7 @@ class BinTest extends TestCase
         $noPackagesError = 'No packages found';
         $parseError = 'Failure while parsing';
 
-        $okOutput = 'No shadow dependencies found';
+        $okOutput = 'No composer issues found';
         $helpOutput = 'Usage:';
 
         $this->runCommand('composer dump-autoload --classmap-authoritative', $rootDir, 0, 'Generated optimized autoload files');
