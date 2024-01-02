@@ -87,20 +87,20 @@ class ComposerDependencyAnalyser
 
         foreach ($scanPaths as $scanPath) {
             foreach ($this->listPhpFilesIn($scanPath) as $filePath) {
-                foreach ($this->getUsedSymbolsInFile($filePath) as $usedClass) {
-                    if ($this->isInternalClass($usedClass)) {
+                foreach ($this->getUsedSymbolsInFile($filePath) as $usedSymbol) {
+                    if ($this->isInternalClass($usedSymbol)) {
                         continue;
                     }
 
-                    if (!isset($this->optimizedClassmap[$usedClass])) {
-                        if (!$this->isConstOrFunction($usedClass)) {
-                            $errors[$usedClass] = new ClassmapEntryMissingError($usedClass, $filePath);
+                    if (!isset($this->optimizedClassmap[$usedSymbol])) {
+                        if (!$this->isConstOrFunction($usedSymbol)) {
+                            $errors[$usedSymbol] = new ClassmapEntryMissingError($usedSymbol, $filePath);
                         }
 
                         continue;
                     }
 
-                    $classmapPath = $this->optimizedClassmap[$usedClass];
+                    $classmapPath = $this->optimizedClassmap[$usedSymbol];
 
                     if (!$this->isVendorPath($classmapPath)) {
                         continue; // local class
@@ -109,7 +109,7 @@ class ComposerDependencyAnalyser
                     $packageName = $this->getPackageNameFromVendorPath($classmapPath);
 
                     if ($this->isShadowDependency($packageName)) {
-                        $errors[$usedClass] = new ShadowDependencyError($usedClass, $packageName, $filePath);
+                        $errors[$usedSymbol] = new ShadowDependencyError($usedSymbol, $packageName, $filePath);
                     }
                 }
             }
@@ -143,8 +143,7 @@ class ComposerDependencyAnalyser
             throw new LogicException("Unable to get contents of $filePath");
         }
 
-        $extractor = new UsedSymbolExtractor($code);
-        return $extractor->parseUsedClasses();
+        return (new UsedSymbolExtractor($code))->parseUsedClasses();
     }
 
     /**

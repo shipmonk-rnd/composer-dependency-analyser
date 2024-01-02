@@ -44,6 +44,10 @@ Every used class should be listed in your `require` (or `require-dev`) section o
 - Detecting dead dependencies
 - Detecting dev dependencies used in production code
 
+## Limitations:
+- Files within global namespace (no namespace declared) are not supported
+  - We cannot detect used classes there unless all those use FQN
+
 ## Contributing:
 - Check your code by `composer check`
 - Autofix coding-style by `composer fix:cs`

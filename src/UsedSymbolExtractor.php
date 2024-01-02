@@ -50,8 +50,11 @@ class UsedSymbolExtractor
      * As we do not verify if the resulting name are classes, it can return even used functions or constants (due to FQNs).
      * - elimination of those is solved in ComposerDependencyAnalyser::isClass
      *
+     * It does not produce any local names in current namespace
+     * - this results in very limited functionality in files without namespace
+     *
      * @return list<string>
-     * @license Inspired by Doctrine\Common\Annotations\TokenParser
+     * @license Inspired by https://github.com/doctrine/annotations/blob/2.0.0/lib/Doctrine/Common/Annotations/TokenParser.php
      */
     public function parseUsedClasses(): array
     {

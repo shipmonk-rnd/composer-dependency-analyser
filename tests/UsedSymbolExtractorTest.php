@@ -74,6 +74,13 @@ class UsedSymbolExtractorTest extends TestCase
                 'DateTimeImmutable',
             ]
         ];
+
+        yield 'global namespace' => [
+            __DIR__ . '/data/used-symbols/global-namespace.php',
+            [
+                'DateTimeImmutable',
+            ]
+        ];
     }
 
 }
