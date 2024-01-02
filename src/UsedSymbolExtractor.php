@@ -2,15 +2,19 @@
 
 namespace ShipMonk\Composer;
 
+use function array_merge;
 use function count;
+use function explode;
 use function ltrim;
+use function strlen;
+use function substr;
 use function token_get_all;
-use const PHP_VERSION_ID;
 use const T_AS;
 use const T_COMMENT;
 use const T_DOC_COMMENT;
 use const T_NAME_FULLY_QUALIFIED;
 use const T_NAME_QUALIFIED;
+use const T_NAMESPACE;
 use const T_NS_SEPARATOR;
 use const T_STRING;
 use const T_USE;
@@ -34,11 +38,6 @@ class UsedSymbolExtractor
      */
     private $pointer = 0;
 
-    /**
-     * @var int
-     */
-    private $level = 0;
-
     public function __construct(string $code)
     {
         $this->tokens = token_get_all($code);
@@ -46,23 +45,51 @@ class UsedSymbolExtractor
     }
 
     /**
+     * As we do not verify if the resulting name are classes, it can return even used functions or constants (due to FQNs).
+     * - elimination of those is solved in ComposerDependencyAnalyser::isClass
+     *
      * @return list<string>
      */
-    public function parseUsedSymbols(): array
+    public function parseUsedClasses(): array
     {
-        $statements = [];
+        $usedSymbols = [];
+        $useStatements = [];
 
         while ($token = $this->getNextEffectiveToken()) {
-            if ($token[0] === T_USE && $this->level === 0) {
-                $usedClass = $this->parseSimpleUseStatement();
+            if ($token[0] === T_NAMESPACE) {
+                $useStatements = []; // reset use statements on namespace change
+            }
+
+            if ($token[0] === T_USE) {
+                $usedClass = $this->parseUseStatement();
 
                 if ($usedClass !== null) {
-                    $statements[] = $usedClass;
+                    $useStatements = array_merge($useStatements, $usedClass);
+                }
+            }
+
+            if ($token[0] === T_NAME_FULLY_QUALIFIED) {
+                $usedSymbols[] = $this->normalizeBackslash($token[1]);
+            }
+
+            if ($token[0] === T_NAME_QUALIFIED) {
+                [$neededAlias] = explode('\\', $token[1], 2);
+
+                if (isset($useStatements[$neededAlias])) {
+                    $usedSymbols[] = $this->normalizeBackslash($useStatements[$neededAlias] . substr($token[1], strlen($neededAlias)));
+                }
+            }
+
+            if ($token[0] === T_STRING) {
+                $symbolName = $token[1];
+
+                if (isset($useStatements[$symbolName])) {
+                    $usedSymbols[] = $this->normalizeBackslash($useStatements[$symbolName]);
                 }
             }
         }
 
-        return $statements;
+        return $usedSymbols;
     }
 
     /**
@@ -82,12 +109,6 @@ class UsedSymbolExtractor
                 continue;
             }
 
-            if ($token === '{') {
-                $this->level++;
-            } elseif ($token === '}') {
-                $this->level--;
-            }
-
             return $token;
         }
 
@@ -95,38 +116,54 @@ class UsedSymbolExtractor
     }
 
     /**
-     * Parses simple use statement like:
-     *
-     * use Foo\Bar;
-     * use Foo\Bar as Alias;
-     *
-     * Does not support bracket syntax nor comma-separated statements:
-     *
-     * use Foo\{ Bar, Baz };
-     * use Foo\Bar, Foo\Baz;
+     * @return array<string, string>|null
      */
-    private function parseSimpleUseStatement(): ?string
+    public function parseUseStatement(): ?array
     {
+        $groupRoot = '';
         $class = '';
+        $alias = '';
+        $statements = [];
+        $explicitAlias = false;
 
-        while ($token = $this->getNextEffectiveToken()) {
-            if ($token[0] === T_STRING) {
+        while (($token = $this->getNextEffectiveToken())) {
+            if (!$explicitAlias && $token[0] === T_STRING) {
                 $class .= $token[1];
+                $alias = $token[1];
+            } elseif ($explicitAlias && $token[0] === T_STRING) {
+                $alias = $token[1];
             } elseif (
-                PHP_VERSION_ID >= 80000 &&
-                ($token[0] === T_NAME_QUALIFIED || $token[0] === T_NAME_FULLY_QUALIFIED)
+                $token[0] === T_NAME_QUALIFIED || $token[0] === T_NAME_FULLY_QUALIFIED
             ) {
                 $class .= $token[1];
+
+                $classSplit = explode('\\', $token[1]);
+                $alias = $classSplit[count($classSplit) - 1];
             } elseif ($token[0] === T_NS_SEPARATOR) {
                 $class .= '\\';
-            } elseif ($token[0] === T_AS || $token === ';') {
-                return $this->normalizeBackslash($class);
+                $alias = '';
+            } elseif ($token[0] === T_AS) {
+                $explicitAlias = true;
+                $alias = '';
+            } elseif ($token === ',') {
+                $statements[$alias] = $groupRoot . $class;
+                $class = '';
+                $alias = '';
+                $explicitAlias = false;
+            } elseif ($token === ';') {
+                $statements[$alias] = $groupRoot . $class;
+                break;
+            } elseif ($token === '{') {
+                $groupRoot = $class;
+                $class = '';
+            } elseif ($token === '}') {
+                continue;
             } else {
                 break;
             }
         }
 
-        return null;
+        return $statements === [] ? null : $statements;
     }
 
     private function normalizeBackslash(string $class): string

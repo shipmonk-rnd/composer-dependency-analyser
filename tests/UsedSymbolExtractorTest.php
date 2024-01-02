@@ -8,20 +8,65 @@ use function file_get_contents;
 class UsedSymbolExtractorTest extends TestCase
 {
 
-    public function test(): void
+    /**
+     * @param list<string> $expectedUsages
+     * @dataProvider provideVariants
+     */
+    public function test(string $path, array $expectedUsages): void
     {
-        $code = file_get_contents(__DIR__ . '/data/use-statements.php');
+        $code = file_get_contents($path);
         self::assertNotFalse($code);
 
         $extractor = new UsedSymbolExtractor($code);
-        $expected = [
-            'GlobalClassname',
-            'Regular\Classname',
-            'Aliased\Classname',
-            'Aliased\Classname2',
+
+        self::assertSame($expectedUsages, $extractor->parseUsedClasses());
+    }
+
+    /**
+     * @return iterable<array{string, list<string>}>
+     */
+    public function provideVariants(): iterable
+    {
+        yield 'use statements' => [
+            __DIR__ . '/data/used-symbols/use-statements.php',
+            [
+                'PHPUnit\Framework\Exception',
+                'PHPUnit\Framework\Warning',
+                'PHPUnit\Framework\Error',
+                'PHPUnit\Framework\OutputError',
+                'PHPUnit\Framework\Constraint\IsNan',
+                'PHPUnit\Framework\Constraint\IsFinite',
+                'PHPUnit\Framework\Constraint\DirectoryExists',
+                'PHPUnit\Framework\Constraint\FileExists',
+            ]
         ];
 
-        self::assertSame($expected, $extractor->parseUsedSymbols());
+        yield 'various usages' => [
+            __DIR__ . '/data/used-symbols/various-usages.php',
+            [
+                'DateTimeImmutable',
+                'DateTimeInterface',
+                'DateTime',
+                'PHPUnit\Framework\Error',
+                'LogicException',
+            ]
+        ];
+
+        yield 'bracket namespace' => [
+            __DIR__ . '/data/used-symbols/bracket-namespace.php',
+            [
+                'DateTimeImmutable',
+                'DateTime',
+            ]
+        ];
+
+        yield 'other symbols' => [
+            __DIR__ . '/data/used-symbols/other-symbols.php',
+            [
+                'DIRECTORY_SEPARATOR',
+                'strlen',
+            ]
+        ];
     }
 
 }

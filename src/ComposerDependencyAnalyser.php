@@ -13,8 +13,10 @@ use ShipMonk\Composer\Error\ShadowDependencyError;
 use ShipMonk\Composer\Error\SymbolError;
 use UnexpectedValueException;
 use function class_exists;
+use function defined;
 use function explode;
 use function file_get_contents;
+use function function_exists;
 use function interface_exists;
 use function is_file;
 use function ksort;
@@ -85,13 +87,16 @@ class ComposerDependencyAnalyser
 
         foreach ($scanPaths as $scanPath) {
             foreach ($this->listPhpFilesIn($scanPath) as $filePath) {
-                foreach ($this->getUsesInFile($filePath) as $usedClass) {
+                foreach ($this->getUsedSymbolsInFile($filePath) as $usedClass) {
                     if ($this->isInternalClass($usedClass)) {
                         continue;
                     }
 
                     if (!isset($this->optimizedClassmap[$usedClass])) {
-                        $errors[$usedClass] = new ClassmapEntryMissingError($usedClass, $filePath);
+                        if (!$this->isConstOrFunction($usedClass)) {
+                            $errors[$usedClass] = new ClassmapEntryMissingError($usedClass, $filePath);
+                        }
+
                         continue;
                     }
 
@@ -130,7 +135,7 @@ class ComposerDependencyAnalyser
     /**
      * @return list<string>
      */
-    private function getUsesInFile(string $filePath): array
+    private function getUsedSymbolsInFile(string $filePath): array
     {
         $code = file_get_contents($filePath);
 
@@ -139,7 +144,7 @@ class ComposerDependencyAnalyser
         }
 
         $extractor = new UsedSymbolExtractor($code);
-        return $extractor->parseUsedSymbols();
+        return $extractor->parseUsedClasses();
     }
 
     /**
@@ -199,6 +204,15 @@ class ComposerDependencyAnalyser
         }
 
         return $realPath;
+    }
+
+    /**
+     * Since UsedSymbolExtractor cannot reliably tell if FQN usages are classes or other symbols,
+     * we verify those edgecases only when such classname is not found in classmap.
+     */
+    private function isConstOrFunction(string $usedClass): bool
+    {
+        return defined($usedClass) || function_exists($usedClass);
     }
 
 }

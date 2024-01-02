@@ -9,7 +9,7 @@
         "dependency"
     ],
     "require": {
-        "php": "^7.2 || ^8.0"
+        "php": "^8.0"
     },
     "require-dev": {
         "editorconfig-checker/editorconfig-checker": "^10.3.0",
