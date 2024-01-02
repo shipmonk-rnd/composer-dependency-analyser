@@ -60,10 +60,6 @@ class UsedSymbolExtractor
                     $statements[] = $usedClass;
                 }
             }
-
-            if (PHP_VERSION_ID >= 80000 && $token[0] === T_NAME_FULLY_QUALIFIED) {
-                $statements[] = $this->normalizeBackslash($token[1]);
-            }
         }
 
         return $statements;

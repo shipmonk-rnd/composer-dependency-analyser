@@ -38,7 +38,7 @@ All this can be ensured by [slevomat/coding-standard](https://github.com/slevoma
 </ruleset>
 ```
 
-Basically, this tool extracts used symbols just from use statements and FQNs (PHP8+) and compare those with your composer dependencies.
+Basically, this tool extracts used symbols just from use statements and compare those with your composer dependencies.
 
 ## Usage:
 
