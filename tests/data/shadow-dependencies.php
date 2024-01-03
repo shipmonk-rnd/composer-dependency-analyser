@@ -18,3 +18,5 @@ new DateTimeImmutable();
 
 echo \DIRECTORY_SEPARATOR;
 echo \strlen('');
+
+\Composer\InstalledVersions::getInstalledPackages();
