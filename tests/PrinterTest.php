@@ -10,6 +10,7 @@ use ShipMonk\Composer\Error\ShadowDependencyError;
 use function ob_get_clean;
 use function ob_start;
 use function preg_replace;
+use function str_replace;
 
 class PrinterTest extends TestCase
 {
@@ -18,7 +19,7 @@ class PrinterTest extends TestCase
     {
         $printer = new Printer();
 
-        $output = $this->captureOutput(static function () use ($printer): void {
+        $output = $this->captureAndNormalizeOutput(static function () use ($printer): void {
             $printer->printLine('Hello, <red>world</red>!');
         });
 
@@ -30,13 +31,13 @@ class PrinterTest extends TestCase
     {
         $printer = new Printer();
 
-        $output1 = $this->captureOutput(static function () use ($printer): void {
+        $output1 = $this->captureAndNormalizeOutput(static function () use ($printer): void {
             $printer->printResult([], false, false);
         });
 
         self::assertSame("No composer issues found\n\n", $this->removeColors($output1));
 
-        $output2 = $this->captureOutput(static function () use ($printer): void {
+        $output2 = $this->captureAndNormalizeOutput(static function () use ($printer): void {
             $printer->printResult([
                 new ClassmapEntryMissingError('Foo', 'foo.php'),
                 new ShadowDependencyError('Bar', 'some/package', 'bar.php'),
@@ -73,7 +74,7 @@ Found dev dependencies in production code!
 
 OUT;
         // editorconfig-checker-enable
-        self::assertSame($fullOutput, $this->removeColors($output2));
+        self::assertSame($this->normalizeEol($fullOutput), $this->removeColors($output2));
     }
 
     private function removeColors(string $output): string
@@ -84,11 +85,16 @@ OUT;
     /**
      * @param Closure(): void $closure
      */
-    private function captureOutput(Closure $closure): string
+    private function captureAndNormalizeOutput(Closure $closure): string
     {
         ob_start();
         $closure();
-        return (string) ob_get_clean();
+        return $this->normalizeEol((string) ob_get_clean());
+    }
+
+    private function normalizeEol(string $string): string
+    {
+        return str_replace("\r\n", "\n", $string);
     }
 
 }
