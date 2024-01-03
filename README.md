@@ -1,13 +1,19 @@
 # Composer dependency analyser
 
-This package aims to detect composer dependency issues in your project, fast!
+This package aims to detect composer dependency issues in your project.
 
-For example, it detects shadowed depencencies similar to [maglnet/composer-require-checker](https://github.com/maglnet/ComposerRequireChecker), but **much faster**:
+It detects **shadowed dependencies** and **dead dependencies** similar to other tools, but **MUCH faster**:
 
-| Project                               | Analysis of 13k files |
-|---------------------------------------|-----------------------|
-| shipmonk/composer-dependency-analyser | 2 secs                |
-| maglnet/composer-require-checker      | 124 secs              |
+| Project                                   | Dead dependency  | Shadow dependency | Time*       |
+|-------------------------------------------|------------------|-------------------|-------------|
+| maglnet/composer-require-checker          | ❌                | ✅                 | 124 secs |
+| icanhazstring/composer-unused             | ✅                | ❌                 | 72 secs  |
+| **shipmonk/composer-dependency-analyser** | ✅                | ✅                 | **3 secs** |
+
+<sup><sub>\*Time measured on codebase with ~13 000 files</sub></sup>
+
+
+This means you can safely add this tool to CI without wasting resources.
 
 ## Installation:
 
@@ -38,17 +44,19 @@ Found shadow dependencies!
 
 You can add `--verbose` flag to see first usage (file & line) of each class.
 
-## What it does:
+## Detected issues:
 This tool reads your `composer.json` and scans all paths listed in both `autoload` sections while analysing:
 
-- Shadowed dependencies
+- **Shadowed dependencies**
   - Those are dependencies of your dependencies, which are not listed in `composer.json`
   - Your code can break when your direct dependency gets updated to newer version which does not require that shadowed dependency anymore
   - You should list all those classes within your dependencies
-- Dev dependencies used in production code
+- **Unused dependencies**
+  - Any non-dev dependency is expected to have at least single usage within the scanned paths
+- **Dev dependencies in production code**
   - Your code can break once you run your application with `composer install --no-dev`
   - You should move those to `require` from `require-dev`
-- Unknown classes
+- **Unknown classes**
   - Any class missing in composer classmap gets reported as we cannot say if that one is shadowed or not
   - This might be expected in some cases, so you can disable this behaviour by `--ignore-unknown-classes`
 
@@ -56,9 +64,6 @@ It is expected to run this tool in root of your project, where the `composer.jso
 If you want to run it elsewhere, you can use `--composer-json=path/to/composer.json` option.
 
 Currently, it only supports those autoload sections: `psr-4`, `psr-0`, `files`.
-
-## Future scope:
-- Detecting dead dependencies
 
 ## Limitations:
 - Files without namespace has limited support
