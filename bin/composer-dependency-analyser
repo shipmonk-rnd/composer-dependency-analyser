@@ -15,7 +15,7 @@ Options:
     --help                      Print this help text and exit.
     --verbose                   Print verbose output
     --ignore-unknown-classes    Ignore when class is not found in classmap
-    --composer_json <path>      Provide custom path to composer.json
+    --composer-json <path>      Provide custom path to composer.json
 
 EOD;
 
@@ -42,7 +42,7 @@ $exit = static function (string $message) use ($printer): void {
 };
 
 /** @var int $restIndex */
-$providedOptions = getopt('', ['help', 'verbose', 'ignore-unknown-classes', 'composer_json:'], $restIndex);
+$providedOptions = getopt('', ['help', 'verbose', 'ignore-unknown-classes', 'composer-json:'], $restIndex);
 
 $cwd = getcwd();
 $providedPaths = array_slice($argv, $restIndex);
@@ -59,8 +59,8 @@ $ignoreUnknown = isset($providedOptions['ignore-unknown-classes']);
 $cwd = getcwd();
 
 /** @var string[] $providedOptions */
-$composerJsonPath = isset($providedOptions['composer_json'])
-    ? ($cwd . "/" . $providedOptions['composer_json'])
+$composerJsonPath = isset($providedOptions['composer-json'])
+    ? ($cwd . "/" . $providedOptions['composer-json'])
     : ($cwd . "/composer.json");
 
 if (!is_file($composerJsonPath)) {

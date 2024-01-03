@@ -53,7 +53,7 @@ This tool reads your `composer.json` and scans all paths listed in both `autoloa
   - This might be expected in some cases, so you can disable this behaviour by `--ignore-unknown-classes`
 
 It is expected to run this tool in root of your project, where the `composer.json` is located.
-If you want to run it elsewhere, you can use `--composer_json=path/to/composer.json` option.
+If you want to run it elsewhere, you can use `--composer-json=path/to/composer.json` option.
 
 Currently, it only supports those autoload sections: `psr-4`, `psr-0`, `files`.
 
