@@ -33,9 +33,9 @@ class ComposerDependencyAnalyserTest extends TestCase
         $result = $detector->scan([$scanPath => false]);
 
         self::assertEquals([
-            'Unknown\Clazz' => new ClassmapEntryMissingError('Unknown\Clazz', $scanPath),
-            'Shadow\Package\Clazz' => new ShadowDependencyError('Shadow\Package\Clazz', 'shadow/package', $scanPath),
-            'Dev\Package\Clazz' => new DevDependencyInProductionCodeError('Dev\Package\Clazz', 'dev/package', $scanPath),
+            'Unknown\Clazz' => new ClassmapEntryMissingError('Unknown\Clazz', $scanPath, 11),
+            'Shadow\Package\Clazz' => new ShadowDependencyError('Shadow\Package\Clazz', 'shadow/package', $scanPath, 15),
+            'Dev\Package\Clazz' => new DevDependencyInProductionCodeError('Dev\Package\Clazz', 'dev/package', $scanPath, 16),
         ], $result);
     }
 

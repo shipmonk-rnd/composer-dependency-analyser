@@ -20,15 +20,19 @@ class ShadowDependencyError implements SymbolError
      */
     private $exampleUsageFilepath;
 
+    private int $exampleUsageLine;
+
     public function __construct(
         string $className,
         string $packageName,
-        string $exampleUsageFilepath
+        string $exampleUsageFilepath,
+        int $exampleUsageLine
     )
     {
         $this->className = $className;
         $this->packageName = $packageName;
         $this->exampleUsageFilepath = $exampleUsageFilepath;
+        $this->exampleUsageLine = $exampleUsageLine;
     }
 
     public function getPackageName(): string
@@ -44,6 +48,11 @@ class ShadowDependencyError implements SymbolError
     public function getExampleUsageFilepath(): string
     {
         return $this->exampleUsageFilepath;
+    }
+
+    public function getExampleUsageLine(): int
+    {
+        return $this->exampleUsageLine;
     }
 
 }

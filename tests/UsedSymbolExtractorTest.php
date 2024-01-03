@@ -9,7 +9,7 @@ class UsedSymbolExtractorTest extends TestCase
 {
 
     /**
-     * @param list<string> $expectedUsages
+     * @param array<string, int> $expectedUsages
      * @dataProvider provideVariants
      */
     public function test(string $path, array $expectedUsages): void
@@ -23,62 +23,62 @@ class UsedSymbolExtractorTest extends TestCase
     }
 
     /**
-     * @return iterable<array{string, list<string>}>
+     * @return iterable<array{string, array<string, int>}>
      */
     public function provideVariants(): iterable
     {
         yield 'use statements' => [
             __DIR__ . '/data/used-symbols/use-statements.php',
             [
-                'PHPUnit\Framework\Exception',
-                'PHPUnit\Framework\Warning',
-                'PHPUnit\Framework\Error',
-                'PHPUnit\Framework\OutputError',
-                'PHPUnit\Framework\Constraint\IsNan',
-                'PHPUnit\Framework\Constraint\IsFinite',
-                'PHPUnit\Framework\Constraint\DirectoryExists',
-                'PHPUnit\Framework\Constraint\FileExists',
+                'PHPUnit\Framework\Exception' => 11,
+                'PHPUnit\Framework\Warning' => 12,
+                'PHPUnit\Framework\Error' => 13,
+                'PHPUnit\Framework\OutputError' => 14,
+                'PHPUnit\Framework\Constraint\IsNan' => 15,
+                'PHPUnit\Framework\Constraint\IsFinite' => 16,
+                'PHPUnit\Framework\Constraint\DirectoryExists' => 17,
+                'PHPUnit\Framework\Constraint\FileExists' => 18,
             ]
         ];
 
         yield 'various usages' => [
             __DIR__ . '/data/used-symbols/various-usages.php',
             [
-                'DateTimeImmutable',
-                'DateTimeInterface',
-                'DateTime',
-                'PHPUnit\Framework\Error',
-                'LogicException',
+                'DateTimeImmutable' => 12,
+                'DateTimeInterface' => 12,
+                'DateTime' => 12,
+                'PHPUnit\Framework\Error' => 14,
+                'LogicException' => 15,
             ]
         ];
 
         yield 'bracket namespace' => [
             __DIR__ . '/data/used-symbols/bracket-namespace.php',
             [
-                'DateTimeImmutable',
-                'DateTime',
+                'DateTimeImmutable' => 5,
+                'DateTime' => 11,
             ]
         ];
 
         yield 'other symbols' => [
             __DIR__ . '/data/used-symbols/other-symbols.php',
             [
-                'DIRECTORY_SEPARATOR',
-                'strlen',
+                'DIRECTORY_SEPARATOR' => 9,
+                'strlen' => 11,
             ]
         ];
 
         yield 'relative namespace' => [
             __DIR__ . '/data/used-symbols/relative-namespace.php',
             [
-                'DateTimeImmutable',
+                'DateTimeImmutable' => 10,
             ]
         ];
 
         yield 'global namespace' => [
             __DIR__ . '/data/used-symbols/global-namespace.php',
             [
-                'DateTimeImmutable',
+                'DateTimeImmutable' => 3,
             ]
         ];
     }

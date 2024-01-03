@@ -8,12 +8,12 @@ use Dev\Package\Clazz as DevClazz;
 use DateTimeImmutable;
 use DateTimeInterface;
 
-new \Unknown\Clazz();
+new \Unknown\Clazz(); // reported as unknown
 new AppClazz();
 new Intermediate\Clazz();
 new Clazz();
-new ShadowClazz();
-new DevClazz();
+new ShadowClazz(); // reported as shadow
+new DevClazz(); // reported as dev
 new DateTimeImmutable();
 
 echo \DIRECTORY_SEPARATOR;

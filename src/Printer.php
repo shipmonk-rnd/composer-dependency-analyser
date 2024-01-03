@@ -95,7 +95,7 @@ class Printer
             $this->printLine("  • <orange>{$error->getSymbolName()}</orange>$append");
 
             if ($verbose) {
-                $this->printLine("    <gray>first usage in {$error->getExampleUsageFilepath()}</gray>" . PHP_EOL);
+                $this->printLine("    <gray>first usage in {$error->getExampleUsageFilepath()}:{$error->getExampleUsageLine()}</gray>" . PHP_EOL);
             }
         }
 
