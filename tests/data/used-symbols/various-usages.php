@@ -9,7 +9,7 @@ use PHPUnit\Framework\Error;
 
 class Foo {
 
-    public function foo(\DateTimeImmutable $foo):DateTimeInterface|\DateTime
+    public function foo(\DateTimeImmutable $foo): DateTimeInterface|\DateTime
     {
         $class = Error::class;
         return new LogicExceptionAlias();

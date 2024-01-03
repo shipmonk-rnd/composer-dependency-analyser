@@ -20,7 +20,10 @@ class ShadowDependencyError implements SymbolError
      */
     private $exampleUsageFilepath;
 
-    private int $exampleUsageLine;
+    /**
+     * @var int
+     */
+    private $exampleUsageLine;
 
     public function __construct(
         string $className,
