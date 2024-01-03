@@ -45,8 +45,8 @@ Every used class should be listed in your `require` (or `require-dev`) section o
 - Detecting dev dependencies used in production code
 
 ## Limitations:
-- Files within global namespace (no namespace declared) are not supported
-  - We cannot detect used classes there unless all those use FQN
+- Files without namespace has limited support
+  - Only classes with use statements and FQNs are detected
 
 ## Contributing:
 - Check your code by `composer check`
