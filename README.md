@@ -20,7 +20,7 @@ composer require --dev shipmonk/composer-dependency-analyser
 ## Usage:
 
 ```sh
-composer dump-autoload -o # we use composer's autoloader to detect which class belongs to which package
+composer dump-autoload --classmap-authoritative # we use composer's autoloader to detect which class belongs to which package
 vendor/bin/composer-dependency-analyser
 ```
 
@@ -49,7 +49,7 @@ This tool reads your `composer.json` and scans all paths listed in both `autoloa
   - Your code can break once you run your application with `composer install --no-dev`
   - You should move those to `require` from `require-dev`
 - Unknown classes
-  - If some found usage is not found within composer classmap, it is reported (as we cannot say if that one is shadowed or not)
+  - Any class missing in composer classmap gets reported as we cannot say if that one is shadowed or not
   - This might be expected in some cases, so you can disable this behaviour by `--ignore-unknown-classes`
 
 It is expected to run this tool in root of your project, where the `composer.json` is located.
