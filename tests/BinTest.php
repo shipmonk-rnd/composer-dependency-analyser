@@ -17,7 +17,6 @@ class BinTest extends TestCase
         $testsDir = __DIR__;
 
         $noComposerJsonError = 'File composer.json not found';
-        $notInClassmapError = 'not found in composer classmap';
         $noPackagesError = 'No packages found';
         $parseError = 'Failure while parsing';
 
@@ -26,8 +25,8 @@ class BinTest extends TestCase
 
         $this->runCommand('composer dump-autoload --classmap-authoritative', $rootDir, 0, 'Generated optimized autoload files');
 
-        $this->runCommand('php bin/composer-dependency-analyser src', $rootDir, 0, $okOutput);
         $this->runCommand('php bin/composer-dependency-analyser --verbose src', $rootDir, 0, $okOutput);
+        $this->runCommand('php bin/composer-dependency-analyser src', $rootDir, 0, $okOutput);
         $this->runCommand('php ../bin/composer-dependency-analyser src', $testsDir, 255, $noComposerJsonError);
         $this->runCommand('php bin/composer-dependency-analyser --help', $rootDir, 0, $helpOutput);
         $this->runCommand('php ../bin/composer-dependency-analyser --help', $testsDir, 0, $helpOutput);
@@ -36,9 +35,6 @@ class BinTest extends TestCase
         $this->runCommand('php bin/composer-dependency-analyser --composer_json=README.md src', $rootDir, 255, $parseError);
         $this->runCommand('php ../bin/composer-dependency-analyser --composer_json=composer.json src', $testsDir, 255, $noComposerJsonError);
         $this->runCommand('php ../bin/composer-dependency-analyser --composer_json=../composer.json ../src', $testsDir, 0, $okOutput);
-        $this->runCommand('php bin/composer-dependency-analyser tests', $rootDir, 255, $notInClassmapError);
-        $this->runCommand('php bin/composer-dependency-analyser --verbose tests', $rootDir, 255, $notInClassmapError);
-        $this->runCommand('php ../bin/composer-dependency-analyser tests', $testsDir, 255, $noComposerJsonError);
     }
 
     private function runCommand(

@@ -14,32 +14,6 @@ See comparison with existing projects:
 composer require --dev shipmonk/composer-dependency-analyser
 ```
 
-## Preconditions:
-- To achieve such performance, your project needs follow some `use statements` limitations
-- Disallowed approaches:
-  - Partial use statements, `use Doctrine\ORM\Mapping as ORM;` + `#[ORM\Entity]`
-  - Multiple use statements `use Foo, Bar;`
-  - Bracketed use statements `use Foo\{Bar, Baz};`
-  - Bracketed namespaces `namespace Foo { ... }`
-
-All this can be ensured by [slevomat/coding-standard](https://github.com/slevomat/coding-standard) with following config:
-
-```xml
-<?xml version="1.0"?>
-<ruleset>
-    <rule ref="SlevomatCodingStandard.Namespaces.DisallowGroupUse"/>
-    <rule ref="SlevomatCodingStandard.Namespaces.NamespaceDeclaration"/>
-    <rule ref="SlevomatCodingStandard.Namespaces.MultipleUsesPerLine"/>
-    <rule ref="SlevomatCodingStandard.Namespaces.ReferenceUsedNamesOnly">
-        <properties>
-            <property name="allowPartialUses" value="false"/>
-        </properties>
-    </rule>
-</ruleset>
-```
-
-Basically, this tool extracts used symbols just from use statements and compare those with your composer dependencies.
-
 ## Usage:
 
 ```sh
@@ -69,7 +43,10 @@ Every used class should be listed in your `require` (or `require-dev`) section o
 ## Future scope:
 - Detecting dead dependencies
 - Detecting dev dependencies used in production code
-- Lowering number of preconditions
+
+## Limitations:
+- Files without namespace has limited support
+  - Only classes with use statements and FQNs are detected
 
 ## Contributing:
 - Check your code by `composer check`

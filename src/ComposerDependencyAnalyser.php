@@ -13,8 +13,10 @@ use ShipMonk\Composer\Error\ShadowDependencyError;
 use ShipMonk\Composer\Error\SymbolError;
 use UnexpectedValueException;
 use function class_exists;
+use function defined;
 use function explode;
 use function file_get_contents;
+use function function_exists;
 use function interface_exists;
 use function is_file;
 use function ksort;
@@ -85,17 +87,20 @@ class ComposerDependencyAnalyser
 
         foreach ($scanPaths as $scanPath) {
             foreach ($this->listPhpFilesIn($scanPath) as $filePath) {
-                foreach ($this->getUsesInFile($filePath) as $usedClass) {
-                    if ($this->isInternalClass($usedClass)) {
+                foreach ($this->getUsedSymbolsInFile($filePath) as $usedSymbol) {
+                    if ($this->isInternalClass($usedSymbol)) {
                         continue;
                     }
 
-                    if (!isset($this->optimizedClassmap[$usedClass])) {
-                        $errors[$usedClass] = new ClassmapEntryMissingError($usedClass, $filePath);
+                    if (!isset($this->optimizedClassmap[$usedSymbol])) {
+                        if (!$this->isConstOrFunction($usedSymbol)) {
+                            $errors[$usedSymbol] = new ClassmapEntryMissingError($usedSymbol, $filePath);
+                        }
+
                         continue;
                     }
 
-                    $classmapPath = $this->optimizedClassmap[$usedClass];
+                    $classmapPath = $this->optimizedClassmap[$usedSymbol];
 
                     if (!$this->isVendorPath($classmapPath)) {
                         continue; // local class
@@ -104,7 +109,7 @@ class ComposerDependencyAnalyser
                     $packageName = $this->getPackageNameFromVendorPath($classmapPath);
 
                     if ($this->isShadowDependency($packageName)) {
-                        $errors[$usedClass] = new ShadowDependencyError($usedClass, $packageName, $filePath);
+                        $errors[$usedSymbol] = new ShadowDependencyError($usedSymbol, $packageName, $filePath);
                     }
                 }
             }
@@ -130,7 +135,7 @@ class ComposerDependencyAnalyser
     /**
      * @return list<string>
      */
-    private function getUsesInFile(string $filePath): array
+    private function getUsedSymbolsInFile(string $filePath): array
     {
         $code = file_get_contents($filePath);
 
@@ -138,8 +143,7 @@ class ComposerDependencyAnalyser
             throw new LogicException("Unable to get contents of $filePath");
         }
 
-        $extractor = new UsedSymbolExtractor($code);
-        return $extractor->parseUsedSymbols();
+        return (new UsedSymbolExtractor($code))->parseUsedClasses();
     }
 
     /**
@@ -199,6 +203,15 @@ class ComposerDependencyAnalyser
         }
 
         return $realPath;
+    }
+
+    /**
+     * Since UsedSymbolExtractor cannot reliably tell if FQN usages are classes or other symbols,
+     * we verify those edgecases only when such classname is not found in classmap.
+     */
+    private function isConstOrFunction(string $usedClass): bool
+    {
+        return defined($usedClass) || function_exists($usedClass);
     }
 
 }

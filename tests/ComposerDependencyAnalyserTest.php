@@ -32,7 +32,7 @@ class ComposerDependencyAnalyserTest extends TestCase
         $result = $detector->scan([$scanPath]);
 
         self::assertEquals([
-            'Regular\Package' => new ClassmapEntryMissingError('Regular\Package', $scanPath),
+            'Unknown\Clazz' => new ClassmapEntryMissingError('Unknown\Clazz', $scanPath),
             'Shadow\Package\Clazz' => new ShadowDependencyError('Shadow\Package\Clazz', 'shadow/package', $scanPath),
         ], $result);
     }

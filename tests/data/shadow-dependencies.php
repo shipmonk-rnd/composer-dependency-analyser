@@ -8,4 +8,13 @@ use Dev\Package\Clazz as DevClazz;
 use DateTimeImmutable;
 use DateTimeInterface;
 
-new \Shadow\Package\Clazz();
+new \Unknown\Clazz();
+new AppClazz();
+new Intermediate\Clazz();
+new Clazz();
+new ShadowClazz();
+new DevClazz();
+new DateTimeImmutable();
+
+echo \DIRECTORY_SEPARATOR;
+echo \strlen('');
