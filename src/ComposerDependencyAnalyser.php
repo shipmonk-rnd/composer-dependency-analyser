@@ -114,7 +114,7 @@ class ComposerDependencyAnalyser
                     }
 
                     if (!$isDevPath && $this->isDevDependency($packageName)) {
-                        $errors[$usedClass] = new DevDependencyInProductionCodeError($usedClass, $packageName, $filePath);
+                        $errors[$usedSymbol] = new DevDependencyInProductionCodeError($usedSymbol, $packageName, $filePath);
                     }
                 }
             }

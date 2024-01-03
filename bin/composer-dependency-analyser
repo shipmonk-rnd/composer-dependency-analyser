@@ -4,10 +4,6 @@
 use Composer\Autoload\ClassLoader;
 use ShipMonk\Composer\ComposerDependencyAnalyser;
 use ShipMonk\Composer\ComposerJson;
-use ShipMonk\Composer\Error\ClassmapEntryMissingError;
-use ShipMonk\Composer\Error\DevDependencyInProductionCodeError;
-use ShipMonk\Composer\Error\ShadowDependencyError;
-use ShipMonk\Composer\Error\SymbolError;
 use ShipMonk\Composer\Printer;
 
 $usage = <<<EOD
@@ -18,6 +14,7 @@ Usage:
 Options:
     --help                      Print this help text and exit.
     --verbose                   Print verbose output
+    --ignore-unknown-classes    Ignore when class is not found in classmap
     --composer_json <path>      Provide custom path to composer.json
 
 EOD;
@@ -45,7 +42,7 @@ $exit = static function (string $message) use ($printer): void {
 };
 
 /** @var int $restIndex */
-$providedOptions = getopt('', ['help', 'verbose', 'composer_json:'], $restIndex);
+$providedOptions = getopt('', ['help', 'verbose', 'ignore-unknown-classes', 'composer_json:'], $restIndex);
 
 $cwd = getcwd();
 $providedPaths = array_slice($argv, $restIndex);
@@ -56,6 +53,7 @@ if (isset($providedOptions['help'])) {
 }
 
 $verbose = isset($providedOptions['verbose']);
+$ignoreUnknown = isset($providedOptions['ignore-unknown-classes']);
 
 /** @var non-empty-string $cwd */
 $cwd = getcwd();
@@ -111,7 +109,7 @@ foreach ($composerJson->autoloadPaths as $relativePath => $isDevPath) {
 $detector = new ComposerDependencyAnalyser($vendorDir, $loaders[$vendorDir]->getClassMap(), $composerJson->dependencies, ['php']);
 $errors = $detector->scan($absolutePaths);
 
-$exitCode = $printer->printResult(array_values($errors), $verbose);
+$exitCode = $printer->printResult(array_values($errors), $ignoreUnknown, $verbose);
 exit($exitCode);
 
 

@@ -48,6 +48,9 @@ This tool reads your `composer.json` and scans all paths listed in both `autoloa
 - Dev dependencies used in production code
   - Your code can break once you run your application with `composer install --no-dev`
   - You should move those to `require` from `require-dev`
+- Unknown classes
+  - If some found usage is not found within composer classmap, it is reported (as we cannot say if that one is shadowed or not)
+  - This might be expected in some cases, so you can disable this behaviour by `--ignore-unknown-classes`
 
 It is expected to run this tool in root of your project, where the `composer.json` is located.
 If you want to run it elsewhere, you can use `--composer_json=path/to/composer.json` option.

@@ -25,23 +25,23 @@ class BinTest extends TestCase
 
         $this->runCommand('composer dump-autoload --classmap-authoritative', $rootDir, 0, 'Generated optimized autoload files');
 
-        $this->runCommand('php bin/composer-dependency-analyser --verbose src', $rootDir, 0, $okOutput);
-        $this->runCommand('php bin/composer-dependency-analyser src', $rootDir, 0, $okOutput);
-        $this->runCommand('php ../bin/composer-dependency-analyser src', $testsDir, 255, $noComposerJsonError);
+        $this->runCommand('php bin/composer-dependency-analyser --ignore-unknown-classes', $rootDir, 0, $okOutput);
+        $this->runCommand('php bin/composer-dependency-analyser --ignore-unknown-classes --verbose', $rootDir, 0, $okOutput);
+        $this->runCommand('php ../bin/composer-dependency-analyser', $testsDir, 255, $noComposerJsonError);
         $this->runCommand('php bin/composer-dependency-analyser --help', $rootDir, 0, $helpOutput);
         $this->runCommand('php ../bin/composer-dependency-analyser --help', $testsDir, 0, $helpOutput);
-        $this->runCommand('php bin/composer-dependency-analyser --composer_json=composer.json src', $rootDir, 0, $okOutput);
-        $this->runCommand('php bin/composer-dependency-analyser --composer_json=composer.lock src', $rootDir, 255, $noPackagesError);
-        $this->runCommand('php bin/composer-dependency-analyser --composer_json=README.md src', $rootDir, 255, $parseError);
-        $this->runCommand('php ../bin/composer-dependency-analyser --composer_json=composer.json src', $testsDir, 255, $noComposerJsonError);
-        $this->runCommand('php ../bin/composer-dependency-analyser --composer_json=../composer.json ../src', $testsDir, 0, $okOutput);
+        $this->runCommand('php bin/composer-dependency-analyser --ignore-unknown-classes --composer_json=composer.json', $rootDir, 0, $okOutput);
+        $this->runCommand('php bin/composer-dependency-analyser --ignore-unknown-classes --composer_json=composer.lock', $rootDir, 255, $noPackagesError);
+        $this->runCommand('php bin/composer-dependency-analyser --ignore-unknown-classes --composer_json=README.md', $rootDir, 255, $parseError);
+        $this->runCommand('php ../bin/composer-dependency-analyser --ignore-unknown-classes --composer_json=composer.json', $testsDir, 255, $noComposerJsonError);
+        $this->runCommand('php ../bin/composer-dependency-analyser --ignore-unknown-classes --composer_json=../composer.json', $testsDir, 0, $okOutput);
     }
 
     private function runCommand(
         string $command,
         string $cwd,
         int $expectedExitCode,
-        ?string $expectedOutputContains = null
+        string $expectedOutputContains
     ): void
     {
         $desc = [
@@ -71,9 +71,7 @@ class BinTest extends TestCase
             "Error was:\n" . $errorOutput . "\n"
         );
 
-        if ($expectedOutputContains !== null) {
-            self::assertStringContainsString($expectedOutputContains, $output);
-        }
+        self::assertStringContainsString($expectedOutputContains, $output);
     }
 
 }

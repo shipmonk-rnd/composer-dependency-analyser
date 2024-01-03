@@ -33,25 +33,23 @@ class Printer
      */
     public function printResult(
         array $errors,
+        bool $ignoreUnknownClasses,
         bool $verbose
     ): int
     {
-        if (count($errors) === 0) {
-            $this->printLine('<green>No composer issues found</green>' . PHP_EOL);
-            return 0;
-        }
-
+        $errorReported = false;
         $classmapErrors = $this->filterErrors($errors, ClassmapEntryMissingError::class);
         $shadowDependencyErrors = $this->filterErrors($errors, ShadowDependencyError::class);
         $devDependencyInProductionErrors = $this->filterErrors($errors, DevDependencyInProductionCodeError::class);
 
-        if (count($classmapErrors) > 0) {
+        if (count($classmapErrors) > 0 && !$ignoreUnknownClasses) {
             $this->printErrors(
-                'Classes not found in composer classmap!',
-                'this usually means that preconditions are not met, see readme',
+                'Unknown classes!',
+                'those are not present in composer classmap, so we cannot check them',
                 $classmapErrors,
-                $verbose,
+                $verbose
             );
+            $errorReported = true;
         }
 
         if (count($shadowDependencyErrors) > 0) {
@@ -59,17 +57,24 @@ class Printer
                 'Found shadow dependencies!',
                 'those are used, but not listed as dependency in composer.json',
                 $shadowDependencyErrors,
-                $verbose,
+                $verbose
             );
+            $errorReported = true;
         }
 
         if (count($devDependencyInProductionErrors) > 0) {
             $this->printErrors(
                 'Found dev dependencies in production code!',
-                '(those are wrongly listed as dev dependency in composer.json)',
+                'those are wrongly listed as dev dependency in composer.json',
                 $devDependencyInProductionErrors,
-                $verbose,
+                $verbose
             );
+            $errorReported = true;
+        }
+
+        if (!$errorReported) {
+            $this->printLine('<green>No composer issues found</green>' . PHP_EOL);
+            return 0;
         }
 
         return 255;
