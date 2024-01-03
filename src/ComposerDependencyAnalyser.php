@@ -93,6 +93,10 @@ class ComposerDependencyAnalyser
                         continue;
                     }
 
+                    if ($this->isComposerInternalClass($usedSymbol)) {
+                        continue;
+                    }
+
                     if (!isset($this->optimizedClassmap[$usedSymbol])) {
                         if (!$this->isConstOrFunction($usedSymbol)) {
                             $errors[$usedSymbol] = new ClassmapEntryMissingError($usedSymbol, $filePath);
@@ -223,6 +227,14 @@ class ComposerDependencyAnalyser
     private function isConstOrFunction(string $usedClass): bool
     {
         return defined($usedClass) || function_exists($usedClass);
+    }
+
+    /**
+     * Those are always available: https://getcomposer.org/doc/07-runtime.md#installed-versions
+     */
+    private function isComposerInternalClass(string $usedSymbol): bool
+    {
+        return $usedSymbol === 'Composer\\InstalledVersions';
     }
 
 }
