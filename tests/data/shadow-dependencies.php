@@ -20,3 +20,5 @@ echo \DIRECTORY_SEPARATOR;
 echo \strlen('');
 
 \Composer\InstalledVersions::getInstalledPackages();
+
+ShadowClazz::class; // second usage to test

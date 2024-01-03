@@ -38,7 +38,7 @@ class ComposerDependencyAnalyserTest extends TestCase
         self::assertEquals([
             new ClassmapEntryMissingError(new ClassUsage('Unknown\Clazz', $scanPath, 11)),
             new DevDependencyInProductionCodeError('dev/package', new ClassUsage('Dev\Package\Clazz', $scanPath, 16)),
-            new ShadowDependencyError('shadow/package', new ClassUsage('Shadow\Package\Clazz', $scanPath, 15)),
+            new ShadowDependencyError('shadow/package', new ClassUsage('Shadow\Package\Clazz', $scanPath, 24)),
             new UnusedDependencyError('regular/dead'),
         ], $result);
     }

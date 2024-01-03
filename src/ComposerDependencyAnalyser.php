@@ -106,7 +106,7 @@ class ComposerDependencyAnalyser
 
                     if (!isset($this->optimizedClassmap[$usedSymbol])) {
                         if (!$this->isConstOrFunction($usedSymbol)) {
-                            $errors[] = new ClassmapEntryMissingError(new ClassUsage($usedSymbol, $filePath, $lineNumber));
+                            $errors[$usedSymbol] = new ClassmapEntryMissingError(new ClassUsage($usedSymbol, $filePath, $lineNumber));
                         }
 
                         continue;
@@ -121,11 +121,11 @@ class ComposerDependencyAnalyser
                     $packageName = $this->getPackageNameFromVendorPath($classmapPath);
 
                     if ($this->isShadowDependency($packageName)) {
-                        $errors[] = new ShadowDependencyError($packageName, new ClassUsage($usedSymbol, $filePath, $lineNumber));
+                        $errors[$packageName] = new ShadowDependencyError($packageName, new ClassUsage($usedSymbol, $filePath, $lineNumber));
                     }
 
                     if (!$isDevPath && $this->isDevDependency($packageName)) {
-                        $errors[] = new DevDependencyInProductionCodeError($packageName, new ClassUsage($usedSymbol, $filePath, $lineNumber));
+                        $errors[$packageName] = new DevDependencyInProductionCodeError($packageName, new ClassUsage($usedSymbol, $filePath, $lineNumber));
                     }
 
                     $usedPackages[$packageName] = true;
