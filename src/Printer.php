@@ -2,10 +2,12 @@
 
 namespace ShipMonk\Composer;
 
+use LogicException;
 use ShipMonk\Composer\Error\ClassmapEntryMissingError;
 use ShipMonk\Composer\Error\DevDependencyInProductionCodeError;
 use ShipMonk\Composer\Error\ShadowDependencyError;
 use ShipMonk\Composer\Error\SymbolError;
+use ShipMonk\Composer\Error\UnusedDependencyError;
 use function array_filter;
 use function array_keys;
 use function array_values;
@@ -41,6 +43,7 @@ class Printer
         $classmapErrors = $this->filterErrors($errors, ClassmapEntryMissingError::class);
         $shadowDependencyErrors = $this->filterErrors($errors, ShadowDependencyError::class);
         $devDependencyInProductionErrors = $this->filterErrors($errors, DevDependencyInProductionCodeError::class);
+        $unusedDependencyErrors = $this->filterErrors($errors, UnusedDependencyError::class);
 
         if (count($classmapErrors) > 0 && !$ignoreUnknownClasses) {
             $this->printErrors(
@@ -72,6 +75,16 @@ class Printer
             $errorReported = true;
         }
 
+        if (count($unusedDependencyErrors) > 0) {
+            $this->printErrors(
+                'Found unused dependencies!',
+                'those are listed in composer.json, but not used',
+                $unusedDependencyErrors,
+                $verbose
+            );
+            $errorReported = true;
+        }
+
         if (!$errorReported) {
             $this->printLine('<green>No composer issues found</green>' . PHP_EOL);
             return 0;
@@ -90,12 +103,21 @@ class Printer
         $this->printLine("<gray>($subtitle)</gray>" . PHP_EOL);
 
         foreach ($errors as $error) {
-            $append = $error->getPackageName() !== null ? " ({$error->getPackageName()})" : '';
+            $usage = $error->getExampleUsage();
 
-            $this->printLine("  • <orange>{$error->getSymbolName()}</orange>$append");
+            if ($error->getPackageName() !== null) {
+                $this->printLine("  • <orange>{$error->getPackageName()}</orange>");
 
-            if ($verbose) {
-                $this->printLine("    <gray>first usage in {$error->getExampleUsageFilepath()}:{$error->getExampleUsageLine()}</gray>" . PHP_EOL);
+                if ($usage !== null) {
+                    $this->printLine("    <gray>e.g. {$usage->getClassname()} in {$usage->getFilepath()}:{$usage->getLineNumber()}</gray>" . PHP_EOL);
+                }
+            } else {
+                if ($usage === null) {
+                    throw new LogicException('Either packageName or exampleUsage must be set');
+                }
+
+                $this->printLine("  • <orange>{$usage->getClassname()}</orange>");
+                $this->printLine("    <gray>e.g. in {$usage->getFilepath()}:{$usage->getLineNumber()}</gray>" . PHP_EOL);
             }
         }
 

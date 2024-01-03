@@ -6,6 +6,7 @@ use PHPUnit\Framework\TestCase;
 use ShipMonk\Composer\Error\ClassmapEntryMissingError;
 use ShipMonk\Composer\Error\DevDependencyInProductionCodeError;
 use ShipMonk\Composer\Error\ShadowDependencyError;
+use ShipMonk\Composer\Error\UnusedDependencyError;
 
 class ComposerDependencyAnalyserTest extends TestCase
 {
@@ -23,6 +24,8 @@ class ComposerDependencyAnalyserTest extends TestCase
         $dependencies = [
             'regular/package' => false,
             'dev/package' => true,
+            'regular/dead' => false,
+            'dev/dead' => true,
         ];
         $detector = new ComposerDependencyAnalyser(
             $vendorDir,
@@ -33,9 +36,10 @@ class ComposerDependencyAnalyserTest extends TestCase
         $result = $detector->scan([$scanPath => false]);
 
         self::assertEquals([
-            'Unknown\Clazz' => new ClassmapEntryMissingError('Unknown\Clazz', $scanPath, 11),
-            'Shadow\Package\Clazz' => new ShadowDependencyError('Shadow\Package\Clazz', 'shadow/package', $scanPath, 15),
-            'Dev\Package\Clazz' => new DevDependencyInProductionCodeError('Dev\Package\Clazz', 'dev/package', $scanPath, 16),
+            new ClassmapEntryMissingError(new ClassUsage('Unknown\Clazz', $scanPath, 11)),
+            new DevDependencyInProductionCodeError('dev/package', new ClassUsage('Dev\Package\Clazz', $scanPath, 16)),
+            new ShadowDependencyError('shadow/package', new ClassUsage('Shadow\Package\Clazz', $scanPath, 15)),
+            new UnusedDependencyError('regular/dead'),
         ], $result);
     }
 

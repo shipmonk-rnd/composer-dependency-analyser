@@ -12,20 +12,26 @@ use ShipMonk\Composer\Error\ClassmapEntryMissingError;
 use ShipMonk\Composer\Error\DevDependencyInProductionCodeError;
 use ShipMonk\Composer\Error\ShadowDependencyError;
 use ShipMonk\Composer\Error\SymbolError;
+use ShipMonk\Composer\Error\UnusedDependencyError;
 use UnexpectedValueException;
+use function array_diff;
+use function array_filter;
+use function array_keys;
+use function array_values;
 use function class_exists;
 use function defined;
 use function explode;
 use function file_get_contents;
 use function function_exists;
+use function get_class;
 use function interface_exists;
 use function is_file;
-use function ksort;
 use function realpath;
 use function str_replace;
 use function strlen;
 use function substr;
 use function trim;
+use function usort;
 use const DIRECTORY_SEPARATOR;
 
 class ComposerDependencyAnalyser
@@ -80,11 +86,12 @@ class ComposerDependencyAnalyser
 
     /**
      * @param array<string, bool> $scanPaths path => is dev path
-     * @return array<string, SymbolError>
+     * @return list<SymbolError>
      */
     public function scan(array $scanPaths): array
     {
         $errors = [];
+        $usedPackages = [];
 
         foreach ($scanPaths as $scanPath => $isDevPath) {
             foreach ($this->listPhpFilesIn($scanPath) as $filePath) {
@@ -99,7 +106,7 @@ class ComposerDependencyAnalyser
 
                     if (!isset($this->optimizedClassmap[$usedSymbol])) {
                         if (!$this->isConstOrFunction($usedSymbol)) {
-                            $errors[$usedSymbol] = new ClassmapEntryMissingError($usedSymbol, $filePath, $lineNumber);
+                            $errors[] = new ClassmapEntryMissingError(new ClassUsage($usedSymbol, $filePath, $lineNumber));
                         }
 
                         continue;
@@ -114,19 +121,40 @@ class ComposerDependencyAnalyser
                     $packageName = $this->getPackageNameFromVendorPath($classmapPath);
 
                     if ($this->isShadowDependency($packageName)) {
-                        $errors[$usedSymbol] = new ShadowDependencyError($usedSymbol, $packageName, $filePath, $lineNumber);
+                        $errors[] = new ShadowDependencyError($packageName, new ClassUsage($usedSymbol, $filePath, $lineNumber));
                     }
 
                     if (!$isDevPath && $this->isDevDependency($packageName)) {
-                        $errors[$usedSymbol] = new DevDependencyInProductionCodeError($usedSymbol, $packageName, $filePath, $lineNumber);
+                        $errors[] = new DevDependencyInProductionCodeError($packageName, new ClassUsage($usedSymbol, $filePath, $lineNumber));
                     }
+
+                    $usedPackages[$packageName] = true;
                 }
             }
         }
 
-        ksort($errors);
+        $unusedDependencies = array_diff(
+            array_keys(array_filter($this->composerJsonDependencies, static function (bool $devDependency) {
+                return !$devDependency; // dev deps are typically used only in CI
+            })),
+            array_keys($usedPackages)
+        );
 
-        return $errors;
+        foreach ($unusedDependencies as $unusedDependency) {
+            $errors[] = new UnusedDependencyError($unusedDependency);
+        }
+
+        usort($errors, static function (SymbolError $a, SymbolError $b): int {
+            return [
+                get_class($a),
+                $a->getPackageName() ?? '',
+            ] <=> [
+                get_class($b),
+                $b->getPackageName() ?? '',
+            ];
+        });
+
+        return array_values($errors);
     }
 
     private function isShadowDependency(string $packageName): bool
