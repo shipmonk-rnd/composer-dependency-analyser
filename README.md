@@ -36,7 +36,7 @@ Found shadow dependencies!
 
 ```
 
-You can add `--verbose` flag to see first usage of each class.
+You can add `--verbose` flag to see first usage (file & line) of each class.
 
 ## What it does:
 This tool reads your `composer.json` and scans all paths listed in both `autoload` sections while analysing:
