@@ -14,12 +14,12 @@ class ComposerJson
 {
 
     /**
-     * Path => isDev
+     * Package => isDev
      *
      * @readonly
      * @var array<string, bool>
      */
-    public array $dependencies;
+    public $dependencies;
 
     /**
      * Path => isDev
@@ -27,7 +27,7 @@ class ComposerJson
      * @readonly
      * @var array<string, bool>
      */
-    public array $autoloadPaths;
+    public $autoloadPaths;
 
     /**
      * @param array{require?: array<string, string>, require-dev?: array<string, string>, autoload?: array{psr-0?: array<string, string|string[]>, psr-4?: array<string, string|string[]>, files?: string[]}, autoload-dev?: array{psr-0?: array<string, string|string[]>, psr-4?: array<string, string|string[]>, files?: string[]}} $composerJsonData
@@ -43,7 +43,7 @@ class ComposerJson
             $this->extractAutoloadPaths($composerJsonData['autoload']['files'] ?? [], false),
             $this->extractAutoloadPaths($composerJsonData['autoload-dev']['psr-0'] ?? [], true),
             $this->extractAutoloadPaths($composerJsonData['autoload-dev']['psr-4'] ?? [], true),
-            $this->extractAutoloadPaths($composerJsonData['autoload-dev']['files'] ?? [], true),
+            $this->extractAutoloadPaths($composerJsonData['autoload-dev']['files'] ?? [], true)
             // classmap not supported
         );
 
