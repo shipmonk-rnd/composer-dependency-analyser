@@ -1,12 +1,13 @@
 # Composer dependency analyser
 
-This package aims to detect shadowed composer dependencies in your project, fast!
-See comparison with existing projects:
+This package aims to detect composer dependency issues in your project, fast!
 
-| Project                                                                               | Analysis of 13k files |
-|---------------------------------------------------------------------------------------|-----------------------|
-| shipmonk/composer-dependency-analyser                                                 | 2 secs                |
-| [maglnet/composer-require-checker](https://github.com/maglnet/ComposerRequireChecker) | 124 secs              |
+For example, it detects shadowed depencencies similar to [maglnet/composer-require-checker](https://github.com/maglnet/ComposerRequireChecker), but **much faster**:
+
+| Project                               | Analysis of 13k files |
+|---------------------------------------|-----------------------|
+| shipmonk/composer-dependency-analyser | 2 secs                |
+| maglnet/composer-require-checker      | 124 secs              |
 
 ## Installation:
 
@@ -14,11 +15,13 @@ See comparison with existing projects:
 composer require --dev shipmonk/composer-dependency-analyser
 ```
 
+*Note that this package itself has zero composer dependencies.*
+
 ## Usage:
 
 ```sh
-composer dump-autoload -o # we use composer's autoloader to detect which class belongs to which package
-vendor/bin/composer-dependency-analyser src
+composer dump-autoload --classmap-authoritative # we use composer's autoloader to detect which class belongs to which package
+vendor/bin/composer-dependency-analyser
 ```
 
 Example output:
@@ -35,14 +38,27 @@ Found shadow dependencies!
 
 You can add `--verbose` flag to see first usage of each class.
 
-## Shadow dependency risks
-You are not in control of dependencies of your dependencies, so your code can break if you rely on such transitive dependency and your direct dependency will be updated to newer version which does not require that transitive dependency anymore.
+## What it does:
+This tool reads your `composer.json` and scans all paths listed in both `autoload` sections while analysing:
 
-Every used class should be listed in your `require` (or `require-dev`) section of `composer.json`.
+- Shadowed dependencies
+  - Those are dependencies of your dependencies, which are not listed in `composer.json`
+  - Your code can break when your direct dependency gets updated to newer version which does not require that shadowed dependency anymore
+  - You should list all those classes within your dependencies
+- Dev dependencies used in production code
+  - Your code can break once you run your application with `composer install --no-dev`
+  - You should move those to `require` from `require-dev`
+- Unknown classes
+  - Any class missing in composer classmap gets reported as we cannot say if that one is shadowed or not
+  - This might be expected in some cases, so you can disable this behaviour by `--ignore-unknown-classes`
+
+It is expected to run this tool in root of your project, where the `composer.json` is located.
+If you want to run it elsewhere, you can use `--composer-json=path/to/composer.json` option.
+
+Currently, it only supports those autoload sections: `psr-4`, `psr-0`, `files`.
 
 ## Future scope:
 - Detecting dead dependencies
-- Detecting dev dependencies used in production code
 
 ## Limitations:
 - Files without namespace has limited support

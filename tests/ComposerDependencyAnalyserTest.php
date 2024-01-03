@@ -4,6 +4,7 @@ namespace ShipMonk\Composer;
 
 use PHPUnit\Framework\TestCase;
 use ShipMonk\Composer\Error\ClassmapEntryMissingError;
+use ShipMonk\Composer\Error\DevDependencyInProductionCodeError;
 use ShipMonk\Composer\Error\ShadowDependencyError;
 
 class ComposerDependencyAnalyserTest extends TestCase
@@ -29,11 +30,12 @@ class ComposerDependencyAnalyserTest extends TestCase
             $dependencies
         );
         $scanPath = __DIR__ . '/data/shadow-dependencies.php';
-        $result = $detector->scan([$scanPath]);
+        $result = $detector->scan([$scanPath => false]);
 
         self::assertEquals([
             'Unknown\Clazz' => new ClassmapEntryMissingError('Unknown\Clazz', $scanPath),
             'Shadow\Package\Clazz' => new ShadowDependencyError('Shadow\Package\Clazz', 'shadow/package', $scanPath),
+            'Dev\Package\Clazz' => new DevDependencyInProductionCodeError('Dev\Package\Clazz', 'dev/package', $scanPath),
         ], $result);
     }
 

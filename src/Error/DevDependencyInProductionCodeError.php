@@ -2,7 +2,7 @@
 
 namespace ShipMonk\Composer\Error;
 
-class ClassmapEntryMissingError implements SymbolError
+class DevDependencyInProductionCodeError implements SymbolError
 {
 
     /**
@@ -13,15 +13,27 @@ class ClassmapEntryMissingError implements SymbolError
     /**
      * @var string
      */
+    private $packageName;
+
+    /**
+     * @var string
+     */
     private $exampleUsageFilepath;
 
     public function __construct(
         string $className,
+        string $packageName,
         string $exampleUsageFilepath
     )
     {
         $this->className = $className;
+        $this->packageName = $packageName;
         $this->exampleUsageFilepath = $exampleUsageFilepath;
+    }
+
+    public function getPackageName(): string
+    {
+        return $this->packageName;
     }
 
     public function getSymbolName(): string
@@ -32,11 +44,6 @@ class ClassmapEntryMissingError implements SymbolError
     public function getExampleUsageFilepath(): string
     {
         return $this->exampleUsageFilepath;
-    }
-
-    public function getPackageName(): ?string
-    {
-        return null;
     }
 
 }
