@@ -11,4 +11,6 @@ interface SymbolError
 
     public function getExampleUsageFilepath(): string;
 
+    public function getExampleUsageLine(): int;
+
 }

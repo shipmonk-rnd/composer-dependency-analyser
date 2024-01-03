@@ -88,7 +88,7 @@ class ComposerDependencyAnalyser
 
         foreach ($scanPaths as $scanPath => $isDevPath) {
             foreach ($this->listPhpFilesIn($scanPath) as $filePath) {
-                foreach ($this->getUsedSymbolsInFile($filePath) as $usedSymbol) {
+                foreach ($this->getUsedSymbolsInFile($filePath) as $usedSymbol => $lineNumber) {
                     if ($this->isInternalClass($usedSymbol)) {
                         continue;
                     }
@@ -99,7 +99,7 @@ class ComposerDependencyAnalyser
 
                     if (!isset($this->optimizedClassmap[$usedSymbol])) {
                         if (!$this->isConstOrFunction($usedSymbol)) {
-                            $errors[$usedSymbol] = new ClassmapEntryMissingError($usedSymbol, $filePath);
+                            $errors[$usedSymbol] = new ClassmapEntryMissingError($usedSymbol, $filePath, $lineNumber);
                         }
 
                         continue;
@@ -114,11 +114,11 @@ class ComposerDependencyAnalyser
                     $packageName = $this->getPackageNameFromVendorPath($classmapPath);
 
                     if ($this->isShadowDependency($packageName)) {
-                        $errors[$usedSymbol] = new ShadowDependencyError($usedSymbol, $packageName, $filePath);
+                        $errors[$usedSymbol] = new ShadowDependencyError($usedSymbol, $packageName, $filePath, $lineNumber);
                     }
 
                     if (!$isDevPath && $this->isDevDependency($packageName)) {
-                        $errors[$usedSymbol] = new DevDependencyInProductionCodeError($usedSymbol, $packageName, $filePath);
+                        $errors[$usedSymbol] = new DevDependencyInProductionCodeError($usedSymbol, $packageName, $filePath, $lineNumber);
                     }
                 }
             }
@@ -148,7 +148,7 @@ class ComposerDependencyAnalyser
     }
 
     /**
-     * @return list<string>
+     * @return array<string, int>
      */
     private function getUsedSymbolsInFile(string $filePath): array
     {

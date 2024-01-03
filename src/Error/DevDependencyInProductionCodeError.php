@@ -20,15 +20,22 @@ class DevDependencyInProductionCodeError implements SymbolError
      */
     private $exampleUsageFilepath;
 
+    /**
+     * @var int
+     */
+    private $exampleUsageLine;
+
     public function __construct(
         string $className,
         string $packageName,
-        string $exampleUsageFilepath
+        string $exampleUsageFilepath,
+        int $exampleUsageLine
     )
     {
         $this->className = $className;
         $this->packageName = $packageName;
         $this->exampleUsageFilepath = $exampleUsageFilepath;
+        $this->exampleUsageLine = $exampleUsageLine;
     }
 
     public function getPackageName(): string
@@ -44,6 +51,11 @@ class DevDependencyInProductionCodeError implements SymbolError
     public function getExampleUsageFilepath(): string
     {
         return $this->exampleUsageFilepath;
+    }
+
+    public function getExampleUsageLine(): int
+    {
+        return $this->exampleUsageLine;
     }
 
 }

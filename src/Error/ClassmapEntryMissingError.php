@@ -15,13 +15,20 @@ class ClassmapEntryMissingError implements SymbolError
      */
     private $exampleUsageFilepath;
 
+    /**
+     * @var int
+     */
+    private $exampleUsageLine;
+
     public function __construct(
         string $className,
-        string $exampleUsageFilepath
+        string $exampleUsageFilepath,
+        int $exampleUsageLine
     )
     {
         $this->className = $className;
         $this->exampleUsageFilepath = $exampleUsageFilepath;
+        $this->exampleUsageLine = $exampleUsageLine;
     }
 
     public function getSymbolName(): string
@@ -37,6 +44,11 @@ class ClassmapEntryMissingError implements SymbolError
     public function getPackageName(): ?string
     {
         return null;
+    }
+
+    public function getExampleUsageLine(): int
+    {
+        return $this->exampleUsageLine;
     }
 
 }

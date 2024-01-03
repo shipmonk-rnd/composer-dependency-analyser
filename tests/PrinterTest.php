@@ -39,9 +39,9 @@ class PrinterTest extends TestCase
 
         $output2 = $this->captureAndNormalizeOutput(static function () use ($printer): void {
             $printer->printResult([
-                new ClassmapEntryMissingError('Foo', 'foo.php'),
-                new ShadowDependencyError('Bar', 'some/package', 'bar.php'),
-                new DevDependencyInProductionCodeError('Baz', 'some/package', 'baz.php'),
+                new ClassmapEntryMissingError('Foo', 'foo.php', 11),
+                new ShadowDependencyError('Bar', 'some/package', 'bar.php', 22),
+                new DevDependencyInProductionCodeError('Baz', 'some/package', 'baz.php', 33),
             ], false, true);
         });
 
@@ -52,7 +52,7 @@ Unknown classes!
 (those are not present in composer classmap, so we cannot check them)
 
   • Foo
-    first usage in foo.php
+    first usage in foo.php:11
 
 
 
@@ -60,7 +60,7 @@ Found shadow dependencies!
 (those are used, but not listed as dependency in composer.json)
 
   • Bar (some/package)
-    first usage in bar.php
+    first usage in bar.php:22
 
 
 
@@ -68,7 +68,7 @@ Found dev dependencies in production code!
 (those are wrongly listed as dev dependency in composer.json)
 
   • Baz (some/package)
-    first usage in baz.php
+    first usage in baz.php:33
 
 
 
