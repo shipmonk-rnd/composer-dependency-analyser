@@ -2,15 +2,13 @@
 
 namespace ShipMonk\Composer\Error;
 
+use ShipMonk\Composer\ClassUsage;
+
 interface SymbolError
 {
 
     public function getPackageName(): ?string;
 
-    public function getSymbolName(): string;
-
-    public function getExampleUsageFilepath(): string;
-
-    public function getExampleUsageLine(): int;
+    public function getExampleUsage(): ?ClassUsage;
 
 }

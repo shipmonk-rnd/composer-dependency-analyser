@@ -2,13 +2,10 @@
 
 namespace ShipMonk\Composer\Error;
 
+use ShipMonk\Composer\ClassUsage;
+
 class DevDependencyInProductionCodeError implements SymbolError
 {
-
-    /**
-     * @var string
-     */
-    private $className;
 
     /**
      * @var string
@@ -16,26 +13,17 @@ class DevDependencyInProductionCodeError implements SymbolError
     private $packageName;
 
     /**
-     * @var string
+     * @var ClassUsage
      */
-    private $exampleUsageFilepath;
-
-    /**
-     * @var int
-     */
-    private $exampleUsageLine;
+    private $exampleUsage;
 
     public function __construct(
-        string $className,
         string $packageName,
-        string $exampleUsageFilepath,
-        int $exampleUsageLine
+        ClassUsage $exampleUsage
     )
     {
-        $this->className = $className;
         $this->packageName = $packageName;
-        $this->exampleUsageFilepath = $exampleUsageFilepath;
-        $this->exampleUsageLine = $exampleUsageLine;
+        $this->exampleUsage = $exampleUsage;
     }
 
     public function getPackageName(): string
@@ -43,19 +31,9 @@ class DevDependencyInProductionCodeError implements SymbolError
         return $this->packageName;
     }
 
-    public function getSymbolName(): string
+    public function getExampleUsage(): ClassUsage
     {
-        return $this->className;
-    }
-
-    public function getExampleUsageFilepath(): string
-    {
-        return $this->exampleUsageFilepath;
-    }
-
-    public function getExampleUsageLine(): int
-    {
-        return $this->exampleUsageLine;
+        return $this->exampleUsage;
     }
 
 }

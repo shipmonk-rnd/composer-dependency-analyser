@@ -7,6 +7,7 @@ use PHPUnit\Framework\TestCase;
 use ShipMonk\Composer\Error\ClassmapEntryMissingError;
 use ShipMonk\Composer\Error\DevDependencyInProductionCodeError;
 use ShipMonk\Composer\Error\ShadowDependencyError;
+use ShipMonk\Composer\Error\UnusedDependencyError;
 use function ob_get_clean;
 use function ob_start;
 use function preg_replace;
@@ -39,9 +40,10 @@ class PrinterTest extends TestCase
 
         $output2 = $this->captureAndNormalizeOutput(static function () use ($printer): void {
             $printer->printResult([
-                new ClassmapEntryMissingError('Foo', 'foo.php', 11),
-                new ShadowDependencyError('Bar', 'some/package', 'bar.php', 22),
-                new DevDependencyInProductionCodeError('Baz', 'some/package', 'baz.php', 33),
+                new ClassmapEntryMissingError(new ClassUsage('Foo', 'foo.php', 11)),
+                new ShadowDependencyError('shadow/package', new ClassUsage('Bar', 'bar.php', 22)),
+                new DevDependencyInProductionCodeError('some/package', new ClassUsage('Baz', 'baz.php', 33)),
+                new UnusedDependencyError('dead/package'),
             ], false, true);
         });
 
@@ -52,24 +54,30 @@ Unknown classes!
 (those are not present in composer classmap, so we cannot check them)
 
   • Foo
-    first usage in foo.php:11
+    e.g. in foo.php:11
 
 
 
 Found shadow dependencies!
 (those are used, but not listed as dependency in composer.json)
 
-  • Bar (some/package)
-    first usage in bar.php:22
+  • shadow/package
+    e.g. Bar in bar.php:22
 
 
 
 Found dev dependencies in production code!
 (those are wrongly listed as dev dependency in composer.json)
 
-  • Baz (some/package)
-    first usage in baz.php:33
+  • some/package
+    e.g. Baz in baz.php:33
 
+
+
+Found unused dependencies!
+(those are listed in composer.json, but not used)
+
+  • dead/package
 
 
 OUT;

@@ -2,43 +2,21 @@
 
 namespace ShipMonk\Composer\Error;
 
+use ShipMonk\Composer\ClassUsage;
+
 class ClassmapEntryMissingError implements SymbolError
 {
 
     /**
-     * @var string
+     * @var ClassUsage
      */
-    private $className;
-
-    /**
-     * @var string
-     */
-    private $exampleUsageFilepath;
-
-    /**
-     * @var int
-     */
-    private $exampleUsageLine;
+    private $exampleUsage;
 
     public function __construct(
-        string $className,
-        string $exampleUsageFilepath,
-        int $exampleUsageLine
+        ClassUsage $exampleUsage
     )
     {
-        $this->className = $className;
-        $this->exampleUsageFilepath = $exampleUsageFilepath;
-        $this->exampleUsageLine = $exampleUsageLine;
-    }
-
-    public function getSymbolName(): string
-    {
-        return $this->className;
-    }
-
-    public function getExampleUsageFilepath(): string
-    {
-        return $this->exampleUsageFilepath;
+        $this->exampleUsage = $exampleUsage;
     }
 
     public function getPackageName(): ?string
@@ -46,9 +24,9 @@ class ClassmapEntryMissingError implements SymbolError
         return null;
     }
 
-    public function getExampleUsageLine(): int
+    public function getExampleUsage(): ClassUsage
     {
-        return $this->exampleUsageLine;
+        return $this->exampleUsage;
     }
 
 }
