@@ -2,11 +2,15 @@
 
 namespace ShipMonk\Composer\Config;
 
+use LogicException;
 use ShipMonk\Composer\Crate\PathToScan;
 use ShipMonk\Composer\Enum\ErrorType;
+use function array_flip;
 use function array_keys;
 use function array_merge;
+use function get_defined_constants;
 use function in_array;
+use function preg_last_error;
 use function preg_match;
 use function strpos;
 
@@ -56,7 +60,7 @@ class Configuration
     /**
      * @var list<string>
      */
-    private $ignoredUnknownClassesRegex = [];
+    private $ignoredUnknownClassesRegexes = [];
 
     /**
      * @return $this
@@ -137,7 +141,12 @@ class Configuration
      */
     public function ignoreErrorsOnPath(string $path, array $errorTypes): self
     {
-        $this->ignoredErrorsOnPath[$path] = $errorTypes;
+        if (in_array(ErrorType::UNUSED_DEPENDENCY, $errorTypes, true)) {
+            throw new LogicException('Unused dependency errors cannot be ignored on a path');
+        }
+
+        $previousErrorTypes = $this->ignoredErrorsOnPath[$path] ?? [];
+        $this->ignoredErrorsOnPath[$path] = array_merge($previousErrorTypes, $errorTypes);
         return $this;
     }
 
@@ -161,7 +170,12 @@ class Configuration
      */
     public function ignoreErrorsOnPackage(string $packageName, array $errorTypes): self
     {
-        $this->ignoredErrorsOnPackage[$packageName] = $errorTypes;
+        if (in_array(ErrorType::UNKNOWN_CLASS, $errorTypes, true)) {
+            throw new LogicException('Unknown class errors cannot be ignored on a package');
+        }
+
+        $previousErrorTypes = $this->ignoredErrorsOnPackage[$packageName] ?? [];
+        $this->ignoredErrorsOnPackage[$packageName] = array_merge($previousErrorTypes, $errorTypes);
         return $this;
     }
 
@@ -181,7 +195,7 @@ class Configuration
      */
     public function ignoreUnknownClassesRegex(string $classNameRegex): self
     {
-        $this->ignoredUnknownClassesRegex[] = $classNameRegex;
+        $this->ignoredUnknownClassesRegexes[] = $classNameRegex;
         return $this;
     }
 
@@ -230,8 +244,17 @@ class Configuration
             return true;
         }
 
-        foreach ($this->ignoredUnknownClassesRegex as $regex) {
-            if (preg_match($regex, $class) !== false) {
+        foreach ($this->ignoredUnknownClassesRegexes as $regex) {
+            $matches = preg_match($regex, $class);
+
+            if ($matches === false) {
+                /** @var array<string, int> $pcreConstants */
+                $pcreConstants = get_defined_constants(true)['pcre'] ?? [];
+                $error = array_flip($pcreConstants)[preg_last_error()] ?? 'unknown error';
+                throw new LogicException("Invalid regex: '$regex', error: $error");
+            }
+
+            if ($matches === 1) {
                 return true;
             }
         }

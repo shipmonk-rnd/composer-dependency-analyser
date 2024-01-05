@@ -66,7 +66,7 @@ This tool reads your `composer.json` and scans all paths listed in both `autoloa
 
 - **Unknown classes**
   - Any class missing in composer classmap gets reported as we cannot say if that one is shadowed or not
-  - This might be expected in some cases, so you can disable this behaviour by `--ignore-unknown-classes` or more granually by `--config`
+  - This might be expected in some cases, so you can disable this behaviour by `--ignore-unknown-classes` or more granularly by `--config`
 
 It is expected to run this tool in root of your project, where the `composer.json` is located.
 If you want to run it elsewhere, you can use `--composer-json=path/to/composer.json` option.
@@ -121,8 +121,6 @@ return $config
 ```
 
 All paths are expected to exist. If you need some glob functionality, you can do it in your config file and pass the expanded list to e.g. `ignoreErrorsOnPaths`.
-
-```php
 
 ## Limitations:
 - Files without namespace has limited support
