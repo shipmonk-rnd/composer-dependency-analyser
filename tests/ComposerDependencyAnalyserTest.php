@@ -3,6 +3,8 @@
 namespace ShipMonk\Composer;
 
 use PHPUnit\Framework\TestCase;
+use ShipMonk\Composer\Config\Configuration;
+use ShipMonk\Composer\Crate\ClassUsage;
 use ShipMonk\Composer\Error\ClassmapEntryMissingError;
 use ShipMonk\Composer\Error\DevDependencyInProductionCodeError;
 use ShipMonk\Composer\Error\ShadowDependencyError;
@@ -27,13 +29,18 @@ class ComposerDependencyAnalyserTest extends TestCase
             'regular/dead' => false,
             'dev/dead' => true,
         ];
+        $scanPath = __DIR__ . '/data/shadow-dependencies.php';
+
+        $config = new Configuration();
+        $config->addPathToScan($scanPath, false);
+
         $detector = new ComposerDependencyAnalyser(
+            $config,
             $vendorDir,
             $classmap,
             $dependencies
         );
-        $scanPath = __DIR__ . '/data/shadow-dependencies.php';
-        $result = $detector->scan([$scanPath => false]);
+        $result = $detector->run();
 
         self::assertEquals([
             new ClassmapEntryMissingError(new ClassUsage('Unknown\Clazz', $scanPath, 11)),

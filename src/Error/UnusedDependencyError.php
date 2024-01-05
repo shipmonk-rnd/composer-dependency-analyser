@@ -2,7 +2,7 @@
 
 namespace ShipMonk\Composer\Error;
 
-use ShipMonk\Composer\ClassUsage;
+use ShipMonk\Composer\Crate\ClassUsage;
 
 class UnusedDependencyError implements SymbolError
 {

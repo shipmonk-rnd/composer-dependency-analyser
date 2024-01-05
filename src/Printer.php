@@ -33,61 +33,48 @@ class Printer
     /**
      * @param list<SymbolError> $errors
      */
-    public function printResult(
-        array $errors,
-        bool $ignoreUnknownClasses,
-        bool $verbose
-    ): int
+    public function printResult(array $errors): int
     {
-        $errorReported = false;
+        if ($errors === []) {
+            $this->printLine('<green>No composer issues found</green>' . PHP_EOL);
+            return 0;
+        }
+
         $classmapErrors = $this->filterErrors($errors, ClassmapEntryMissingError::class);
         $shadowDependencyErrors = $this->filterErrors($errors, ShadowDependencyError::class);
         $devDependencyInProductionErrors = $this->filterErrors($errors, DevDependencyInProductionCodeError::class);
         $unusedDependencyErrors = $this->filterErrors($errors, UnusedDependencyError::class);
 
-        if (count($classmapErrors) > 0 && !$ignoreUnknownClasses) {
+        if (count($classmapErrors) > 0) {
             $this->printErrors(
                 'Unknown classes!',
                 'those are not present in composer classmap, so we cannot check them',
-                $classmapErrors,
-                $verbose
+                $classmapErrors
             );
-            $errorReported = true;
         }
 
         if (count($shadowDependencyErrors) > 0) {
             $this->printErrors(
                 'Found shadow dependencies!',
                 'those are used, but not listed as dependency in composer.json',
-                $shadowDependencyErrors,
-                $verbose
+                $shadowDependencyErrors
             );
-            $errorReported = true;
         }
 
         if (count($devDependencyInProductionErrors) > 0) {
             $this->printErrors(
                 'Found dev dependencies in production code!',
-                'those are wrongly listed as dev dependency in composer.json',
-                $devDependencyInProductionErrors,
-                $verbose
+                'those should probably be moved to "require" section in composer.json',
+                $devDependencyInProductionErrors
             );
-            $errorReported = true;
         }
 
         if (count($unusedDependencyErrors) > 0) {
             $this->printErrors(
                 'Found unused dependencies!',
-                'those are listed in composer.json, but not used',
-                $unusedDependencyErrors,
-                $verbose
+                'those are listed in composer.json, but no usage was found in scanned paths',
+                $unusedDependencyErrors
             );
-            $errorReported = true;
-        }
-
-        if (!$errorReported) {
-            $this->printLine('<green>No composer issues found</green>' . PHP_EOL);
-            return 0;
         }
 
         return 255;
@@ -96,7 +83,7 @@ class Printer
     /**
      * @param list<SymbolError> $errors
      */
-    private function printErrors(string $title, string $subtitle, array $errors, bool $verbose): void
+    private function printErrors(string $title, string $subtitle, array $errors): void
     {
         $this->printLine('');
         $this->printLine("<red>$title</red>");

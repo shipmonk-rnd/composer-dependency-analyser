@@ -8,6 +8,9 @@ use LogicException;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use ReflectionClass;
+use ShipMonk\Composer\Config\Configuration;
+use ShipMonk\Composer\Crate\ClassUsage;
+use ShipMonk\Composer\Enum\ErrorType;
 use ShipMonk\Composer\Error\ClassmapEntryMissingError;
 use ShipMonk\Composer\Error\DevDependencyInProductionCodeError;
 use ShipMonk\Composer\Error\ShadowDependencyError;
@@ -38,6 +41,11 @@ class ComposerDependencyAnalyser
 {
 
     /**
+     * @var Configuration
+     */
+    private $config;
+
+    /**
      * @var string
      */
     private $vendorDir;
@@ -59,42 +67,39 @@ class ComposerDependencyAnalyser
     private $composerJsonDependencies;
 
     /**
-     * @var list<string>
-     */
-    private $extensionsToCheck;
-
-    /**
      * @param array<string, string> $optimizedClassmap className => filePath
      * @param array<string, bool> $composerJsonDependencies package name => is dev dependency
-     * @param list<string> $extensionsToCheck
      */
     public function __construct(
+        Configuration $config,
         string $vendorDir,
         array $optimizedClassmap,
-        array $composerJsonDependencies,
-        array $extensionsToCheck = ['php']
+        array $composerJsonDependencies
     )
     {
         foreach ($optimizedClassmap as $className => $filePath) {
             $this->optimizedClassmap[$className] = $this->realPath($filePath);
         }
 
+        $this->config = $config;
         $this->vendorDir = $this->realPath($vendorDir);
         $this->composerJsonDependencies = $composerJsonDependencies;
-        $this->extensionsToCheck = $extensionsToCheck;
     }
 
     /**
-     * @param array<string, bool> $scanPaths path => is dev path
      * @return list<SymbolError>
      */
-    public function scan(array $scanPaths): array
+    public function run(): array
     {
         $errors = [];
         $usedPackages = [];
 
-        foreach ($scanPaths as $scanPath => $isDevPath) {
-            foreach ($this->listPhpFilesIn($scanPath) as $filePath) {
+        foreach ($this->config->getPathsToScan() as $scanPath) {
+            foreach ($this->listPhpFilesIn($scanPath->getPath()) as $filePath) {
+                if ($this->config->isExcludedFilepath($filePath)) {
+                    continue;
+                }
+
                 foreach ($this->getUsedSymbolsInFile($filePath) as $usedSymbol => $lineNumber) {
                     if ($this->isInternalClass($usedSymbol)) {
                         continue;
@@ -105,7 +110,11 @@ class ComposerDependencyAnalyser
                     }
 
                     if (!isset($this->optimizedClassmap[$usedSymbol])) {
-                        if (!$this->isConstOrFunction($usedSymbol)) {
+                        if (
+                            !$this->isConstOrFunction($usedSymbol)
+                            && !$this->config->shouldIgnoreUnknownClass($usedSymbol)
+                            && !$this->config->shouldIgnoreError(ErrorType::UNKNOWN_CLASS, $filePath, null)
+                        ) {
                             $errors[$usedSymbol] = new ClassmapEntryMissingError(new ClassUsage($usedSymbol, $filePath, $lineNumber));
                         }
 
@@ -120,11 +129,18 @@ class ComposerDependencyAnalyser
 
                     $packageName = $this->getPackageNameFromVendorPath($classmapPath);
 
-                    if ($this->isShadowDependency($packageName)) {
+                    if (
+                        $this->isShadowDependency($packageName)
+                        && !$this->config->shouldIgnoreError(ErrorType::SHADOW_DEPENDENCY, $filePath, $packageName)
+                    ) {
                         $errors[$packageName] = new ShadowDependencyError($packageName, new ClassUsage($usedSymbol, $filePath, $lineNumber));
                     }
 
-                    if (!$isDevPath && $this->isDevDependency($packageName)) {
+                    if (
+                        !$scanPath->isDev()
+                        && $this->isDevDependency($packageName)
+                        && !$this->config->shouldIgnoreError(ErrorType::UNUSED_DEPENDENCY, $filePath, $packageName)
+                    ) {
                         $errors[$packageName] = new DevDependencyInProductionCodeError($packageName, new ClassUsage($usedSymbol, $filePath, $lineNumber));
                     }
 
@@ -141,17 +157,18 @@ class ComposerDependencyAnalyser
         );
 
         foreach ($unusedDependencies as $unusedDependency) {
-            $errors[] = new UnusedDependencyError($unusedDependency);
+            if (!$this->config->shouldIgnoreError(ErrorType::UNUSED_DEPENDENCY, null, $unusedDependency)) {
+                $errors[] = new UnusedDependencyError($unusedDependency);
+            }
         }
 
         usort($errors, static function (SymbolError $a, SymbolError $b): int {
-            return [
-                get_class($a),
-                $a->getPackageName() ?? '',
-            ] <=> [
-                get_class($b),
-                $b->getPackageName() ?? '',
-            ];
+            $aPackageName = $a->getPackageName() ?? '';
+            $bPackageName = $b->getPackageName() ?? '';
+            $aClassName = $a->getExampleUsage() !== null ? $a->getExampleUsage()->getClassname() : '';
+            $bClassName = $b->getExampleUsage() !== null ? $b->getExampleUsage()->getClassname() : '';
+
+            return [get_class($a), $aPackageName, $aClassName] <=> [get_class($b), $bPackageName, $bClassName];
         });
 
         return array_values($errors);
@@ -223,7 +240,7 @@ class ComposerDependencyAnalyser
 
     private function isExtensionToCheck(string $filePath): bool
     {
-        foreach ($this->extensionsToCheck as $extension) {
+        foreach ($this->config->getFileExtensions() as $extension) {
             if (substr($filePath, -(strlen($extension) + 1)) === ".$extension") {
                 return true;
             }

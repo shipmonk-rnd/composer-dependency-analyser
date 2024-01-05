@@ -4,6 +4,7 @@ namespace ShipMonk\Composer;
 
 use Closure;
 use PHPUnit\Framework\TestCase;
+use ShipMonk\Composer\Crate\ClassUsage;
 use ShipMonk\Composer\Error\ClassmapEntryMissingError;
 use ShipMonk\Composer\Error\DevDependencyInProductionCodeError;
 use ShipMonk\Composer\Error\ShadowDependencyError;
@@ -33,7 +34,7 @@ class PrinterTest extends TestCase
         $printer = new Printer();
 
         $output1 = $this->captureAndNormalizeOutput(static function () use ($printer): void {
-            $printer->printResult([], false, false);
+            $printer->printResult([]);
         });
 
         self::assertSame("No composer issues found\n\n", $this->removeColors($output1));
@@ -44,7 +45,7 @@ class PrinterTest extends TestCase
                 new ShadowDependencyError('shadow/package', new ClassUsage('Bar', 'bar.php', 22)),
                 new DevDependencyInProductionCodeError('some/package', new ClassUsage('Baz', 'baz.php', 33)),
                 new UnusedDependencyError('dead/package'),
-            ], false, true);
+            ]);
         });
 
         // editorconfig-checker-disable
@@ -67,7 +68,7 @@ Found shadow dependencies!
 
 
 Found dev dependencies in production code!
-(those are wrongly listed as dev dependency in composer.json)
+(those should probably be moved to "require" section in composer.json)
 
   • some/package
     e.g. Baz in baz.php:33
@@ -75,7 +76,7 @@ Found dev dependencies in production code!
 
 
 Found unused dependencies!
-(those are listed in composer.json, but not used)
+(those are listed in composer.json, but no usage was found in scanned paths)
 
   • dead/package
 
