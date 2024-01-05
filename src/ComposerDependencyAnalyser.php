@@ -139,7 +139,7 @@ class ComposerDependencyAnalyser
                     if (
                         !$scanPath->isDev()
                         && $this->isDevDependency($packageName)
-                        && !$this->config->shouldIgnoreError(ErrorType::UNUSED_DEPENDENCY, $filePath, $packageName)
+                        && !$this->config->shouldIgnoreError(ErrorType::DEV_DEPENDENCY_IN_PROD, $filePath, $packageName)
                     ) {
                         $errors[$packageName] = new DevDependencyInProductionCodeError($packageName, new ClassUsage($usedSymbol, $filePath, $lineNumber));
                     }
