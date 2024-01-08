@@ -45,7 +45,7 @@ $exit = static function (string $message) use ($printer): void {
 };
 
 /** @var string[] $providedOptions */
-$providedOptions = getopt('', ['help', 'ignore-unknown-classes', 'composer-json:', 'config:'], $restIndex);
+$providedOptions = getopt('', ['help', 'verbose', 'ignore-unknown-classes', 'composer-json:', 'config:'], $restIndex);
 
 /** @var int $restIndex */
 $providedPaths = array_slice($argv, $restIndex);
@@ -154,9 +154,9 @@ foreach ($config->getPathsWithIgnore() as $pathWithIgnore) {
 }
 
 $analyser = new ComposerDependencyAnalyser($config, $vendorDir, $loaders[$vendorDir]->getClassMap(), $composerJson->dependencies);
-$errors = $analyser->run();
+$result = $analyser->run();
 
-$exitCode = $printer->printResult($errors);
+$exitCode = $printer->printResult($result, isset($providedOptions['verbose']));
 exit($exitCode);
 
 

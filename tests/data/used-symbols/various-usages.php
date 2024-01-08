@@ -17,7 +17,7 @@ class Foo {
 
 }
 
-
+echo LogicExceptionAlias::class;
 
 namespace App2;
 
@@ -39,6 +39,3 @@ class Foo {
     }
 
 }
-
-
-

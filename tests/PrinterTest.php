@@ -4,11 +4,8 @@ namespace ShipMonk\Composer;
 
 use Closure;
 use PHPUnit\Framework\TestCase;
-use ShipMonk\Composer\Crate\ClassUsage;
-use ShipMonk\Composer\Error\ClassmapEntryMissingError;
-use ShipMonk\Composer\Error\DevDependencyInProductionCodeError;
-use ShipMonk\Composer\Error\ShadowDependencyError;
-use ShipMonk\Composer\Error\UnusedDependencyError;
+use ShipMonk\Composer\Result\AnalysisResult;
+use ShipMonk\Composer\Result\SymbolUsage;
 use function ob_get_clean;
 use function ob_start;
 use function preg_replace;
@@ -34,18 +31,32 @@ class PrinterTest extends TestCase
         $printer = new Printer();
 
         $output1 = $this->captureAndNormalizeOutput(static function () use ($printer): void {
-            $printer->printResult([]);
+            $printer->printResult(new AnalysisResult([], [], [], []), false);
         });
 
         self::assertSame("No composer issues found\n\n", $this->removeColors($output1));
 
         $output2 = $this->captureAndNormalizeOutput(static function () use ($printer): void {
-            $printer->printResult([
-                new ClassmapEntryMissingError(new ClassUsage('Foo', 'foo.php', 11)),
-                new ShadowDependencyError('shadow/package', new ClassUsage('Bar', 'bar.php', 22)),
-                new DevDependencyInProductionCodeError('some/package', new ClassUsage('Baz', 'baz.php', 33)),
-                new UnusedDependencyError('dead/package'),
-            ]);
+            $printer->printResult(
+                new AnalysisResult(
+                    ['Unknown\\Thing' => [new SymbolUsage('app/init.php', 1093)]],
+                    [
+                        'shadow/package' => [
+                            'Shadow\Utils' => [
+                                new SymbolUsage('src/Utils.php', 19),
+                                new SymbolUsage('src/Utils.php', 22),
+                            ],
+                            'Shadow\Comparator' => [new SymbolUsage('src/bootstrap.php', 25)],
+                        ],
+                        'shadow/another' => [
+                            'Another\Controller' => [new SymbolUsage('src/Printer.php', 173)],
+                        ],
+                    ],
+                    ['some/package' => ['Another\Command' => [new SymbolUsage('src/ProductGenerator.php', 28)]]],
+                    ['dead/package']
+                ),
+                false
+            );
         });
 
         // editorconfig-checker-disable
@@ -54,8 +65,8 @@ class PrinterTest extends TestCase
 Unknown classes!
 (those are not present in composer classmap, so we cannot check them)
 
-  • Foo
-    e.g. in foo.php:11
+  • Unknown\Thing
+    in app/init.php:1093
 
 
 
@@ -63,7 +74,10 @@ Found shadow dependencies!
 (those are used, but not listed as dependency in composer.json)
 
   • shadow/package
-    e.g. Bar in bar.php:22
+      Shadow\Utils in src/Utils.php:19 (+ 2 more)
+
+  • shadow/another
+      Another\Controller in src/Printer.php:173
 
 
 
@@ -71,7 +85,7 @@ Found dev dependencies in production code!
 (those should probably be moved to "require" section in composer.json)
 
   • some/package
-    e.g. Baz in baz.php:33
+      Another\Command in src/ProductGenerator.php:28
 
 
 

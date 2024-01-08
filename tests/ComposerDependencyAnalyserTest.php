@@ -6,12 +6,9 @@ use LogicException;
 use PHPUnit\Framework\TestCase;
 use ShipMonk\Composer\Config\Configuration;
 use ShipMonk\Composer\Config\ErrorType;
-use ShipMonk\Composer\Crate\ClassUsage;
-use ShipMonk\Composer\Error\ClassmapEntryMissingError;
-use ShipMonk\Composer\Error\DevDependencyInProductionCodeError;
-use ShipMonk\Composer\Error\ShadowDependencyError;
-use ShipMonk\Composer\Error\SymbolError;
-use ShipMonk\Composer\Error\UnusedDependencyError;
+use ShipMonk\Composer\Result\AnalysisResult;
+use ShipMonk\Composer\Result\SymbolUsage;
+use function array_filter;
 use function dirname;
 use function realpath;
 
@@ -21,9 +18,8 @@ class ComposerDependencyAnalyserTest extends TestCase
     /**
      * @dataProvider provideConfigs
      * @param callable(Configuration): void $editConfig
-     * @param list<SymbolError> $expectedResult
      */
-    public function test(callable $editConfig, array $expectedResult): void
+    public function test(callable $editConfig, AnalysisResult $expectedResult): void
     {
         $appDir = __DIR__ . '/app';
         $vendorDir = __DIR__ . '/vendor';
@@ -55,7 +51,7 @@ class ComposerDependencyAnalyserTest extends TestCase
     }
 
     /**
-     * @return iterable<string, array{callable(Configuration): void, list<SymbolError>}>
+     * @return iterable<string, array{callable(Configuration): void, AnalysisResult}>
      */
     public function provideConfigs(): iterable
     {
@@ -69,10 +65,9 @@ class ComposerDependencyAnalyserTest extends TestCase
         yield 'no paths' => [
             static function (Configuration $config): void {
             },
-            [
-                new UnusedDependencyError('regular/dead'),
-                new UnusedDependencyError('regular/package'),
-            ]
+            $this->createAnalysisResult([
+                ErrorType::UNUSED_DEPENDENCY => ['regular/dead', 'regular/package'],
+            ])
         ];
 
         yield 'all paths excluded' => [
@@ -80,60 +75,62 @@ class ComposerDependencyAnalyserTest extends TestCase
                 $config->addPathToScan(dirname($variousUsagesPath), false);
                 $config->addPathsToExclude([$variousUsagesPath, $unknownClassesPath]);
             },
-            [
-                new UnusedDependencyError('regular/dead'),
-                new UnusedDependencyError('regular/package'),
-            ]
+            $this->createAnalysisResult([
+                ErrorType::UNUSED_DEPENDENCY => ['regular/dead', 'regular/package'],
+            ])
         ];
 
         yield 'no file extensions' => [
             static function (Configuration $config): void {
                 $config->setFileExtensions([]);
             },
-            [
-                new UnusedDependencyError('regular/dead'),
-                new UnusedDependencyError('regular/package'),
-            ]
+            $this->createAnalysisResult([
+                ErrorType::UNUSED_DEPENDENCY => ['regular/dead', 'regular/package'],
+            ])
         ];
 
         yield 'default' => [
             static function (Configuration $config) use ($variousUsagesPath): void {
                 $config->addPathToScan($variousUsagesPath, false);
             },
-            [
-                new ClassmapEntryMissingError(new ClassUsage('Unknown\Clazz', $variousUsagesPath, 11)),
-                new DevDependencyInProductionCodeError('dev/package', new ClassUsage('Dev\Package\Clazz', $variousUsagesPath, 16)),
-                new ShadowDependencyError('shadow/package', new ClassUsage('Shadow\Package\Clazz', $variousUsagesPath, 24)),
-                new UnusedDependencyError('regular/dead'),
-            ]
+            $this->createAnalysisResult([
+                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11)]],
+                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16)]]],
+                ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24)]]],
+                ErrorType::UNUSED_DEPENDENCY => ['regular/dead']
+            ])
         ];
 
         yield 'scan dir' => [
             static function (Configuration $config) use ($variousUsagesPath): void {
                 $config->addPathToScan(dirname($variousUsagesPath), false);
             },
-            [
-                new ClassmapEntryMissingError(new ClassUsage('Unknown\Clazz', $variousUsagesPath, 11)),
-                new ClassmapEntryMissingError(new ClassUsage('Unknown\One', $unknownClassesPath, 3)),
-                new ClassmapEntryMissingError(new ClassUsage('Unknown\Two', $unknownClassesPath, 4)),
-                new DevDependencyInProductionCodeError('dev/package', new ClassUsage('Dev\Package\Clazz', $variousUsagesPath, 16)),
-                new ShadowDependencyError('shadow/package', new ClassUsage('Shadow\Package\Clazz', $variousUsagesPath, 24)),
-                new UnusedDependencyError('regular/dead'),
-            ]
+            $this->createAnalysisResult([
+                ErrorType::UNKNOWN_CLASS => [
+                    'Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11)],
+                    'Unknown\One' => [new SymbolUsage($unknownClassesPath, 3)],
+                    'Unknown\Two' => [new SymbolUsage($unknownClassesPath, 4)],
+                ],
+                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16)]]],
+                ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24)]]],
+                ErrorType::UNUSED_DEPENDENCY => ['regular/dead']
+            ])
         ];
 
         yield 'scan more paths' => [
             static function (Configuration $config) use ($variousUsagesPath, $unknownClassesPath): void {
                 $config->addPathsToScan([$variousUsagesPath, $unknownClassesPath], false);
             },
-            [
-                new ClassmapEntryMissingError(new ClassUsage('Unknown\Clazz', $variousUsagesPath, 11)),
-                new ClassmapEntryMissingError(new ClassUsage('Unknown\One', $unknownClassesPath, 3)),
-                new ClassmapEntryMissingError(new ClassUsage('Unknown\Two', $unknownClassesPath, 4)),
-                new DevDependencyInProductionCodeError('dev/package', new ClassUsage('Dev\Package\Clazz', $variousUsagesPath, 16)),
-                new ShadowDependencyError('shadow/package', new ClassUsage('Shadow\Package\Clazz', $variousUsagesPath, 24)),
-                new UnusedDependencyError('regular/dead'),
-            ]
+            $this->createAnalysisResult([
+                ErrorType::UNKNOWN_CLASS => [
+                    'Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11)],
+                    'Unknown\One' => [new SymbolUsage($unknownClassesPath, 3)],
+                    'Unknown\Two' => [new SymbolUsage($unknownClassesPath, 4)],
+                ],
+                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16)]]],
+                ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24)]]],
+                ErrorType::UNUSED_DEPENDENCY => ['regular/dead']
+            ])
         ];
 
         yield 'scan more paths, 2 calls' => [
@@ -141,14 +138,16 @@ class ComposerDependencyAnalyserTest extends TestCase
                 $config->addPathToScan($variousUsagesPath, false);
                 $config->addPathToScan($unknownClassesPath, false);
             },
-            [
-                new ClassmapEntryMissingError(new ClassUsage('Unknown\Clazz', $variousUsagesPath, 11)),
-                new ClassmapEntryMissingError(new ClassUsage('Unknown\One', $unknownClassesPath, 3)),
-                new ClassmapEntryMissingError(new ClassUsage('Unknown\Two', $unknownClassesPath, 4)),
-                new DevDependencyInProductionCodeError('dev/package', new ClassUsage('Dev\Package\Clazz', $variousUsagesPath, 16)),
-                new ShadowDependencyError('shadow/package', new ClassUsage('Shadow\Package\Clazz', $variousUsagesPath, 24)),
-                new UnusedDependencyError('regular/dead'),
-            ]
+            $this->createAnalysisResult([
+                ErrorType::UNKNOWN_CLASS => [
+                    'Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11)],
+                    'Unknown\One' => [new SymbolUsage($unknownClassesPath, 3)],
+                    'Unknown\Two' => [new SymbolUsage($unknownClassesPath, 4)],
+                ],
+                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16)]]],
+                ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24)]]],
+                ErrorType::UNUSED_DEPENDENCY => ['regular/dead']
+            ])
         ];
 
         yield 'scan dir, exclude path' => [
@@ -156,12 +155,12 @@ class ComposerDependencyAnalyserTest extends TestCase
                 $config->addPathToScan(dirname($variousUsagesPath), false);
                 $config->addPathToExclude($unknownClassesPath);
             },
-            [
-                new ClassmapEntryMissingError(new ClassUsage('Unknown\Clazz', $variousUsagesPath, 11)),
-                new DevDependencyInProductionCodeError('dev/package', new ClassUsage('Dev\Package\Clazz', $variousUsagesPath, 16)),
-                new ShadowDependencyError('shadow/package', new ClassUsage('Shadow\Package\Clazz', $variousUsagesPath, 24)),
-                new UnusedDependencyError('regular/dead'),
-            ]
+            $this->createAnalysisResult([
+                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11)]],
+                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16)]]],
+                ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24)]]],
+                ErrorType::UNUSED_DEPENDENCY => ['regular/dead']
+            ])
         ];
 
         yield 'ignore on path' => [
@@ -169,12 +168,12 @@ class ComposerDependencyAnalyserTest extends TestCase
                 $config->addPathToScan(dirname($variousUsagesPath), false);
                 $config->ignoreErrorsOnPath($unknownClassesPath, [ErrorType::UNKNOWN_CLASS]);
             },
-            [
-                new ClassmapEntryMissingError(new ClassUsage('Unknown\Clazz', $variousUsagesPath, 11)),
-                new DevDependencyInProductionCodeError('dev/package', new ClassUsage('Dev\Package\Clazz', $variousUsagesPath, 16)),
-                new ShadowDependencyError('shadow/package', new ClassUsage('Shadow\Package\Clazz', $variousUsagesPath, 24)),
-                new UnusedDependencyError('regular/dead'),
-            ]
+            $this->createAnalysisResult([
+                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11)]],
+                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16)]]],
+                ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24)]]],
+                ErrorType::UNUSED_DEPENDENCY => ['regular/dead']
+            ])
         ];
 
         yield 'ignore on path 2' => [
@@ -182,11 +181,13 @@ class ComposerDependencyAnalyserTest extends TestCase
                 $config->addPathToScan(dirname($unknownClassesPath), false);
                 $config->ignoreErrorsOnPath($variousUsagesPath, [ErrorType::UNKNOWN_CLASS, ErrorType::SHADOW_DEPENDENCY, ErrorType::DEV_DEPENDENCY_IN_PROD]);
             },
-            [
-                new ClassmapEntryMissingError(new ClassUsage('Unknown\One', $unknownClassesPath, 3)),
-                new ClassmapEntryMissingError(new ClassUsage('Unknown\Two', $unknownClassesPath, 4)),
-                new UnusedDependencyError('regular/dead'),
-            ]
+            $this->createAnalysisResult([
+                ErrorType::UNKNOWN_CLASS => [
+                    'Unknown\One' => [new SymbolUsage($unknownClassesPath, 3)],
+                    'Unknown\Two' => [new SymbolUsage($unknownClassesPath, 4)],
+                ],
+                ErrorType::UNUSED_DEPENDENCY => ['regular/dead'],
+            ])
         ];
 
         yield 'ignore on paths' => [
@@ -194,9 +195,9 @@ class ComposerDependencyAnalyserTest extends TestCase
                 $config->addPathToScan(dirname($unknownClassesPath), false);
                 $config->ignoreErrorsOnPaths([$variousUsagesPath, $unknownClassesPath], [ErrorType::UNKNOWN_CLASS, ErrorType::SHADOW_DEPENDENCY, ErrorType::DEV_DEPENDENCY_IN_PROD]);
             },
-            [
-                new UnusedDependencyError('regular/dead'),
-            ]
+            $this->createAnalysisResult([
+                ErrorType::UNUSED_DEPENDENCY => ['regular/dead'],
+            ])
         ];
 
         yield 'ignore on package' => [
@@ -204,11 +205,11 @@ class ComposerDependencyAnalyserTest extends TestCase
                 $config->addPathToScan($variousUsagesPath, false);
                 $config->ignoreErrorsOnPackages(['regular/dead'], [ErrorType::UNUSED_DEPENDENCY]);
             },
-            [
-                new ClassmapEntryMissingError(new ClassUsage('Unknown\Clazz', $variousUsagesPath, 11)),
-                new DevDependencyInProductionCodeError('dev/package', new ClassUsage('Dev\Package\Clazz', $variousUsagesPath, 16)),
-                new ShadowDependencyError('shadow/package', new ClassUsage('Shadow\Package\Clazz', $variousUsagesPath, 24)),
-            ]
+            $this->createAnalysisResult([
+                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11)]],
+                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16)]]],
+                ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24)]]],
+            ])
         ];
 
         yield 'ignore on package 2' => [
@@ -218,9 +219,9 @@ class ComposerDependencyAnalyserTest extends TestCase
                 $config->ignoreErrorsOnPackage('shadow/package', [ErrorType::SHADOW_DEPENDENCY]);
                 $config->ignoreErrorsOnPackage('dev/package', [ErrorType::DEV_DEPENDENCY_IN_PROD]);
             },
-            [
-                new ClassmapEntryMissingError(new ClassUsage('Unknown\Clazz', $variousUsagesPath, 11)),
-            ]
+            $this->createAnalysisResult([
+                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11)]],
+            ])
         ];
 
         yield 'ignore all unused' => [
@@ -228,11 +229,11 @@ class ComposerDependencyAnalyserTest extends TestCase
                 $config->addPathToScan($variousUsagesPath, false);
                 $config->ignoreErrors([ErrorType::UNUSED_DEPENDENCY]);
             },
-            [
-                new ClassmapEntryMissingError(new ClassUsage('Unknown\Clazz', $variousUsagesPath, 11)),
-                new DevDependencyInProductionCodeError('dev/package', new ClassUsage('Dev\Package\Clazz', $variousUsagesPath, 16)),
-                new ShadowDependencyError('shadow/package', new ClassUsage('Shadow\Package\Clazz', $variousUsagesPath, 24)),
-            ]
+            $this->createAnalysisResult([
+                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11)]],
+                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16)]]],
+                ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24)]]],
+            ])
         ];
 
         yield 'ignore all shadow' => [
@@ -240,11 +241,11 @@ class ComposerDependencyAnalyserTest extends TestCase
                 $config->addPathToScan($variousUsagesPath, false);
                 $config->ignoreErrors([ErrorType::SHADOW_DEPENDENCY]);
             },
-            [
-                new ClassmapEntryMissingError(new ClassUsage('Unknown\Clazz', $variousUsagesPath, 11)),
-                new DevDependencyInProductionCodeError('dev/package', new ClassUsage('Dev\Package\Clazz', $variousUsagesPath, 16)),
-                new UnusedDependencyError('regular/dead'),
-            ]
+            $this->createAnalysisResult([
+                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11)]],
+                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16)]]],
+                ErrorType::UNUSED_DEPENDENCY => ['regular/dead']
+            ])
         ];
 
         yield 'ignore all dev-in-prod' => [
@@ -252,11 +253,11 @@ class ComposerDependencyAnalyserTest extends TestCase
                 $config->addPathToScan($variousUsagesPath, false);
                 $config->ignoreErrors([ErrorType::DEV_DEPENDENCY_IN_PROD]);
             },
-            [
-                new ClassmapEntryMissingError(new ClassUsage('Unknown\Clazz', $variousUsagesPath, 11)),
-                new ShadowDependencyError('shadow/package', new ClassUsage('Shadow\Package\Clazz', $variousUsagesPath, 24)),
-                new UnusedDependencyError('regular/dead'),
-            ]
+            $this->createAnalysisResult([
+                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11)]],
+                ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24)]]],
+                ErrorType::UNUSED_DEPENDENCY => ['regular/dead'],
+            ])
         ];
 
         yield 'ignore all unknown' => [
@@ -264,11 +265,11 @@ class ComposerDependencyAnalyserTest extends TestCase
                 $config->addPathToScan($variousUsagesPath, false);
                 $config->ignoreErrors([ErrorType::UNKNOWN_CLASS]);
             },
-            [
-                new DevDependencyInProductionCodeError('dev/package', new ClassUsage('Dev\Package\Clazz', $variousUsagesPath, 16)),
-                new ShadowDependencyError('shadow/package', new ClassUsage('Shadow\Package\Clazz', $variousUsagesPath, 24)),
-                new UnusedDependencyError('regular/dead'),
-            ]
+            $this->createAnalysisResult([
+                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16)]]],
+                ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24)]]],
+                ErrorType::UNUSED_DEPENDENCY => ['regular/dead']
+            ])
         ];
 
         yield 'ignore specific unknown class' => [
@@ -276,11 +277,10 @@ class ComposerDependencyAnalyserTest extends TestCase
                 $config->addPathToScan($unknownClassesPath, false);
                 $config->ignoreUnknownClasses(['Unknown\One']);
             },
-            [
-                new ClassmapEntryMissingError(new ClassUsage('Unknown\Two', $unknownClassesPath, 4)),
-                new UnusedDependencyError('regular/dead'),
-                new UnusedDependencyError('regular/package'),
-            ]
+            $this->createAnalysisResult([
+                ErrorType::UNKNOWN_CLASS => ['Unknown\Two' => [new SymbolUsage($unknownClassesPath, 4)]],
+                ErrorType::UNUSED_DEPENDENCY => ['regular/dead', 'regular/package'],
+            ])
         ];
 
         yield 'ignore unknown class by regex' => [
@@ -288,12 +288,24 @@ class ComposerDependencyAnalyserTest extends TestCase
                 $config->addPathToScan($unknownClassesPath, false);
                 $config->ignoreUnknownClassesRegex('~Two~');
             },
-            [
-                new ClassmapEntryMissingError(new ClassUsage('Unknown\One', $unknownClassesPath, 3)),
-                new UnusedDependencyError('regular/dead'),
-                new UnusedDependencyError('regular/package'),
-            ]
+            $this->createAnalysisResult([
+                ErrorType::UNKNOWN_CLASS => ['Unknown\One' => [new SymbolUsage($unknownClassesPath, 3)]],
+                ErrorType::UNUSED_DEPENDENCY => ['regular/dead', 'regular/package'],
+            ])
         ];
+    }
+
+    /**
+     * @param array<ErrorType::*, array<mixed>> $args
+     */
+    private function createAnalysisResult(array $args): AnalysisResult
+    {
+        return new AnalysisResult(
+            array_filter($args[ErrorType::UNKNOWN_CLASS] ?? []), // @phpstan-ignore-line ignore mixed
+            array_filter($args[ErrorType::SHADOW_DEPENDENCY] ?? []), // @phpstan-ignore-line ignore mixed
+            array_filter($args[ErrorType::DEV_DEPENDENCY_IN_PROD] ?? []), // @phpstan-ignore-line ignore mixed
+            array_filter($args[ErrorType::UNUSED_DEPENDENCY] ?? []) // @phpstan-ignore-line ignore mixed
+        );
     }
 
 }
