@@ -17,3 +17,18 @@ new \PHPUnit\Framework\Constraint\IsFinite();
 new DirectoryExists();
 new FileExists();
 
+trait Trait_ {
+    public function originalMethod(): void {}
+}
+
+class Class_
+{
+    use Trait_ {
+        originalMethod as newMethodName;
+    }
+
+    public function test() {
+        $this->newMethodName();
+    }
+
+}
