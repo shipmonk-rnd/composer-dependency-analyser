@@ -1,6 +1,6 @@
 <?php declare(strict_types = 1);
 
-namespace ShipMonk\Composer\Enum;
+namespace ShipMonk\Composer\Config;
 
 final class ErrorType
 {

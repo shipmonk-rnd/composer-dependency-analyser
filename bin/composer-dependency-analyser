@@ -5,7 +5,7 @@ use Composer\Autoload\ClassLoader;
 use ShipMonk\Composer\ComposerDependencyAnalyser;
 use ShipMonk\Composer\ComposerJson;
 use ShipMonk\Composer\Config\Configuration;
-use ShipMonk\Composer\Enum\ErrorType;
+use ShipMonk\Composer\Config\ErrorType;
 use ShipMonk\Composer\Printer;
 
 $usage = <<<EOD

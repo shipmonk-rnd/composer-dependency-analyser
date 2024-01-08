@@ -81,13 +81,13 @@ Here is example of what you can do:
 <?php
 
 use ShipMonk\Composer\Config\Configuration;
-use ShipMonk\Composer\Enum\ErrorType;
+use ShipMonk\Composer\Config\ErrorType;
 
 $config = new Configuration();
 
 return $config
     // disable scanning autoload & autoload-dev paths from composer.json
-    // doing that, you must add custom paths by addPathToScan() or addPathsToScan()
+    // with such option, you should add custom paths by addPathToScan() or addPathsToScan()
     ->disableComposerAutoloadPathScan()
 
     // disable detection of dev dependencies in production code globally
@@ -108,6 +108,7 @@ return $config
     // ignore errors on specific packages
     // you might have various reasons to ignore certain errors
     // e.g. polyfills are often used in libraries, but those are obviously unused when running with latest PHP
+    // for multiple packages at once, use ignoreErrorsOnPackages()
     ->ignoreErrorsOnPackage('symfony/polyfill-php73', [ErrorType::UNUSED_DEPENDENCY])
 
     // allow using classes not present in composer's autoloader

@@ -5,8 +5,8 @@ namespace ShipMonk\Composer;
 use LogicException;
 use PHPUnit\Framework\TestCase;
 use ShipMonk\Composer\Config\Configuration;
+use ShipMonk\Composer\Config\ErrorType;
 use ShipMonk\Composer\Crate\ClassUsage;
-use ShipMonk\Composer\Enum\ErrorType;
 use ShipMonk\Composer\Error\ClassmapEntryMissingError;
 use ShipMonk\Composer\Error\DevDependencyInProductionCodeError;
 use ShipMonk\Composer\Error\ShadowDependencyError;
@@ -202,7 +202,7 @@ class ComposerDependencyAnalyserTest extends TestCase
         yield 'ignore on package' => [
             static function (Configuration $config) use ($variousUsagesPath): void {
                 $config->addPathToScan($variousUsagesPath, false);
-                $config->ignoreErrorsOnPackage('regular/dead', [ErrorType::UNUSED_DEPENDENCY]);
+                $config->ignoreErrorsOnPackages(['regular/dead'], [ErrorType::UNUSED_DEPENDENCY]);
             },
             [
                 new ClassmapEntryMissingError(new ClassUsage('Unknown\Clazz', $variousUsagesPath, 11)),

@@ -3,8 +3,6 @@
 namespace ShipMonk\Composer\Config;
 
 use LogicException;
-use ShipMonk\Composer\Crate\PathToScan;
-use ShipMonk\Composer\Enum\ErrorType;
 use function array_flip;
 use function array_keys;
 use function array_merge;
@@ -179,6 +177,20 @@ class Configuration
 
         $previousErrorTypes = $this->ignoredErrorsOnPackage[$packageName] ?? [];
         $this->ignoredErrorsOnPackage[$packageName] = array_merge($previousErrorTypes, $errorTypes);
+        return $this;
+    }
+
+    /**
+     * @param list<string> $packageNames
+     * @param list<ErrorType::*> $errorTypes
+     * @return $this
+     */
+    public function ignoreErrorsOnPackages(array $packageNames, array $errorTypes): self
+    {
+        foreach ($packageNames as $packageName) {
+            $this->ignoreErrorsOnPackage($packageName, $errorTypes);
+        }
+
         return $this;
     }
 
