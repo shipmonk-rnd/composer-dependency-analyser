@@ -12,6 +12,7 @@ use function get_defined_constants;
 use function in_array;
 use function preg_last_error;
 use function preg_match;
+use function realpath;
 use function strpos;
 
 class Configuration
@@ -96,7 +97,7 @@ class Configuration
      */
     public function addPathToScan(string $path, bool $isDev): self
     {
-        $this->pathsToScan[] = new PathToScan($path, $isDev);
+        $this->pathsToScan[] = new PathToScan($this->realpath($path), $isDev);
         return $this;
     }
 
@@ -118,7 +119,7 @@ class Configuration
      */
     public function addPathToExclude(string $path): self
     {
-        $this->pathsToExclude[] = $path;
+        $this->pathsToExclude[] = $this->realpath($path);
         return $this;
     }
 
@@ -145,8 +146,10 @@ class Configuration
             throw new LogicException('Unused dependency errors cannot be ignored on a path');
         }
 
-        $previousErrorTypes = $this->ignoredErrorsOnPath[$path] ?? [];
-        $this->ignoredErrorsOnPath[$path] = array_merge($previousErrorTypes, $errorTypes);
+        $realpath = $this->realpath($path);
+
+        $previousErrorTypes = $this->ignoredErrorsOnPath[$realpath] ?? [];
+        $this->ignoredErrorsOnPath[$realpath] = array_merge($previousErrorTypes, $errorTypes);
         return $this;
     }
 
@@ -326,6 +329,17 @@ class Configuration
     private function isFilepathWithinPath(string $filePath, string $path): bool
     {
         return strpos($filePath, $path) === 0;
+    }
+
+    private function realpath(string $filePath): string
+    {
+        $realPath = realpath($filePath);
+
+        if ($realPath === false) {
+            throw new LogicException("Unable to realpath '$filePath'");
+        }
+
+        return $realPath;
     }
 
 }
