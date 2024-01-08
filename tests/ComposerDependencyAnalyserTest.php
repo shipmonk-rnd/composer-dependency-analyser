@@ -2,16 +2,28 @@
 
 namespace ShipMonk\Composer;
 
+use LogicException;
 use PHPUnit\Framework\TestCase;
+use ShipMonk\Composer\Config\Configuration;
+use ShipMonk\Composer\Config\ErrorType;
+use ShipMonk\Composer\Crate\ClassUsage;
 use ShipMonk\Composer\Error\ClassmapEntryMissingError;
 use ShipMonk\Composer\Error\DevDependencyInProductionCodeError;
 use ShipMonk\Composer\Error\ShadowDependencyError;
+use ShipMonk\Composer\Error\SymbolError;
 use ShipMonk\Composer\Error\UnusedDependencyError;
+use function dirname;
+use function realpath;
 
 class ComposerDependencyAnalyserTest extends TestCase
 {
 
-    public function test(): void
+    /**
+     * @dataProvider provideConfigs
+     * @param callable(Configuration): void $editConfig
+     * @param list<SymbolError> $expectedResult
+     */
+    public function test(callable $editConfig, array $expectedResult): void
     {
         $appDir = __DIR__ . '/app';
         $vendorDir = __DIR__ . '/vendor';
@@ -27,20 +39,261 @@ class ComposerDependencyAnalyserTest extends TestCase
             'regular/dead' => false,
             'dev/dead' => true,
         ];
+
+        $config = new Configuration();
+        $editConfig($config);
+
         $detector = new ComposerDependencyAnalyser(
+            $config,
             $vendorDir,
             $classmap,
             $dependencies
         );
-        $scanPath = __DIR__ . '/data/shadow-dependencies.php';
-        $result = $detector->scan([$scanPath => false]);
+        $result = $detector->run();
 
-        self::assertEquals([
-            new ClassmapEntryMissingError(new ClassUsage('Unknown\Clazz', $scanPath, 11)),
-            new DevDependencyInProductionCodeError('dev/package', new ClassUsage('Dev\Package\Clazz', $scanPath, 16)),
-            new ShadowDependencyError('shadow/package', new ClassUsage('Shadow\Package\Clazz', $scanPath, 24)),
-            new UnusedDependencyError('regular/dead'),
-        ], $result);
+        self::assertEquals($expectedResult, $result);
+    }
+
+    /**
+     * @return iterable<string, array{callable(Configuration): void, list<SymbolError>}>
+     */
+    public function provideConfigs(): iterable
+    {
+        $variousUsagesPath = realpath(__DIR__ . '/data/analysis/various-usages.php');
+        $unknownClassesPath = realpath(__DIR__ . '/data/analysis/unknown-classes.php');
+
+        if ($unknownClassesPath === false || $variousUsagesPath === false) {
+            throw new LogicException('Unable to realpath data files');
+        }
+
+        yield 'no paths' => [
+            static function (Configuration $config): void {
+            },
+            [
+                new UnusedDependencyError('regular/dead'),
+                new UnusedDependencyError('regular/package'),
+            ]
+        ];
+
+        yield 'all paths excluded' => [
+            static function (Configuration $config) use ($variousUsagesPath, $unknownClassesPath): void {
+                $config->addPathToScan(dirname($variousUsagesPath), false);
+                $config->addPathsToExclude([$variousUsagesPath, $unknownClassesPath]);
+            },
+            [
+                new UnusedDependencyError('regular/dead'),
+                new UnusedDependencyError('regular/package'),
+            ]
+        ];
+
+        yield 'no file extensions' => [
+            static function (Configuration $config): void {
+                $config->setFileExtensions([]);
+            },
+            [
+                new UnusedDependencyError('regular/dead'),
+                new UnusedDependencyError('regular/package'),
+            ]
+        ];
+
+        yield 'default' => [
+            static function (Configuration $config) use ($variousUsagesPath): void {
+                $config->addPathToScan($variousUsagesPath, false);
+            },
+            [
+                new ClassmapEntryMissingError(new ClassUsage('Unknown\Clazz', $variousUsagesPath, 11)),
+                new DevDependencyInProductionCodeError('dev/package', new ClassUsage('Dev\Package\Clazz', $variousUsagesPath, 16)),
+                new ShadowDependencyError('shadow/package', new ClassUsage('Shadow\Package\Clazz', $variousUsagesPath, 24)),
+                new UnusedDependencyError('regular/dead'),
+            ]
+        ];
+
+        yield 'scan dir' => [
+            static function (Configuration $config) use ($variousUsagesPath): void {
+                $config->addPathToScan(dirname($variousUsagesPath), false);
+            },
+            [
+                new ClassmapEntryMissingError(new ClassUsage('Unknown\Clazz', $variousUsagesPath, 11)),
+                new ClassmapEntryMissingError(new ClassUsage('Unknown\One', $unknownClassesPath, 3)),
+                new ClassmapEntryMissingError(new ClassUsage('Unknown\Two', $unknownClassesPath, 4)),
+                new DevDependencyInProductionCodeError('dev/package', new ClassUsage('Dev\Package\Clazz', $variousUsagesPath, 16)),
+                new ShadowDependencyError('shadow/package', new ClassUsage('Shadow\Package\Clazz', $variousUsagesPath, 24)),
+                new UnusedDependencyError('regular/dead'),
+            ]
+        ];
+
+        yield 'scan more paths' => [
+            static function (Configuration $config) use ($variousUsagesPath, $unknownClassesPath): void {
+                $config->addPathsToScan([$variousUsagesPath, $unknownClassesPath], false);
+            },
+            [
+                new ClassmapEntryMissingError(new ClassUsage('Unknown\Clazz', $variousUsagesPath, 11)),
+                new ClassmapEntryMissingError(new ClassUsage('Unknown\One', $unknownClassesPath, 3)),
+                new ClassmapEntryMissingError(new ClassUsage('Unknown\Two', $unknownClassesPath, 4)),
+                new DevDependencyInProductionCodeError('dev/package', new ClassUsage('Dev\Package\Clazz', $variousUsagesPath, 16)),
+                new ShadowDependencyError('shadow/package', new ClassUsage('Shadow\Package\Clazz', $variousUsagesPath, 24)),
+                new UnusedDependencyError('regular/dead'),
+            ]
+        ];
+
+        yield 'scan more paths, 2 calls' => [
+            static function (Configuration $config) use ($variousUsagesPath, $unknownClassesPath): void {
+                $config->addPathToScan($variousUsagesPath, false);
+                $config->addPathToScan($unknownClassesPath, false);
+            },
+            [
+                new ClassmapEntryMissingError(new ClassUsage('Unknown\Clazz', $variousUsagesPath, 11)),
+                new ClassmapEntryMissingError(new ClassUsage('Unknown\One', $unknownClassesPath, 3)),
+                new ClassmapEntryMissingError(new ClassUsage('Unknown\Two', $unknownClassesPath, 4)),
+                new DevDependencyInProductionCodeError('dev/package', new ClassUsage('Dev\Package\Clazz', $variousUsagesPath, 16)),
+                new ShadowDependencyError('shadow/package', new ClassUsage('Shadow\Package\Clazz', $variousUsagesPath, 24)),
+                new UnusedDependencyError('regular/dead'),
+            ]
+        ];
+
+        yield 'scan dir, exclude path' => [
+            static function (Configuration $config) use ($variousUsagesPath, $unknownClassesPath): void {
+                $config->addPathToScan(dirname($variousUsagesPath), false);
+                $config->addPathToExclude($unknownClassesPath);
+            },
+            [
+                new ClassmapEntryMissingError(new ClassUsage('Unknown\Clazz', $variousUsagesPath, 11)),
+                new DevDependencyInProductionCodeError('dev/package', new ClassUsage('Dev\Package\Clazz', $variousUsagesPath, 16)),
+                new ShadowDependencyError('shadow/package', new ClassUsage('Shadow\Package\Clazz', $variousUsagesPath, 24)),
+                new UnusedDependencyError('regular/dead'),
+            ]
+        ];
+
+        yield 'ignore on path' => [
+            static function (Configuration $config) use ($variousUsagesPath, $unknownClassesPath): void {
+                $config->addPathToScan(dirname($variousUsagesPath), false);
+                $config->ignoreErrorsOnPath($unknownClassesPath, [ErrorType::UNKNOWN_CLASS]);
+            },
+            [
+                new ClassmapEntryMissingError(new ClassUsage('Unknown\Clazz', $variousUsagesPath, 11)),
+                new DevDependencyInProductionCodeError('dev/package', new ClassUsage('Dev\Package\Clazz', $variousUsagesPath, 16)),
+                new ShadowDependencyError('shadow/package', new ClassUsage('Shadow\Package\Clazz', $variousUsagesPath, 24)),
+                new UnusedDependencyError('regular/dead'),
+            ]
+        ];
+
+        yield 'ignore on path 2' => [
+            static function (Configuration $config) use ($variousUsagesPath, $unknownClassesPath): void {
+                $config->addPathToScan(dirname($unknownClassesPath), false);
+                $config->ignoreErrorsOnPath($variousUsagesPath, [ErrorType::UNKNOWN_CLASS, ErrorType::SHADOW_DEPENDENCY, ErrorType::DEV_DEPENDENCY_IN_PROD]);
+            },
+            [
+                new ClassmapEntryMissingError(new ClassUsage('Unknown\One', $unknownClassesPath, 3)),
+                new ClassmapEntryMissingError(new ClassUsage('Unknown\Two', $unknownClassesPath, 4)),
+                new UnusedDependencyError('regular/dead'),
+            ]
+        ];
+
+        yield 'ignore on paths' => [
+            static function (Configuration $config) use ($variousUsagesPath, $unknownClassesPath): void {
+                $config->addPathToScan(dirname($unknownClassesPath), false);
+                $config->ignoreErrorsOnPaths([$variousUsagesPath, $unknownClassesPath], [ErrorType::UNKNOWN_CLASS, ErrorType::SHADOW_DEPENDENCY, ErrorType::DEV_DEPENDENCY_IN_PROD]);
+            },
+            [
+                new UnusedDependencyError('regular/dead'),
+            ]
+        ];
+
+        yield 'ignore on package' => [
+            static function (Configuration $config) use ($variousUsagesPath): void {
+                $config->addPathToScan($variousUsagesPath, false);
+                $config->ignoreErrorsOnPackages(['regular/dead'], [ErrorType::UNUSED_DEPENDENCY]);
+            },
+            [
+                new ClassmapEntryMissingError(new ClassUsage('Unknown\Clazz', $variousUsagesPath, 11)),
+                new DevDependencyInProductionCodeError('dev/package', new ClassUsage('Dev\Package\Clazz', $variousUsagesPath, 16)),
+                new ShadowDependencyError('shadow/package', new ClassUsage('Shadow\Package\Clazz', $variousUsagesPath, 24)),
+            ]
+        ];
+
+        yield 'ignore on package 2' => [
+            static function (Configuration $config) use ($variousUsagesPath): void {
+                $config->addPathToScan($variousUsagesPath, false);
+                $config->ignoreErrorsOnPackage('regular/dead', [ErrorType::UNUSED_DEPENDENCY]);
+                $config->ignoreErrorsOnPackage('shadow/package', [ErrorType::SHADOW_DEPENDENCY]);
+                $config->ignoreErrorsOnPackage('dev/package', [ErrorType::DEV_DEPENDENCY_IN_PROD]);
+            },
+            [
+                new ClassmapEntryMissingError(new ClassUsage('Unknown\Clazz', $variousUsagesPath, 11)),
+            ]
+        ];
+
+        yield 'ignore all unused' => [
+            static function (Configuration $config) use ($variousUsagesPath): void {
+                $config->addPathToScan($variousUsagesPath, false);
+                $config->ignoreErrors([ErrorType::UNUSED_DEPENDENCY]);
+            },
+            [
+                new ClassmapEntryMissingError(new ClassUsage('Unknown\Clazz', $variousUsagesPath, 11)),
+                new DevDependencyInProductionCodeError('dev/package', new ClassUsage('Dev\Package\Clazz', $variousUsagesPath, 16)),
+                new ShadowDependencyError('shadow/package', new ClassUsage('Shadow\Package\Clazz', $variousUsagesPath, 24)),
+            ]
+        ];
+
+        yield 'ignore all shadow' => [
+            static function (Configuration $config) use ($variousUsagesPath): void {
+                $config->addPathToScan($variousUsagesPath, false);
+                $config->ignoreErrors([ErrorType::SHADOW_DEPENDENCY]);
+            },
+            [
+                new ClassmapEntryMissingError(new ClassUsage('Unknown\Clazz', $variousUsagesPath, 11)),
+                new DevDependencyInProductionCodeError('dev/package', new ClassUsage('Dev\Package\Clazz', $variousUsagesPath, 16)),
+                new UnusedDependencyError('regular/dead'),
+            ]
+        ];
+
+        yield 'ignore all dev-in-prod' => [
+            static function (Configuration $config) use ($variousUsagesPath): void {
+                $config->addPathToScan($variousUsagesPath, false);
+                $config->ignoreErrors([ErrorType::DEV_DEPENDENCY_IN_PROD]);
+            },
+            [
+                new ClassmapEntryMissingError(new ClassUsage('Unknown\Clazz', $variousUsagesPath, 11)),
+                new ShadowDependencyError('shadow/package', new ClassUsage('Shadow\Package\Clazz', $variousUsagesPath, 24)),
+                new UnusedDependencyError('regular/dead'),
+            ]
+        ];
+
+        yield 'ignore all unknown' => [
+            static function (Configuration $config) use ($variousUsagesPath): void {
+                $config->addPathToScan($variousUsagesPath, false);
+                $config->ignoreErrors([ErrorType::UNKNOWN_CLASS]);
+            },
+            [
+                new DevDependencyInProductionCodeError('dev/package', new ClassUsage('Dev\Package\Clazz', $variousUsagesPath, 16)),
+                new ShadowDependencyError('shadow/package', new ClassUsage('Shadow\Package\Clazz', $variousUsagesPath, 24)),
+                new UnusedDependencyError('regular/dead'),
+            ]
+        ];
+
+        yield 'ignore specific unknown class' => [
+            static function (Configuration $config) use ($unknownClassesPath): void {
+                $config->addPathToScan($unknownClassesPath, false);
+                $config->ignoreUnknownClasses(['Unknown\One']);
+            },
+            [
+                new ClassmapEntryMissingError(new ClassUsage('Unknown\Two', $unknownClassesPath, 4)),
+                new UnusedDependencyError('regular/dead'),
+                new UnusedDependencyError('regular/package'),
+            ]
+        ];
+
+        yield 'ignore unknown class by regex' => [
+            static function (Configuration $config) use ($unknownClassesPath): void {
+                $config->addPathToScan($unknownClassesPath, false);
+                $config->ignoreUnknownClassesRegex('~Two~');
+            },
+            [
+                new ClassmapEntryMissingError(new ClassUsage('Unknown\One', $unknownClassesPath, 3)),
+                new UnusedDependencyError('regular/dead'),
+                new UnusedDependencyError('regular/package'),
+            ]
+        ];
     }
 
 }

@@ -4,18 +4,21 @@
 use Composer\Autoload\ClassLoader;
 use ShipMonk\Composer\ComposerDependencyAnalyser;
 use ShipMonk\Composer\ComposerJson;
+use ShipMonk\Composer\Config\Configuration;
+use ShipMonk\Composer\Config\ErrorType;
 use ShipMonk\Composer\Printer;
 
 $usage = <<<EOD
 
 Usage:
-    vendor/bin/composer-analyser dir-to-scan
+    vendor/bin/composer-analyser
 
 Options:
     --help                      Print this help text and exit.
-    --verbose                   Print verbose output
     --ignore-unknown-classes    Ignore when class is not found in classmap
     --composer-json <path>      Provide custom path to composer.json
+    --config <path>             Provide path to php configuration file
+                                (must return ShipMonk\Composer\Config\Configuration instance)
 
 EOD;
 
@@ -41,24 +44,44 @@ $exit = static function (string $message) use ($printer): void {
     exit(255);
 };
 
-/** @var int $restIndex */
-$providedOptions = getopt('', ['help', 'verbose', 'ignore-unknown-classes', 'composer-json:'], $restIndex);
+/** @var string[] $providedOptions */
+$providedOptions = getopt('', ['help', 'ignore-unknown-classes', 'composer-json:', 'config:'], $restIndex);
 
-$cwd = getcwd();
+/** @var int $restIndex */
 $providedPaths = array_slice($argv, $restIndex);
+$cwd = getcwd();
 
 if (isset($providedOptions['help'])) {
     echo $usage;
     exit;
 }
 
-$verbose = isset($providedOptions['verbose']);
+if (isset($providedOptions['config'])) {
+    $printer->printLine('Using config ' . $providedOptions['config'] . PHP_EOL);
+
+    $configPath = $cwd . "/" . $providedOptions['config'];
+    if (!is_file($configPath)) {
+        $exit("Invalid config path given, {$providedOptions['config']} is not a file.");
+    }
+
+    $config = require $configPath;
+
+    if (!$config instanceof Configuration) {
+        $exit("Invalid config file, must return instance of " . Configuration::class);
+    }
+} else {
+    $config = new Configuration();
+}
+
 $ignoreUnknown = isset($providedOptions['ignore-unknown-classes']);
+
+if ($ignoreUnknown) {
+    $config->ignoreErrors([ErrorType::UNKNOWN_CLASS]);
+}
 
 /** @var non-empty-string $cwd */
 $cwd = getcwd();
 
-/** @var string[] $providedOptions */
 $composerJsonPath = isset($providedOptions['composer-json'])
     ? ($cwd . "/" . $providedOptions['composer-json'])
     : ($cwd . "/composer.json");
@@ -97,19 +120,43 @@ if (!$loaders[$vendorDir]->isClassMapAuthoritative()) {
     $exit('Run \'composer dump-autoload --classmap-authoritative\' first');
 }
 
-$absolutePaths = [];
-foreach ($composerJson->autoloadPaths as $relativePath => $isDevPath) {
-    $absolutePath = dirname($composerJsonPath) . '/' . $relativePath;
-    if (!is_dir($absolutePath) && !is_file($absolutePath)) {
-        $exit("Unexpected path detected, $absolutePath is not a file nor directory.");
+if ($config->shouldScanComposerAutoloadPaths()) {
+    foreach ($composerJson->autoloadPaths as $relativePath => $isDevPath) {
+        $absolutePath = dirname($composerJsonPath) . '/' . $relativePath;
+        $config->addPathToScan($absolutePath, $isDevPath);
     }
-    $absolutePaths[$absolutePath] = $isDevPath;
+
+    if ($config->getPathsToScan() === []) {
+        $exit('No paths to scan! There is no composer autoload section and no extra path to scan configured.');
+    }
+} else {
+    if ($config->getPathsToScan() === []) {
+        $exit('No paths to scan! Scanning composer\'s \'autoload\' sections is disabled and no extra path to scan was configured.');
+    }
 }
 
-$detector = new ComposerDependencyAnalyser($vendorDir, $loaders[$vendorDir]->getClassMap(), $composerJson->dependencies, ['php']);
-$errors = $detector->scan($absolutePaths);
+foreach ($config->getPathsToScan() as $pathToScan) {
+    if (!is_dir($pathToScan->getPath()) && !is_file($pathToScan->getPath())) {
+        $exit("Invalid scan path given, {$pathToScan->getPath()} is not a file nor directory.");
+    }
+}
 
-$exitCode = $printer->printResult(array_values($errors), $ignoreUnknown, $verbose);
+foreach ($config->getPathsToExclude() as $pathToExclude) {
+    if (!is_dir($pathToExclude) && !is_file($pathToExclude)) {
+        $exit("Invalid exclude path given, {$pathToExclude} is not a file nor directory.");
+    }
+}
+
+foreach ($config->getPathsWithIgnore() as $pathWithIgnore) {
+    if (!is_dir($pathWithIgnore) && !is_file($pathWithIgnore)) {
+        $exit("Invalid ignore path given, {$pathWithIgnore} is not a file nor directory.");
+    }
+}
+
+$analyser = new ComposerDependencyAnalyser($config, $vendorDir, $loaders[$vendorDir]->getClassMap(), $composerJson->dependencies);
+$errors = $analyser->run();
+
+$exitCode = $printer->printResult($errors);
 exit($exitCode);
 
 
