@@ -2,6 +2,7 @@
 
 namespace ShipMonk\Composer;
 
+use LogicException;
 use PHPUnit\Framework\TestCase;
 use ShipMonk\Composer\Config\Configuration;
 use ShipMonk\Composer\Crate\ClassUsage;
@@ -12,6 +13,7 @@ use ShipMonk\Composer\Error\ShadowDependencyError;
 use ShipMonk\Composer\Error\SymbolError;
 use ShipMonk\Composer\Error\UnusedDependencyError;
 use function dirname;
+use function realpath;
 
 class ComposerDependencyAnalyserTest extends TestCase
 {
@@ -57,8 +59,12 @@ class ComposerDependencyAnalyserTest extends TestCase
      */
     public function provideConfigs(): iterable
     {
-        $variousUsagesPath = __DIR__ . '/data/analysis/various-usages.php';
-        $unknownClassesPath = __DIR__ . '/data/analysis/unknown-classes.php';
+        $variousUsagesPath = realpath(__DIR__ . '/data/analysis/various-usages.php');
+        $unknownClassesPath = realpath(__DIR__ . '/data/analysis/unknown-classes.php');
+
+        if ($unknownClassesPath === false || $variousUsagesPath === false) {
+            throw new LogicException('Unable to realpath data files');
+        }
 
         yield 'no paths' => [
             static function (Configuration $config): void {
