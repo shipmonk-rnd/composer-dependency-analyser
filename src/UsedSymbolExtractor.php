@@ -12,13 +12,17 @@ use function substr;
 use function token_get_all;
 use const PHP_VERSION_ID;
 use const T_AS;
+use const T_CLASS;
 use const T_COMMENT;
 use const T_DOC_COMMENT;
+use const T_ENUM;
+use const T_INTERFACE;
 use const T_NAME_FULLY_QUALIFIED;
 use const T_NAME_QUALIFIED;
 use const T_NAMESPACE;
 use const T_NS_SEPARATOR;
 use const T_STRING;
+use const T_TRAIT;
 use const T_USE;
 use const T_WHITESPACE;
 
@@ -39,6 +43,18 @@ class UsedSymbolExtractor
      * @var int
      */
     private $pointer = 0;
+
+    /**
+     * When not null, we are inside class-like and use statements dont need to be parsed
+     *
+     * @var int|null
+     */
+    private $inClassLevel = null;
+
+    /**
+     * @var int
+     */
+    private $level = 0;
 
     public function __construct(string $code)
     {
@@ -149,6 +165,20 @@ class UsedSymbolExtractor
                 continue;
             }
 
+            if ($token[0] === T_CLASS || $token[0] === T_INTERFACE || $token[0] === T_TRAIT || (PHP_VERSION_ID >= 80100 && $token[0] === T_ENUM)) {
+                $this->inClassLevel = $this->level + 1;
+            }
+
+            if ($token === '{') {
+                $this->level++;
+            } elseif ($token === '}') {
+                if ($this->level === $this->inClassLevel) {
+                    $this->inClassLevel = null;
+                }
+
+                $this->level--;
+            }
+
             return $token;
         }
 
@@ -198,6 +228,10 @@ class UsedSymbolExtractor
      */
     public function parseUseStatement(): ?array
     {
+        if ($this->inClassLevel !== null) {
+            return null;
+        }
+
         $groupRoot = '';
         $class = '';
         $alias = '';
