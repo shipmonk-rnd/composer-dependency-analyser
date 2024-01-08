@@ -164,8 +164,15 @@ Similar approach should help you to avoid false positives in unused dependencies
 Another approach for DIC-only usages is to scan the generated php file, but that gave us worse results.
 
 ## Limitations:
+- Extension dependencies are not analysed (e.g. `ext-json`)
 - Files without namespace has limited support
   - Only classes with use statements and FQNs are detected
+- Function and constant usages are not analysed
+  - Therefore, if some package contains only functions, it will be reported as unused
+
+-----
+
+Despite those limitations, our experience is that this composer-dependency-analyser works much better than composer-unused and composer-require-checker.
 
 ## Contributing:
 - Check your code by `composer check`
