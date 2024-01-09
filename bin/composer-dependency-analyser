@@ -15,6 +15,7 @@ Usage:
 
 Options:
     --help                      Print this help text and exit.
+    --verbose                   Print more usage examples
     --ignore-unknown-classes    Ignore when class is not found in classmap
     --composer-json <path>      Provide custom path to composer.json
     --config <path>             Provide path to php configuration file
