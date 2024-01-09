@@ -30,37 +30,43 @@ class PrinterTest extends TestCase
     {
         $printer = new Printer();
 
-        $output1 = $this->captureAndNormalizeOutput(static function () use ($printer): void {
+        $noIssuesOutput = $this->captureAndNormalizeOutput(static function () use ($printer): void {
             $printer->printResult(new AnalysisResult([], [], [], []), false);
         });
 
-        self::assertSame("No composer issues found\n\n", $this->removeColors($output1));
+        self::assertSame("No composer issues found\n\n", $this->removeColors($noIssuesOutput));
 
-        $output2 = $this->captureAndNormalizeOutput(static function () use ($printer): void {
-            $printer->printResult(
-                new AnalysisResult(
-                    ['Unknown\\Thing' => [new SymbolUsage('app/init.php', 1093)]],
-                    [
-                        'shadow/package' => [
-                            'Shadow\Utils' => [
-                                new SymbolUsage('src/Utils.php', 19),
-                                new SymbolUsage('src/Utils.php', 22),
-                            ],
-                            'Shadow\Comparator' => [new SymbolUsage('src/bootstrap.php', 25)],
-                        ],
-                        'shadow/another' => [
-                            'Another\Controller' => [new SymbolUsage('src/Printer.php', 173)],
-                        ],
+        $analysisResult = new AnalysisResult(
+            ['Unknown\\Thing' => [new SymbolUsage('app/init.php', 1093)]],
+            [
+                'shadow/package' => [
+                    'Shadow\Utils' => [
+                        new SymbolUsage('src/Utils.php', 19),
+                        new SymbolUsage('src/Utils.php', 22),
+                        new SymbolUsage('src/Application.php', 128),
+                        new SymbolUsage('src/Controller.php', 229),
                     ],
-                    ['some/package' => ['Another\Command' => [new SymbolUsage('src/ProductGenerator.php', 28)]]],
-                    ['dead/package']
-                ),
-                false
-            );
+                    'Shadow\Comparator' => [new SymbolUsage('src/Printer.php', 25)],
+                    'Third\Parser' => [new SymbolUsage('src/bootstrap.php', 317)],
+                    'Forth\Provider' => [new SymbolUsage('src/bootstrap.php', 873)],
+                ],
+                'shadow/another' => [
+                    'Another\Controller' => [new SymbolUsage('src/bootstrap.php', 173)],
+                ],
+            ],
+            ['some/package' => ['Another\Command' => [new SymbolUsage('src/ProductGenerator.php', 28)]]],
+            ['dead/package']
+        );
+
+        $regularOutput = $this->captureAndNormalizeOutput(static function () use ($printer, $analysisResult): void {
+            $printer->printResult($analysisResult, false);
+        });
+        $verboseOutput = $this->captureAndNormalizeOutput(static function () use ($printer, $analysisResult): void {
+            $printer->printResult($analysisResult, true);
         });
 
         // editorconfig-checker-disable
-        $fullOutput = <<<'OUT'
+        $expectedRegularOutput = <<<'OUT'
 
 Unknown classes!
 (those are not present in composer classmap, so we cannot check them)
@@ -74,10 +80,10 @@ Found shadow dependencies!
 (those are used, but not listed as dependency in composer.json)
 
   • shadow/package
-      Shadow\Utils in src/Utils.php:19 (+ 2 more)
+      e.g. Shadow\Utils in src/Utils.php:19 (+ 6 more)
 
   • shadow/another
-      Another\Controller in src/Printer.php:173
+      e.g. Another\Controller in src/bootstrap.php:173
 
 
 
@@ -85,7 +91,7 @@ Found dev dependencies in production code!
 (those should probably be moved to "require" section in composer.json)
 
   • some/package
-      Another\Command in src/ProductGenerator.php:28
+      e.g. Another\Command in src/ProductGenerator.php:28
 
 
 
@@ -96,8 +102,53 @@ Found unused dependencies!
 
 
 OUT;
+        $expectedVerboseOutput = <<<'OUT'
+
+Unknown classes!
+(those are not present in composer classmap, so we cannot check them)
+
+  • Unknown\Thing
+      app/init.php:1093
+
+
+
+Found shadow dependencies!
+(those are used, but not listed as dependency in composer.json)
+
+  • shadow/package
+      Shadow\Utils
+        src/Utils.php:19
+        src/Utils.php:22
+        src/Application.php:128
+        + 1 more
+      Shadow\Comparator
+        src/Printer.php:25
+      Third\Parser
+        src/bootstrap.php:317
+      + 1 more class
+  • shadow/another
+      Another\Controller
+        src/bootstrap.php:173
+
+
+Found dev dependencies in production code!
+(those should probably be moved to "require" section in composer.json)
+
+  • some/package
+      Another\Command
+        src/ProductGenerator.php:28
+
+
+Found unused dependencies!
+(those are listed in composer.json, but no usage was found in scanned paths)
+
+  • dead/package
+
+
+OUT;
         // editorconfig-checker-enable
-        self::assertSame($this->normalizeEol($fullOutput), $this->removeColors($output2));
+        self::assertSame($this->normalizeEol($expectedRegularOutput), $this->removeColors($regularOutput));
+        self::assertSame($this->normalizeEol($expectedVerboseOutput), $this->removeColors($verboseOutput));
     }
 
     private function removeColors(string $output): string

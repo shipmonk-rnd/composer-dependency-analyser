@@ -15,7 +15,7 @@ use const PHP_EOL;
 class Printer
 {
 
-    private const VERBOSE_MAX_EXAMPLE_USAGES = 5;
+    private const VERBOSE_MAX_EXAMPLE_USAGES = 3;
 
     private const COLORS = [
         '<red>' => "\033[31m",
@@ -139,7 +139,7 @@ class Printer
                     $firstUsage = $usages[0];
                     $restUsagesCount = $countOfAllUsages - 1;
                     $rest = $countOfAllUsages > 1 ? " (+ {$restUsagesCount} more)" : '';
-                    $this->printLine("      {$classname}<gray> in {$firstUsage->getFilepath()}:{$firstUsage->getLineNumber()}</gray>$rest" . PHP_EOL);
+                    $this->printLine("      <gray>e.g. </gray>{$classname}<gray> in {$firstUsage->getFilepath()}:{$firstUsage->getLineNumber()}</gray>$rest" . PHP_EOL);
                     break;
                 }
             } else {
@@ -147,8 +147,7 @@ class Printer
 
                 foreach ($usagesPerClassname as $classname => $usages) {
                     $classnamesPrinted++;
-                    $usedTimes = count($usages);
-                    $this->printLine("      {$classname}<gray>, used {$usedTimes}×</gray>");
+                    $this->printLine("      {$classname}");
 
                     foreach ($usages as $index => $usage) {
                         $this->printLine("       <gray> {$usage->getFilepath()}:{$usage->getLineNumber()}</gray>");
@@ -163,11 +162,11 @@ class Printer
                         }
                     }
 
-                    if ($classnamesPrinted === self::VERBOSE_MAX_EXAMPLE_USAGES - 1) {
-                        $restClassnamesCount = count($usagesPerClassname) - $classnamesPrinted - 1;
+                    if ($classnamesPrinted === self::VERBOSE_MAX_EXAMPLE_USAGES) {
+                        $restClassnamesCount = count($usagesPerClassname) - $classnamesPrinted;
 
                         if ($restClassnamesCount > 0) {
-                            $this->printLine("      <gray>+ {$restClassnamesCount} more classes</gray>");
+                            $this->printLine("      + {$restClassnamesCount} more class" . ($restClassnamesCount > 1 ? 'es' : ''));
                             break;
                         }
                     }
