@@ -1,14 +1,9 @@
 <?php declare(strict_types = 1);
 
-namespace ShipMonk\Composer\Crate;
+namespace ShipMonk\Composer\Result;
 
-class ClassUsage
+class SymbolUsage
 {
-
-    /**
-     * @var string
-     */
-    private $classname;
 
     /**
      * @var string
@@ -20,16 +15,10 @@ class ClassUsage
      */
     private $lineNumber;
 
-    public function __construct(string $classname, string $filepath, int $lineNumber)
+    public function __construct(string $filepath, int $lineNumber)
     {
-        $this->classname = $classname;
         $this->filepath = $filepath;
         $this->lineNumber = $lineNumber;
-    }
-
-    public function getClassname(): string
-    {
-        return $this->classname;
     }
 
     public function getFilepath(): string

@@ -12,7 +12,7 @@ new \Unknown\Clazz(); // reported as unknown
 new AppClazz();
 new Intermediate\Clazz();
 new Clazz();
-new ShadowClazz(); // reported as shadow
+
 new DevClazz(); // reported as dev
 new DateTimeImmutable();
 
@@ -21,4 +21,4 @@ echo \strlen('');
 
 \Composer\InstalledVersions::getInstalledPackages();
 
-ShadowClazz::class; // second usage to test
+ShadowClazz::class;

@@ -10,31 +10,26 @@ use RecursiveIteratorIterator;
 use ReflectionClass;
 use ShipMonk\Composer\Config\Configuration;
 use ShipMonk\Composer\Config\ErrorType;
-use ShipMonk\Composer\Crate\ClassUsage;
-use ShipMonk\Composer\Error\ClassmapEntryMissingError;
-use ShipMonk\Composer\Error\DevDependencyInProductionCodeError;
-use ShipMonk\Composer\Error\ShadowDependencyError;
-use ShipMonk\Composer\Error\SymbolError;
-use ShipMonk\Composer\Error\UnusedDependencyError;
+use ShipMonk\Composer\Result\AnalysisResult;
+use ShipMonk\Composer\Result\SymbolUsage;
 use UnexpectedValueException;
 use function array_diff;
 use function array_filter;
 use function array_keys;
-use function array_values;
 use function class_exists;
 use function defined;
 use function explode;
 use function file_get_contents;
 use function function_exists;
-use function get_class;
 use function interface_exists;
 use function is_file;
+use function ksort;
 use function realpath;
+use function sort;
 use function str_replace;
 use function strlen;
 use function substr;
 use function trim;
-use function usort;
 use const DIRECTORY_SEPARATOR;
 
 class ComposerDependencyAnalyser
@@ -86,12 +81,12 @@ class ComposerDependencyAnalyser
         $this->composerJsonDependencies = $composerJsonDependencies;
     }
 
-    /**
-     * @return list<SymbolError>
-     */
-    public function run(): array
+    public function run(): AnalysisResult
     {
-        $errors = [];
+        $classmapErrors = [];
+        $shadowErrors = [];
+        $devInProdErrors = [];
+        $unusedErrors = [];
         $usedPackages = [];
 
         foreach ($this->config->getPathsToScan() as $scanPath) {
@@ -100,7 +95,7 @@ class ComposerDependencyAnalyser
                     continue;
                 }
 
-                foreach ($this->getUsedSymbolsInFile($filePath) as $usedSymbol => $lineNumber) {
+                foreach ($this->getUsedSymbolsInFile($filePath) as $usedSymbol => $lineNumbers) {
                     if ($this->isInternalClass($usedSymbol)) {
                         continue;
                     }
@@ -115,7 +110,9 @@ class ComposerDependencyAnalyser
                             && !$this->config->shouldIgnoreUnknownClass($usedSymbol)
                             && !$this->config->shouldIgnoreError(ErrorType::UNKNOWN_CLASS, $filePath, null)
                         ) {
-                            $errors[$usedSymbol] = new ClassmapEntryMissingError(new ClassUsage($usedSymbol, $filePath, $lineNumber));
+                            foreach ($lineNumbers as $lineNumber) {
+                                $classmapErrors[$usedSymbol][] = new SymbolUsage($filePath, $lineNumber);
+                            }
                         }
 
                         continue;
@@ -133,7 +130,9 @@ class ComposerDependencyAnalyser
                         $this->isShadowDependency($packageName)
                         && !$this->config->shouldIgnoreError(ErrorType::SHADOW_DEPENDENCY, $filePath, $packageName)
                     ) {
-                        $errors[$packageName] = new ShadowDependencyError($packageName, new ClassUsage($usedSymbol, $filePath, $lineNumber));
+                        foreach ($lineNumbers as $lineNumber) {
+                            $shadowErrors[$packageName][$usedSymbol][] = new SymbolUsage($filePath, $lineNumber);
+                        }
                     }
 
                     if (
@@ -141,7 +140,9 @@ class ComposerDependencyAnalyser
                         && $this->isDevDependency($packageName)
                         && !$this->config->shouldIgnoreError(ErrorType::DEV_DEPENDENCY_IN_PROD, $filePath, $packageName)
                     ) {
-                        $errors[$packageName] = new DevDependencyInProductionCodeError($packageName, new ClassUsage($usedSymbol, $filePath, $lineNumber));
+                        foreach ($lineNumbers as $lineNumber) {
+                            $devInProdErrors[$packageName][$usedSymbol][] = new SymbolUsage($filePath, $lineNumber);
+                        }
                     }
 
                     $usedPackages[$packageName] = true;
@@ -158,20 +159,21 @@ class ComposerDependencyAnalyser
 
         foreach ($unusedDependencies as $unusedDependency) {
             if (!$this->config->shouldIgnoreError(ErrorType::UNUSED_DEPENDENCY, null, $unusedDependency)) {
-                $errors[] = new UnusedDependencyError($unusedDependency);
+                $unusedErrors[] = $unusedDependency;
             }
         }
 
-        usort($errors, static function (SymbolError $a, SymbolError $b): int {
-            $aPackageName = $a->getPackageName() ?? '';
-            $bPackageName = $b->getPackageName() ?? '';
-            $aClassName = $a->getExampleUsage() !== null ? $a->getExampleUsage()->getClassname() : '';
-            $bClassName = $b->getExampleUsage() !== null ? $b->getExampleUsage()->getClassname() : '';
+        ksort($classmapErrors);
+        ksort($shadowErrors);
+        ksort($devInProdErrors);
+        sort($unusedErrors);
 
-            return [get_class($a), $aPackageName, $aClassName] <=> [get_class($b), $bPackageName, $bClassName];
-        });
-
-        return array_values($errors);
+        return new AnalysisResult(
+            $classmapErrors,
+            $shadowErrors,
+            $devInProdErrors,
+            $unusedErrors
+        );
     }
 
     private function isShadowDependency(string $packageName): bool
@@ -193,7 +195,7 @@ class ComposerDependencyAnalyser
     }
 
     /**
-     * @return array<string, int>
+     * @return array<string, list<int>>
      */
     private function getUsedSymbolsInFile(string $filePath): array
     {

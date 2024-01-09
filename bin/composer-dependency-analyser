@@ -15,6 +15,7 @@ Usage:
 
 Options:
     --help                      Print this help text and exit.
+    --verbose                   Print more usage examples
     --ignore-unknown-classes    Ignore when class is not found in classmap
     --composer-json <path>      Provide custom path to composer.json
     --config <path>             Provide path to php configuration file
@@ -45,7 +46,7 @@ $exit = static function (string $message) use ($printer): void {
 };
 
 /** @var string[] $providedOptions */
-$providedOptions = getopt('', ['help', 'ignore-unknown-classes', 'composer-json:', 'config:'], $restIndex);
+$providedOptions = getopt('', ['help', 'verbose', 'ignore-unknown-classes', 'composer-json:', 'config:'], $restIndex);
 
 /** @var int $restIndex */
 $providedPaths = array_slice($argv, $restIndex);
@@ -154,9 +155,9 @@ foreach ($config->getPathsWithIgnore() as $pathWithIgnore) {
 }
 
 $analyser = new ComposerDependencyAnalyser($config, $vendorDir, $loaders[$vendorDir]->getClassMap(), $composerJson->dependencies);
-$errors = $analyser->run();
+$result = $analyser->run();
 
-$exitCode = $printer->printResult($errors);
+$exitCode = $printer->printResult($result, isset($providedOptions['verbose']));
 exit($exitCode);
 
 

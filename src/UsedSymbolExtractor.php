@@ -69,7 +69,7 @@ class UsedSymbolExtractor
      * It does not produce any local names in current namespace
      * - this results in very limited functionality in files without namespace
      *
-     * @return array<string, int>
+     * @return array<string, list<int>>
      * @license Inspired by https://github.com/doctrine/annotations/blob/2.0.0/lib/Doctrine/Common/Annotations/TokenParser.php
      */
     public function parseUsedClasses(): array
@@ -95,7 +95,7 @@ class UsedSymbolExtractor
 
                 if ($token[0] === T_NAME_FULLY_QUALIFIED) {
                     $symbolName = $this->normalizeBackslash($token[1]);
-                    $usedSymbols[$symbolName] = $tokenLine;
+                    $usedSymbols[$symbolName][] = $tokenLine;
                 }
 
                 if ($token[0] === T_NAME_QUALIFIED) {
@@ -103,7 +103,7 @@ class UsedSymbolExtractor
 
                     if (isset($useStatements[$neededAlias])) {
                         $symbolName = $this->normalizeBackslash($useStatements[$neededAlias] . substr($token[1], strlen($neededAlias)));
-                        $usedSymbols[$symbolName] = $tokenLine;
+                        $usedSymbols[$symbolName][] = $tokenLine;
                     }
                 }
 
@@ -112,7 +112,7 @@ class UsedSymbolExtractor
 
                     if (isset($useStatements[$name])) {
                         $symbolName = $this->normalizeBackslash($useStatements[$name]);
-                        $usedSymbols[$symbolName] = $tokenLine;
+                        $usedSymbols[$symbolName][] = $tokenLine;
                     }
                 }
             } else {
@@ -127,7 +127,7 @@ class UsedSymbolExtractor
 
                 if ($token[0] === T_NS_SEPARATOR) { // fully qualified name
                     $symbolName = $this->normalizeBackslash($this->parseNameForOldPhp());
-                    $usedSymbols[$symbolName] = $tokenLine;
+                    $usedSymbols[$symbolName][] = $tokenLine;
                 }
 
                 if ($token[0] === T_STRING) {
@@ -135,14 +135,14 @@ class UsedSymbolExtractor
 
                     if (isset($useStatements[$name])) { // unqualified name
                         $symbolName = $this->normalizeBackslash($useStatements[$name]);
-                        $usedSymbols[$symbolName] = $tokenLine;
+                        $usedSymbols[$symbolName][] = $tokenLine;
 
                     } else {
                         [$neededAlias] = explode('\\', $name, 2);
 
                         if (isset($useStatements[$neededAlias])) { // qualified name
                             $symbolName = $this->normalizeBackslash($useStatements[$neededAlias] . substr($name, strlen($neededAlias)));
-                            $usedSymbols[$symbolName] = $tokenLine;
+                            $usedSymbols[$symbolName][] = $tokenLine;
                         }
                     }
                 }

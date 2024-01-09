@@ -2,22 +2,20 @@
 
 namespace ShipMonk\Composer;
 
-use LogicException;
-use ShipMonk\Composer\Error\ClassmapEntryMissingError;
-use ShipMonk\Composer\Error\DevDependencyInProductionCodeError;
-use ShipMonk\Composer\Error\ShadowDependencyError;
-use ShipMonk\Composer\Error\SymbolError;
-use ShipMonk\Composer\Error\UnusedDependencyError;
-use function array_filter;
+use ShipMonk\Composer\Result\AnalysisResult;
+use ShipMonk\Composer\Result\SymbolUsage;
+use function array_fill_keys;
 use function array_keys;
+use function array_reduce;
 use function array_values;
 use function count;
-use function is_a;
 use function str_replace;
 use const PHP_EOL;
 
 class Printer
 {
+
+    private const VERBOSE_MAX_EXAMPLE_USAGES = 3;
 
     private const COLORS = [
         '<red>' => "\033[31m",
@@ -30,50 +28,51 @@ class Printer
         '</gray>' => "\033[0m",
     ];
 
-    /**
-     * @param list<SymbolError> $errors
-     */
-    public function printResult(array $errors): int
+    public function printResult(AnalysisResult $result, bool $verbose): int
     {
-        if ($errors === []) {
+        if ($result->hasNoErrors()) {
             $this->printLine('<green>No composer issues found</green>' . PHP_EOL);
             return 0;
         }
 
-        $classmapErrors = $this->filterErrors($errors, ClassmapEntryMissingError::class);
-        $shadowDependencyErrors = $this->filterErrors($errors, ShadowDependencyError::class);
-        $devDependencyInProductionErrors = $this->filterErrors($errors, DevDependencyInProductionCodeError::class);
-        $unusedDependencyErrors = $this->filterErrors($errors, UnusedDependencyError::class);
+        $classmapErrors = $result->getClassmapErrors();
+        $shadowDependencyErrors = $result->getShadowDependencyErrors();
+        $devDependencyInProductionErrors = $result->getDevDependencyInProductionErrors();
+        $unusedDependencyErrors = $result->getUnusedDependencyErrors();
 
         if (count($classmapErrors) > 0) {
-            $this->printErrors(
+            $this->printClassBasedErrors(
                 'Unknown classes!',
                 'those are not present in composer classmap, so we cannot check them',
-                $classmapErrors
+                $classmapErrors,
+                $verbose
             );
         }
 
         if (count($shadowDependencyErrors) > 0) {
-            $this->printErrors(
+            $this->printPackageBasedErrors(
                 'Found shadow dependencies!',
                 'those are used, but not listed as dependency in composer.json',
-                $shadowDependencyErrors
+                $shadowDependencyErrors,
+                $verbose
             );
         }
 
         if (count($devDependencyInProductionErrors) > 0) {
-            $this->printErrors(
+            $this->printPackageBasedErrors(
                 'Found dev dependencies in production code!',
                 'those should probably be moved to "require" section in composer.json',
-                $devDependencyInProductionErrors
+                $devDependencyInProductionErrors,
+                $verbose
             );
         }
 
         if (count($unusedDependencyErrors) > 0) {
-            $this->printErrors(
+            $this->printPackageBasedErrors(
                 'Found unused dependencies!',
                 'those are listed in composer.json, but no usage was found in scanned paths',
-                $unusedDependencyErrors
+                array_fill_keys($unusedDependencyErrors, []),
+                $verbose
             );
         }
 
@@ -81,34 +80,108 @@ class Printer
     }
 
     /**
-     * @param list<SymbolError> $errors
+     * @param array<string, list<SymbolUsage>> $errors
      */
-    private function printErrors(string $title, string $subtitle, array $errors): void
+    private function printClassBasedErrors(string $title, string $subtitle, array $errors, bool $verbose): void
     {
-        $this->printLine('');
-        $this->printLine("<red>$title</red>");
-        $this->printLine("<gray>($subtitle)</gray>" . PHP_EOL);
+        $this->printHeader($title, $subtitle);
 
-        foreach ($errors as $error) {
-            $usage = $error->getExampleUsage();
+        foreach ($errors as $classname => $usages) {
+            $this->printLine("  • <orange>{$classname}</orange>");
 
-            if ($error->getPackageName() !== null) {
-                $this->printLine("  • <orange>{$error->getPackageName()}</orange>");
+            if ($verbose) {
+                foreach ($usages as $index => $usage) {
+                    $this->printLine("      <gray>{$usage->getFilepath()}:{$usage->getLineNumber()}</gray>");
 
-                if ($usage !== null) {
-                    $this->printLine("    <gray>e.g. {$usage->getClassname()} in {$usage->getFilepath()}:{$usage->getLineNumber()}</gray>" . PHP_EOL);
+                    if ($index === self::VERBOSE_MAX_EXAMPLE_USAGES - 1) {
+                        $restUsagesCount = count($usages) - $index - 1;
+
+                        if ($restUsagesCount > 0) {
+                            $this->printLine("      <gray>+ {$restUsagesCount} more</gray>");
+                            break;
+                        }
+                    }
                 }
+
+                $this->printLine('');
+
             } else {
-                if ($usage === null) {
-                    throw new LogicException('Either packageName or exampleUsage must be set');
-                }
-
-                $this->printLine("  • <orange>{$usage->getClassname()}</orange>");
-                $this->printLine("    <gray>e.g. in {$usage->getFilepath()}:{$usage->getLineNumber()}</gray>" . PHP_EOL);
+                $firstUsage = $usages[0];
+                $restUsagesCount = count($usages) - 1;
+                $rest = $restUsagesCount > 0 ? " (+ {$restUsagesCount} more)" : '';
+                $this->printLine("    <gray>in {$firstUsage->getFilepath()}:{$firstUsage->getLineNumber()}</gray>$rest" . PHP_EOL);
             }
         }
 
         $this->printLine('');
+    }
+
+    /**
+     * @param array<string, array<string, list<SymbolUsage>>> $errors
+     */
+    private function printPackageBasedErrors(string $title, string $subtitle, array $errors, bool $verbose): void
+    {
+        $this->printHeader($title, $subtitle);
+
+        foreach ($errors as $packageName => $usagesPerClassname) {
+            $this->printLine("  • <orange>{$packageName}</orange>");
+
+            if (!$verbose) {
+                $countOfAllUsages = array_reduce(
+                    $usagesPerClassname,
+                    static function (int $carry, array $usages): int {
+                        return $carry + count($usages);
+                    },
+                    0
+                );
+
+                foreach ($usagesPerClassname as $classname => $usages) {
+                    $firstUsage = $usages[0];
+                    $restUsagesCount = $countOfAllUsages - 1;
+                    $rest = $countOfAllUsages > 1 ? " (+ {$restUsagesCount} more)" : '';
+                    $this->printLine("      <gray>e.g. </gray>{$classname}<gray> in {$firstUsage->getFilepath()}:{$firstUsage->getLineNumber()}</gray>$rest" . PHP_EOL);
+                    break;
+                }
+            } else {
+                $classnamesPrinted = 0;
+
+                foreach ($usagesPerClassname as $classname => $usages) {
+                    $classnamesPrinted++;
+                    $this->printLine("      {$classname}");
+
+                    foreach ($usages as $index => $usage) {
+                        $this->printLine("       <gray> {$usage->getFilepath()}:{$usage->getLineNumber()}</gray>");
+
+                        if ($index === self::VERBOSE_MAX_EXAMPLE_USAGES - 1) {
+                            $restUsagesCount = count($usages) - $index - 1;
+
+                            if ($restUsagesCount > 0) {
+                                $this->printLine("        <gray>+ {$restUsagesCount} more</gray>");
+                                break;
+                            }
+                        }
+                    }
+
+                    if ($classnamesPrinted === self::VERBOSE_MAX_EXAMPLE_USAGES) {
+                        $restClassnamesCount = count($usagesPerClassname) - $classnamesPrinted;
+
+                        if ($restClassnamesCount > 0) {
+                            $this->printLine("      + {$restClassnamesCount} more class" . ($restClassnamesCount > 1 ? 'es' : ''));
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        $this->printLine('');
+    }
+
+    private function printHeader(string $title, string $subtitle): void
+    {
+        $this->printLine('');
+        $this->printLine("<red>$title</red>");
+        $this->printLine("<gray>($subtitle)</gray>" . PHP_EOL);
     }
 
     public function printLine(string $string): void
@@ -119,20 +192,6 @@ class Printer
     private function colorize(string $string): string
     {
         return str_replace(array_keys(self::COLORS), array_values(self::COLORS), $string);
-    }
-
-    /**
-     * @template T of SymbolError
-     * @param list<SymbolError> $errors
-     * @param class-string<T> $class
-     * @return list<T>
-     */
-    private function filterErrors(array $errors, string $class): array
-    {
-        $filtered = array_filter($errors, static function (SymbolError $error) use ($class): bool {
-            return is_a($error, $class, true);
-        });
-        return array_values($filtered);
     }
 
 }
