@@ -28,7 +28,7 @@ class Printer
         '</gray>' => "\033[0m",
     ];
 
-    public function printResult(AnalysisResult $result, bool $allUsages): int
+    public function printResult(AnalysisResult $result, bool $verbose): int
     {
         if ($result->hasNoErrors()) {
             $this->printLine('<green>No composer issues found</green>' . PHP_EOL);
@@ -45,7 +45,7 @@ class Printer
                 'Unknown classes!',
                 'those are not present in composer classmap, so we cannot check them',
                 $classmapErrors,
-                $allUsages
+                $verbose
             );
         }
 
@@ -54,7 +54,7 @@ class Printer
                 'Found shadow dependencies!',
                 'those are used, but not listed as dependency in composer.json',
                 $shadowDependencyErrors,
-                $allUsages
+                $verbose
             );
         }
 
@@ -63,7 +63,7 @@ class Printer
                 'Found dev dependencies in production code!',
                 'those should probably be moved to "require" section in composer.json',
                 $devDependencyInProductionErrors,
-                $allUsages
+                $verbose
             );
         }
 
@@ -72,7 +72,7 @@ class Printer
                 'Found unused dependencies!',
                 'those are listed in composer.json, but no usage was found in scanned paths',
                 array_fill_keys($unusedDependencyErrors, []),
-                $allUsages
+                $verbose
             );
         }
 
@@ -82,14 +82,14 @@ class Printer
     /**
      * @param array<string, list<SymbolUsage>> $errors
      */
-    private function printClassBasedErrors(string $title, string $subtitle, array $errors, bool $allUsages): void
+    private function printClassBasedErrors(string $title, string $subtitle, array $errors, bool $verbose): void
     {
         $this->printHeader($title, $subtitle);
 
         foreach ($errors as $classname => $usages) {
             $this->printLine("  • <orange>{$classname}</orange>");
 
-            if ($allUsages) {
+            if ($verbose) {
                 foreach ($usages as $index => $usage) {
                     $this->printLine("      <gray>{$usage->getFilepath()}:{$usage->getLineNumber()}</gray>");
 
@@ -119,14 +119,14 @@ class Printer
     /**
      * @param array<string, array<string, list<SymbolUsage>>> $errors
      */
-    private function printPackageBasedErrors(string $title, string $subtitle, array $errors, bool $allUsages): void
+    private function printPackageBasedErrors(string $title, string $subtitle, array $errors, bool $verbose): void
     {
         $this->printHeader($title, $subtitle);
 
         foreach ($errors as $packageName => $usagesPerClassname) {
             $this->printLine("  • <orange>{$packageName}</orange>");
 
-            if (!$allUsages) {
+            if (!$verbose) {
                 $countOfAllUsages = array_reduce(
                     $usagesPerClassname,
                     static function (int $carry, array $usages): int {

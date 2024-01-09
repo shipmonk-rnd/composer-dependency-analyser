@@ -36,8 +36,8 @@ Example output:
 Found shadow dependencies!
 (those are used, but not listed as dependency in composer.json)
 
-  • symfony/service-contracts
-    e.g. Symfony\Contracts\Service\Attribute\Required in app/Controller/ProductController.php:24
+  • nette/utils
+    e.g. Nette\Utils\Strings in app/Controller/ProductController.php:24 (+ 6 more)
 
 Found unused dependencies!
 (those are listed in composer.json, but no usage was found in scanned paths)
@@ -45,6 +45,8 @@ Found unused dependencies!
   • nette/utils
 
 ```
+
+You can add `--verbose` to see more example classes & usages.
 
 ## Detected issues:
 This tool reads your `composer.json` and scans all paths listed in both `autoload` sections while analysing:
