@@ -42,7 +42,7 @@ No composer issues found
 
 OUT;
 
-        self::assertSame($expectedNoIssuesOutput, $this->removeColors($noIssuesOutput));
+        self::assertSame($this->normalizeEol($expectedNoIssuesOutput), $this->removeColors($noIssuesOutput));
 
         $analysisResult = new AnalysisResult(
             10,
