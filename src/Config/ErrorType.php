@@ -9,5 +9,6 @@ final class ErrorType
     public const SHADOW_DEPENDENCY = 'shadow-dependency';
     public const UNUSED_DEPENDENCY = 'unused-dependency';
     public const DEV_DEPENDENCY_IN_PROD = 'dev-dependency-in-prod';
+    public const PROD_DEPENDENCY_ONLY_IN_DEV = 'prod-dependency-only-in-dev';
 
 }

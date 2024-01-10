@@ -55,6 +55,7 @@ class Printer
         $classmapErrors = $result->getClassmapErrors();
         $shadowDependencyErrors = $result->getShadowDependencyErrors();
         $devDependencyInProductionErrors = $result->getDevDependencyInProductionErrors();
+        $prodDependencyOnlyInDevErrors = $result->getProdDependencyOnlyInDevErrors();
         $unusedDependencyErrors = $result->getUnusedDependencyErrors();
 
         if (count($classmapErrors) > 0) {
@@ -80,6 +81,15 @@ class Printer
                 'Found dev dependencies in production code!',
                 'those should probably be moved to "require" section in composer.json',
                 $devDependencyInProductionErrors,
+                $verbose
+            );
+        }
+
+        if (count($prodDependencyOnlyInDevErrors) > 0) {
+            $this->printPackageBasedErrors(
+                'Found prod dependencies used only in dev paths!',
+                'those should probably be moved to "require-dev" section in composer.json',
+                array_fill_keys($prodDependencyOnlyInDevErrors, []),
                 $verbose
             );
         }

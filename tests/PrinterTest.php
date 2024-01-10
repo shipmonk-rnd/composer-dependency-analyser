@@ -31,7 +31,7 @@ class PrinterTest extends TestCase
         $printer = new Printer('/app');
 
         $noIssuesOutput = $this->captureAndNormalizeOutput(static function () use ($printer): void {
-            $printer->printResult(new AnalysisResult(2, 0.123, [], [], [], []), false);
+            $printer->printResult(new AnalysisResult(2, 0.123, [], [], [], [], []), false);
         });
 
         $expectedNoIssuesOutput = <<<'OUT'
@@ -65,6 +65,7 @@ OUT;
                 ],
             ],
             ['some/package' => ['Another\Command' => [new SymbolUsage('/app/src/ProductGenerator.php', 28)]]],
+            [],
             ['dead/package']
         );
 

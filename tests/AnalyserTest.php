@@ -141,6 +141,18 @@ class AnalyserTest extends TestCase
             ])
         ];
 
+        yield 'prod only in dev' => [
+            static function (Configuration $config) use ($variousUsagesPath): void {
+                $config->addPathToScan($variousUsagesPath, true);
+            },
+            $this->createAnalysisResult(1, [
+                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11)]],
+                ErrorType::PROD_DEPENDENCY_ONLY_IN_DEV => ['regular/package'],
+                ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24)]]],
+                ErrorType::UNUSED_DEPENDENCY => ['regular/dead']
+            ])
+        ];
+
         yield 'scan dir' => [
             static function (Configuration $config) use ($variousUsagesPath): void {
                 $config->addPathToScan(dirname($variousUsagesPath), false);
@@ -300,6 +312,18 @@ class AnalyserTest extends TestCase
             ])
         ];
 
+        yield 'ignore all prod-only-in-dev' => [
+            static function (Configuration $config) use ($variousUsagesPath): void {
+                $config->addPathToScan($variousUsagesPath, true);
+                $config->ignoreErrors([ErrorType::PROD_DEPENDENCY_ONLY_IN_DEV]);
+            },
+            $this->createAnalysisResult(1, [
+                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11)]],
+                ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24)]]],
+                ErrorType::UNUSED_DEPENDENCY => ['regular/dead'],
+            ])
+        ];
+
         yield 'ignore all unknown' => [
             static function (Configuration $config) use ($variousUsagesPath): void {
                 $config->addPathToScan($variousUsagesPath, false);
@@ -346,6 +370,7 @@ class AnalyserTest extends TestCase
             array_filter($args[ErrorType::UNKNOWN_CLASS] ?? []), // @phpstan-ignore-line ignore mixed
             array_filter($args[ErrorType::SHADOW_DEPENDENCY] ?? []), // @phpstan-ignore-line ignore mixed
             array_filter($args[ErrorType::DEV_DEPENDENCY_IN_PROD] ?? []), // @phpstan-ignore-line ignore mixed
+            array_filter($args[ErrorType::PROD_DEPENDENCY_ONLY_IN_DEV] ?? []), // @phpstan-ignore-line ignore mixed
             array_filter($args[ErrorType::UNUSED_DEPENDENCY] ?? []) // @phpstan-ignore-line ignore mixed
         );
     }

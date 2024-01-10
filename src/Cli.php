@@ -22,6 +22,7 @@ class Cli
         'ignore-shadow-deps',
         'ignore-unused-deps',
         'ignore-dev-in-prod-deps',
+        'ignore-prod-only-in-dev-deps',
         'ignore-unknown-classes',
         'composer-json:',
         'config:'
@@ -118,6 +119,7 @@ class Cli
      *     ignore-shadow-deps?: bool,
      *     ignore-unused-deps?: bool,
      *     ignore-dev-in-prod-deps?: bool,
+     *     ignore-prod-only-in-dev-deps?: bool,
      *     ignore-unknown-classes?: bool,
      *     composer-json?: string,
      *     config?: string

@@ -182,7 +182,11 @@ class Configuration
     public function ignoreErrorsOnPath(string $path, array $errorTypes): self
     {
         if (in_array(ErrorType::UNUSED_DEPENDENCY, $errorTypes, true)) {
-            throw new LogicException('Unused dependency errors cannot be ignored on a path');
+            throw new LogicException('UNUSED_DEPENDENCY errors cannot be ignored on a path');
+        }
+
+        if (in_array(ErrorType::PROD_DEPENDENCY_ONLY_IN_DEV, $errorTypes, true)) {
+            throw new LogicException('PROD_DEPENDENCY_ONLY_IN_DEV errors cannot be ignored on a path');
         }
 
         $realpath = $this->realpath($path);
