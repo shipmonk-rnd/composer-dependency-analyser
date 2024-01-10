@@ -147,7 +147,7 @@ $classNameRegex = '[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*'; // https://www.php
 $dicFileContents = file_get_contents(__DIR__ . '/config/services.yaml');
 
 preg_match_all(
-    "~($classNameRegex\\\\$classNameRegex(?:\\\\$classNameRegex)*)~", // at least one backslash
+    "~$classNameRegex(?:\\\\$classNameRegex)+~", // at least one backslash
     $dicFileContents,
     $matches
 ); // or parse the yaml properly
