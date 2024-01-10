@@ -45,7 +45,8 @@ foreach ($autoloadFiles as $autoloadFile) {
     }
 }
 
-$printer = new Printer();
+$cwd = getcwd();
+$printer = new Printer($cwd === false ? '' : $cwd);
 
 /**
  * @return never
@@ -55,7 +56,6 @@ $exit = static function (string $message) use ($printer): void {
     exit(255);
 };
 
-$cwd = getcwd();
 if ($cwd === false) {
     $exit('Cannot get current working directory');
 }
