@@ -88,7 +88,7 @@ if (isset($providedOptions['config'])) {
 }
 
 if (is_file($configPath)) {
-    $printer->printLine('Using config ' . $configPath . PHP_EOL);
+    $printer->printLine('<gray>Using config</gray> ' . $configPath);
 
     $config = require $configPath;
 
