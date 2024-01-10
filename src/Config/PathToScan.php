@@ -1,6 +1,6 @@
 <?php declare(strict_types = 1);
 
-namespace ShipMonk\Composer\Config;
+namespace ShipMonk\ComposerDependencyAnalyser\Config;
 
 class PathToScan
 {

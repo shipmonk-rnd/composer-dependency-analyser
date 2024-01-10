@@ -23,12 +23,12 @@
     },
     "autoload": {
         "psr-4": {
-            "ShipMonk\\Composer\\": "src/"
+            "ShipMonk\\ComposerDependencyAnalyser\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "ShipMonk\\Composer\\": "tests/"
+            "ShipMonk\\ComposerDependencyAnalyser\\": "tests/"
         },
         "classmap": [
             "tests/vendor/",

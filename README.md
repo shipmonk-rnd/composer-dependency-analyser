@@ -76,14 +76,14 @@ If you want to run it elsewhere, you can use `--composer-json=path/to/composer.j
 Currently, it only supports those autoload sections: `psr-4`, `psr-0`, `files`.
 
 ## Configuration:
-You can provide custom path to config file by `--config=path/to/config.php` where the config file is PHP file returning `ShipMonk\Composer\Config\Configuration` object.
+You can provide custom path to config file by `--config=path/to/config.php` where the config file is PHP file returning `ShipMonk\ComposerDependencyAnalyser\Config\Configuration` object.
 Here is example of what you can do:
 
 ```php
 <?php
 
-use ShipMonk\Composer\Config\Configuration;
-use ShipMonk\Composer\Config\ErrorType;
+use ShipMonk\ComposerDependencyAnalyser\Config\Configuration;
+use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
 
 $config = new Configuration();
 

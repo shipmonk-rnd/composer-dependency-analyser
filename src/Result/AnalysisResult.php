@@ -1,6 +1,6 @@
 <?php declare(strict_types = 1);
 
-namespace ShipMonk\Composer\Result;
+namespace ShipMonk\ComposerDependencyAnalyser\Result;
 
 class AnalysisResult
 {

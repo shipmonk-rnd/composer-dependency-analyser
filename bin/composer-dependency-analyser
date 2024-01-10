@@ -2,11 +2,11 @@
 <?php declare(strict_types=1);
 
 use Composer\Autoload\ClassLoader;
-use ShipMonk\Composer\ComposerDependencyAnalyser;
-use ShipMonk\Composer\ComposerJson;
-use ShipMonk\Composer\Config\Configuration;
-use ShipMonk\Composer\Config\ErrorType;
-use ShipMonk\Composer\Printer;
+use ShipMonk\ComposerDependencyAnalyser\ComposerDependencyAnalyser;
+use ShipMonk\ComposerDependencyAnalyser\ComposerJson;
+use ShipMonk\ComposerDependencyAnalyser\Config\Configuration;
+use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
+use ShipMonk\ComposerDependencyAnalyser\Printer;
 
 $usage = <<<EOD
 
@@ -19,7 +19,7 @@ Options:
     --ignore-unknown-classes    Ignore when class is not found in classmap
     --composer-json <path>      Provide custom path to composer.json
     --config <path>             Provide path to php configuration file
-                                (must return ShipMonk\Composer\Config\Configuration instance)
+                                (must return ShipMonk\ComposerDependencyAnalyser\Config\Configuration instance)
 
 EOD;
 

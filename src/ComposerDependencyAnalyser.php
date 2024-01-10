@@ -1,6 +1,6 @@
 <?php declare(strict_types = 1);
 
-namespace ShipMonk\Composer;
+namespace ShipMonk\ComposerDependencyAnalyser;
 
 use DirectoryIterator;
 use Generator;
@@ -8,10 +8,10 @@ use LogicException;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use ReflectionClass;
-use ShipMonk\Composer\Config\Configuration;
-use ShipMonk\Composer\Config\ErrorType;
-use ShipMonk\Composer\Result\AnalysisResult;
-use ShipMonk\Composer\Result\SymbolUsage;
+use ShipMonk\ComposerDependencyAnalyser\Config\Configuration;
+use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
+use ShipMonk\ComposerDependencyAnalyser\Result\AnalysisResult;
+use ShipMonk\ComposerDependencyAnalyser\Result\SymbolUsage;
 use UnexpectedValueException;
 use function array_diff;
 use function array_filter;

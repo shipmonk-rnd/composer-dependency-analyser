@@ -1,6 +1,6 @@
 <?php declare(strict_types = 1);
 
-namespace ShipMonk\Composer;
+namespace ShipMonk\ComposerDependencyAnalyser;
 
 use function array_merge;
 use function count;
