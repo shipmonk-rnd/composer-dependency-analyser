@@ -128,10 +128,34 @@ return $config
     // allow using classes not present in composer's autoloader by regex
     // e.g. when you want to ignore whole namespace of classes
     ->ignoreUnknownClassesRegex('~^PHPStan\\.*?~')
+
+    // force certain classes to be treated as used
+    // handy when dealing with dependencies in non-php files (e.g. DIC config), see example below
+    // beware that those are not validated and do not even trigger unknown class error
+    ->addForceUsedSymbols($classesExtractedFromNeonJsonYamlXmlEtc)
 ;
 ```
 
 All paths are expected to exist. If you need some glob functionality, you can do it in your config file and pass the expanded list to e.g. `ignoreErrorsOnPaths`.
+
+### Detecting classes from non-php files:
+
+Simplest fuzzy search for classnames within your yaml/neon/xml/json files might look like this:
+
+```php
+$classNameRegex = '[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*'; // https://www.php.net/manual/en/language.oop5.basic.php
+$dicFileContents = file_get_contents(__DIR__ . '/config/services.yaml');
+
+preg_match_all(
+    "~($classNameRegex\\\\$classNameRegex(?:\\\\$classNameRegex)*)~", // at least one backslash
+    $dicFileContents,
+    $matches
+); // or parse the yaml properly
+
+$config->addForceUsedSymbols($matches[1]); // possibly filter by class_exists || interface_exists
+```
+
+Similar approach should help you to avoid false positives in unused dependencies due to the usages being present in e.g. DIC config files only.
 
 ## Limitations:
 - Files without namespace has limited support

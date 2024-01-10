@@ -25,6 +25,7 @@ class ComposerDependencyAnalyserTest extends TestCase
         $vendorDir = __DIR__ . '/vendor';
         $classmap = [
             'Regular\Package\Clazz' => $vendorDir . '/regular/package/Clazz.php',
+            'Regular\Dead\Clazz' => $vendorDir . '/regular/dead/Clazz.php',
             'Shadow\Package\Clazz' => $vendorDir . '/shadow/package/Clazz.php',
             'Dev\Package\Clazz' => $vendorDir . '/dev/package/Clazz.php',
             'App\Clazz' => $appDir . '/Clazz.php',
@@ -119,6 +120,18 @@ class ComposerDependencyAnalyserTest extends TestCase
                 ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16)]]],
                 ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24)]]],
                 ErrorType::UNUSED_DEPENDENCY => ['dev/dead', 'regular/dead']
+            ])
+        ];
+
+        yield 'default, force use dead class' => [
+            static function (Configuration $config) use ($variousUsagesPath): void {
+                $config->addForceUsedSymbol('Regular\Dead\Clazz');
+                $config->addPathToScan($variousUsagesPath, false);
+            },
+            $this->createAnalysisResult([
+                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11)]],
+                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16)]]],
+                ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24)]]],
             ])
         ];
 

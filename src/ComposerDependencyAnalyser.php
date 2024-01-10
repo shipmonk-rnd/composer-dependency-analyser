@@ -105,7 +105,7 @@ class ComposerDependencyAnalyser
                         continue;
                     }
 
-                    if (!isset($this->optimizedClassmap[$usedSymbol])) {
+                    if (!$this->isInClassmap($usedSymbol)) {
                         if (
                             !$this->isConstOrFunction($usedSymbol)
                             && !$this->config->shouldIgnoreUnknownClass($usedSymbol)
@@ -119,7 +119,7 @@ class ComposerDependencyAnalyser
                         continue;
                     }
 
-                    $classmapPath = $this->optimizedClassmap[$usedSymbol];
+                    $classmapPath = $this->getPathFromClassmap($usedSymbol);
 
                     if (!$this->isVendorPath($classmapPath)) {
                         continue; // local class
@@ -149,6 +149,21 @@ class ComposerDependencyAnalyser
                     $usedPackages[$packageName] = true;
                 }
             }
+        }
+
+        foreach ($this->config->getForceUsedSymbols() as $forceUsedSymbol) {
+            if (!$this->isInClassmap($forceUsedSymbol)) {
+                continue;
+            }
+
+            $classmapPath = $this->getPathFromClassmap($forceUsedSymbol);
+
+            if (!$this->isVendorPath($classmapPath)) {
+                continue;
+            }
+
+            $forceUsedPackage = $this->getPackageNameFromVendorPath($classmapPath);
+            $usedPackages[$forceUsedPackage] = true;
         }
 
         if ($this->config->shouldReportUnusedDevDependencies()) {
@@ -261,6 +276,20 @@ class ComposerDependencyAnalyser
     private function isVendorPath(string $realPath): bool
     {
         return substr($realPath, 0, strlen($this->vendorDir)) === $this->vendorDir;
+    }
+
+    private function isInClassmap(string $usedSymbol): bool
+    {
+        return isset($this->optimizedClassmap[$usedSymbol]);
+    }
+
+    private function getPathFromClassmap(string $usedSymbol): string
+    {
+        if (!$this->isInClassmap($usedSymbol)) {
+            throw new LogicException("Class $usedSymbol not found in classmap");
+        }
+
+        return $this->optimizedClassmap[$usedSymbol];
     }
 
     private function realPath(string $filePath): string
