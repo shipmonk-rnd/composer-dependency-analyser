@@ -123,6 +123,10 @@ return $config
     // allow using classes not present in composer's autoloader by regex
     // e.g. when you want to ignore whole namespace of classes
     ->ignoreUnknownClassesRegex('~^PHPStan\\.*?~')
+
+    // report unused dependencies even for dev packages
+    // typically, dev packages is some CI tooling without references in code, so this is not enabled by default
+    ->enableAnalysisOfUnusedDevDependencies()
 ;
 ```
 

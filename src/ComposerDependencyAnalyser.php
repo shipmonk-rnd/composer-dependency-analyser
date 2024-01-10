@@ -151,10 +151,16 @@ class ComposerDependencyAnalyser
             }
         }
 
-        $unusedDependencies = array_diff(
-            array_keys(array_filter($this->composerJsonDependencies, static function (bool $devDependency) {
+        if ($this->config->shouldReportUnusedDevDependencies()) {
+            $dependenciesForUnusedAnalysis = array_keys($this->composerJsonDependencies);
+        } else {
+            $dependenciesForUnusedAnalysis = array_keys(array_filter($this->composerJsonDependencies, static function (bool $devDependency) {
                 return !$devDependency; // dev deps are typically used only in CI
-            })),
+            }));
+        }
+
+        $unusedDependencies = array_diff(
+            $dependenciesForUnusedAnalysis,
             array_keys($usedPackages)
         );
 
