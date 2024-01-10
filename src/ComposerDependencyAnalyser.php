@@ -21,6 +21,7 @@ use function defined;
 use function explode;
 use function file_get_contents;
 use function function_exists;
+use function in_array;
 use function interface_exists;
 use function is_file;
 use function ksort;
@@ -281,7 +282,10 @@ class ComposerDependencyAnalyser
      */
     private function isComposerInternalClass(string $usedSymbol): bool
     {
-        return $usedSymbol === 'Composer\\InstalledVersions';
+        return in_array($usedSymbol, [
+            'Composer\\InstalledVersions',
+            'Composer\\Autoload\\ClassLoader'
+        ], true);
     }
 
 }
