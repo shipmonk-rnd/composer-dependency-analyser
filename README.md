@@ -51,29 +51,31 @@ You can add `--verbose` to see more example classes & usages.
 ## Detected issues:
 This tool reads your `composer.json` and scans all paths listed in both `autoload` sections while analysing:
 
-- **Shadowed dependencies**
+### Shadowed dependencies
   - Those are dependencies of your dependencies, which are not listed in `composer.json`
   - Your code can break when your direct dependency gets updated to newer version which does not require that shadowed dependency anymore
   - You should list all those classes within your dependencies
+  - Ignorable by `--ignore-shadow-deps` or more granularly by `--config`
 
-- **Unused dependencies**
+### Unused dependencies
   - Any non-dev dependency is expected to have at least single usage within the scanned paths
   - To avoid false positives here, you might need to adjust scanned paths or ignore some packages by `--config`
+  - Ignorable by `--ignore-unused-deps` or more granularly by `--config`
 
-- **Dev dependencies in production code**
+### Dev dependencies in production code
   - For libraries, this is risky as your users might not have those installed
   - For applications, it can break once you run it with `composer install --no-dev`
   - You should move those from `require-dev` to `require`
-  - If you want to ignore some packages here, use `--config`
+  - Ignorable by `--ignore-dev-in-prod-deps` or more granularly by `--config`
 
-- **Unknown classes**
+### Unknown classes
   - Any class missing in composer classmap gets reported as we cannot say if that one is shadowed or not
-  - This might be expected in some cases, so you can disable this behaviour by `--ignore-unknown-classes` or more granularly by `--config`
+  - Ignorable by `--ignore-unknown-classes` or more granularly by `--config`
 
 It is expected to run this tool in root of your project, where the `composer.json` is located.
 If you want to run it elsewhere, you can use `--composer-json=path/to/composer.json` option.
 
-Currently, it only supports those autoload sections: `psr-4`, `psr-0`, `files`.
+Currently, it only supports those `composer.json` autoload sections: `psr-4`, `psr-0`, `files`.
 
 ## Configuration:
 You can provide custom path to config file by `--config=path/to/config.php` where the config file is PHP file returning `ShipMonk\ComposerDependencyAnalyser\Config\Configuration` object.
