@@ -1,9 +1,9 @@
 <?php declare(strict_types = 1);
 
-namespace ShipMonk\Composer;
+namespace ShipMonk\ComposerDependencyAnalyser;
 
-use ShipMonk\Composer\Result\AnalysisResult;
-use ShipMonk\Composer\Result\SymbolUsage;
+use ShipMonk\ComposerDependencyAnalyser\Result\AnalysisResult;
+use ShipMonk\ComposerDependencyAnalyser\Result\SymbolUsage;
 use function array_fill_keys;
 use function array_keys;
 use function array_reduce;

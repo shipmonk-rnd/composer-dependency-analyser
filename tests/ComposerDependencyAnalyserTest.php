@@ -1,13 +1,13 @@
 <?php declare(strict_types = 1);
 
-namespace ShipMonk\Composer;
+namespace ShipMonk\ComposerDependencyAnalyser;
 
 use LogicException;
 use PHPUnit\Framework\TestCase;
-use ShipMonk\Composer\Config\Configuration;
-use ShipMonk\Composer\Config\ErrorType;
-use ShipMonk\Composer\Result\AnalysisResult;
-use ShipMonk\Composer\Result\SymbolUsage;
+use ShipMonk\ComposerDependencyAnalyser\Config\Configuration;
+use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
+use ShipMonk\ComposerDependencyAnalyser\Result\AnalysisResult;
+use ShipMonk\ComposerDependencyAnalyser\Result\SymbolUsage;
 use function array_filter;
 use function dirname;
 use function realpath;
