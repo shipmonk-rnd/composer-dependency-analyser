@@ -16,10 +16,17 @@ Usage:
 Options:
     --help                      Print this help text and exit.
     --verbose                   Print more usage examples
-    --ignore-unknown-classes    Ignore when class is not found in classmap
     --composer-json <path>      Provide custom path to composer.json
     --config <path>             Provide path to php configuration file
                                 (must return ShipMonk\ComposerDependencyAnalyser\Config\Configuration instance)
+
+Ignore options:
+    (or use --config for better granularity)
+
+    --ignore-unknown-classes    Ignore when class is not found in classmap
+    --ignore-unused-deps        Ignore all unused dependency issues
+    --ignore-shadow-deps        Ignore all shadow dependency issues
+    --ignore-dev-in-prod-deps   Ignore all dev dependency in production code issues
 
 EOD;
 
@@ -46,7 +53,16 @@ $exit = static function (string $message) use ($printer): void {
 };
 
 /** @var string[] $providedOptions */
-$providedOptions = getopt('', ['help', 'verbose', 'ignore-unknown-classes', 'composer-json:', 'config:'], $restIndex);
+$providedOptions = getopt('', [
+    'help',
+    'verbose',
+    'ignore-shadow-deps',
+    'ignore-unused-deps',
+    'ignore-dev-in-prod-deps',
+    'ignore-unknown-classes',
+    'composer-json:',
+    'config:'
+], $restIndex);
 
 /** @var int $restIndex */
 $providedPaths = array_slice($argv, $restIndex);
@@ -80,9 +96,21 @@ if (is_file($configPath)) {
 }
 
 $ignoreUnknown = isset($providedOptions['ignore-unknown-classes']);
+$ignoreUnused = isset($providedOptions['ignore-unused-deps']);
+$ignoreShadow = isset($providedOptions['ignore-shadow-deps']);
+$ignoreDevInProd = isset($providedOptions['ignore-dev-in-prod-deps']);
 
 if ($ignoreUnknown) {
     $config->ignoreErrors([ErrorType::UNKNOWN_CLASS]);
+}
+if ($ignoreUnused) {
+    $config->ignoreErrors([ErrorType::UNUSED_DEPENDENCY]);
+}
+if ($ignoreShadow) {
+    $config->ignoreErrors([ErrorType::SHADOW_DEPENDENCY]);
+}
+if ($ignoreDevInProd) {
+    $config->ignoreErrors([ErrorType::DEV_DEPENDENCY_IN_PROD]);
 }
 
 /** @var non-empty-string $cwd */
