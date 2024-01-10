@@ -1,6 +1,6 @@
 {
     "name": "shipmonk/composer-dependency-analyser",
-    "description": "Fast detection of shadow composer dependencies",
+    "description": "Fast detection of composer dependency issues (dead dependencies, shadow dependencies, misplaced dependencies)",
     "license": [
         "MIT"
     ],
