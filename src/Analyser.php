@@ -33,7 +33,7 @@ use function substr;
 use function trim;
 use const DIRECTORY_SEPARATOR;
 
-class ComposerDependencyAnalyser
+class Analyser
 {
 
     /**
