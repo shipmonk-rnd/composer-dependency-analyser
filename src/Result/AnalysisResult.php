@@ -121,6 +121,7 @@ class AnalysisResult
         return $this->unusedDependencyErrors === []
             && $this->classmapErrors === []
             && $this->devDependencyInProductionErrors === []
+            && $this->prodDependencyOnlyInDevErrors === []
             && $this->shadowDependencyErrors === [];
     }
 
