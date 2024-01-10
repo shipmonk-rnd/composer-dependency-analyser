@@ -133,3 +133,6 @@ All paths are expected to exist. If you need some glob functionality, you can do
 - Check your code by `composer check`
 - Autofix coding-style by `composer fix:cs`
 - All functionality must be tested
+
+## Supported PHP versions
+- PHP 7.2 - 8.3
