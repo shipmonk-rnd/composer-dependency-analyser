@@ -3,7 +3,7 @@
 
 use Composer\Autoload\ClassLoader;
 use ShipMonk\ComposerDependencyAnalyser\Cli;
-use ShipMonk\ComposerDependencyAnalyser\ComposerDependencyAnalyser;
+use ShipMonk\ComposerDependencyAnalyser\Analyser;
 use ShipMonk\ComposerDependencyAnalyser\ComposerJson;
 use ShipMonk\ComposerDependencyAnalyser\Config\Configuration;
 use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
@@ -189,7 +189,7 @@ foreach ($config->getPathsWithIgnore() as $pathWithIgnore) {
 }
 
 $stopwatch = new Stopwatch();
-$analyser = new ComposerDependencyAnalyser($stopwatch, $config, $vendorDir, $loaders[$vendorDir]->getClassMap(), $composerJson->dependencies);
+$analyser = new Analyser($stopwatch, $config, $vendorDir, $loaders[$vendorDir]->getClassMap(), $composerJson->dependencies);
 $result = $analyser->run();
 
 $exitCode = $printer->printResult($result, isset($providedOptions['verbose']));

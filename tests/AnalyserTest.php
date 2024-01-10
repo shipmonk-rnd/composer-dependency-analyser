@@ -12,7 +12,7 @@ use function array_filter;
 use function dirname;
 use function realpath;
 
-class ComposerDependencyAnalyserTest extends TestCase
+class AnalyserTest extends TestCase
 {
 
     /**
@@ -45,7 +45,7 @@ class ComposerDependencyAnalyserTest extends TestCase
             ->method('stop')
             ->willReturn(0.0);
 
-        $detector = new ComposerDependencyAnalyser(
+        $detector = new Analyser(
             $stopwatch,
             $config,
             $vendorDir,
