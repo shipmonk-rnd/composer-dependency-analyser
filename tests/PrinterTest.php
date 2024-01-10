@@ -65,7 +65,7 @@ OUT;
                 ],
             ],
             ['some/package' => ['Another\Command' => [new SymbolUsage('/app/src/ProductGenerator.php', 28)]]],
-            [],
+            ['misplaced/package'],
             ['dead/package']
         );
 
@@ -104,6 +104,12 @@ Found dev dependencies in production code!
   • some/package
       e.g. Another\Command in src/ProductGenerator.php:28
 
+
+
+Found prod dependencies used only in dev paths!
+(those should probably be moved to "require-dev" section in composer.json)
+
+  • misplaced/package
 
 
 Found unused dependencies!
@@ -148,6 +154,12 @@ Found dev dependencies in production code!
   • some/package
       Another\Command
         src/ProductGenerator.php:28
+
+
+Found prod dependencies used only in dev paths!
+(those should probably be moved to "require-dev" section in composer.json)
+
+  • misplaced/package
 
 
 Found unused dependencies!
