@@ -27,6 +27,11 @@ class Configuration
     private $reportUnusedDevDependencies = false;
 
     /**
+     * @var list<string>
+     */
+    private $forceUsedSymbols = [];
+
+    /**
      * @var list<ErrorType::*>
      */
     private $ignoredErrors = [];
@@ -101,6 +106,28 @@ class Configuration
     public function setFileExtensions(array $extensions): self
     {
         $this->fileExtensions = $extensions;
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    public function addForceUsedSymbol(string $symbol): self
+    {
+        $this->forceUsedSymbols[] = $symbol;
+        return $this;
+    }
+
+    /**
+     * @param list<string> $symbols
+     * @return $this
+     */
+    public function addForceUsedSymbols(array $symbols): self
+    {
+        foreach ($symbols as $symbol) {
+            $this->addForceUsedSymbol($symbol);
+        }
+
         return $this;
     }
 
@@ -236,6 +263,14 @@ class Configuration
     public function getFileExtensions(): array
     {
         return $this->fileExtensions;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function getForceUsedSymbols(): array
+    {
+        return $this->forceUsedSymbols;
     }
 
     /**
