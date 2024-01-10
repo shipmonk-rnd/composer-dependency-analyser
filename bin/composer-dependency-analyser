@@ -9,6 +9,7 @@ use ShipMonk\ComposerDependencyAnalyser\Config\Configuration;
 use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
 use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidCliException;
 use ShipMonk\ComposerDependencyAnalyser\Printer;
+use ShipMonk\ComposerDependencyAnalyser\Stopwatch;
 
 $usage = <<<EOD
 
@@ -187,7 +188,8 @@ foreach ($config->getPathsWithIgnore() as $pathWithIgnore) {
     }
 }
 
-$analyser = new ComposerDependencyAnalyser($config, $vendorDir, $loaders[$vendorDir]->getClassMap(), $composerJson->dependencies);
+$stopwatch = new Stopwatch();
+$analyser = new ComposerDependencyAnalyser($stopwatch, $config, $vendorDir, $loaders[$vendorDir]->getClassMap(), $composerJson->dependencies);
 $result = $analyser->run();
 
 $exitCode = $printer->printResult($result, isset($providedOptions['verbose']));

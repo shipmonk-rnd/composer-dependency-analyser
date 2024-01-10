@@ -6,6 +6,16 @@ class AnalysisResult
 {
 
     /**
+     * @var int
+     */
+    private $scannedFilesCount;
+
+    /**
+     * @var float
+     */
+    private $elapsedTime;
+
+    /**
      * @var array<string, list<SymbolUsage>>
      */
     private $classmapErrors;
@@ -32,16 +42,30 @@ class AnalysisResult
      * @param list<string> $unusedDependencyErrors package[]
      */
     public function __construct(
+        int $scannedFilesCount,
+        float $elapsedTime,
         array $classmapErrors,
         array $shadowDependencyErrors,
         array $devDependencyInProductionErrors,
         array $unusedDependencyErrors
     )
     {
+        $this->scannedFilesCount = $scannedFilesCount;
+        $this->elapsedTime = $elapsedTime;
         $this->classmapErrors = $classmapErrors;
         $this->shadowDependencyErrors = $shadowDependencyErrors;
         $this->devDependencyInProductionErrors = $devDependencyInProductionErrors;
         $this->unusedDependencyErrors = $unusedDependencyErrors;
+    }
+
+    public function getScannedFilesCount(): int
+    {
+        return $this->scannedFilesCount;
+    }
+
+    public function getElapsedTime(): float
+    {
+        return $this->elapsedTime;
     }
 
     /**
