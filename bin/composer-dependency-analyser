@@ -26,10 +26,11 @@ Options:
 Ignore options:
     (or use --config for better granularity)
 
-    --ignore-unknown-classes    Ignore when class is not found in classmap
-    --ignore-unused-deps        Ignore all unused dependency issues
-    --ignore-shadow-deps        Ignore all shadow dependency issues
-    --ignore-dev-in-prod-deps   Ignore all dev dependency in production code issues
+    --ignore-unknown-classes        Ignore when class is not found in classmap
+    --ignore-unused-deps            Ignore all unused dependency issues
+    --ignore-shadow-deps            Ignore all shadow dependency issues
+    --ignore-dev-in-prod-deps       Ignore all dev dependency in production code issues
+    --ignore-prod-only-in-dev-deps  Ignore all prod dependency used only in dev paths issues
 
 
 EOD;
@@ -103,6 +104,7 @@ $ignoreUnknown = isset($providedOptions['ignore-unknown-classes']);
 $ignoreUnused = isset($providedOptions['ignore-unused-deps']);
 $ignoreShadow = isset($providedOptions['ignore-shadow-deps']);
 $ignoreDevInProd = isset($providedOptions['ignore-dev-in-prod-deps']);
+$ignoreProdOnlyInDev = isset($providedOptions['ignore-prod-only-in-dev-deps']);
 
 if ($ignoreUnknown) {
     $config->ignoreErrors([ErrorType::UNKNOWN_CLASS]);
@@ -115,6 +117,9 @@ if ($ignoreShadow) {
 }
 if ($ignoreDevInProd) {
     $config->ignoreErrors([ErrorType::DEV_DEPENDENCY_IN_PROD]);
+}
+if ($ignoreProdOnlyInDev) {
+    $config->ignoreErrors([ErrorType::PROD_DEPENDENCY_ONLY_IN_DEV]);
 }
 
 $composerJsonPath = isset($providedOptions['composer-json'])

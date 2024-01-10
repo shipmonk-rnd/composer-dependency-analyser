@@ -2,13 +2,13 @@
 
 This package aims to detect composer dependency issues in your project.
 
-It detects **shadowed dependencies** and **dead dependencies** similar to other tools, but **MUCH faster**:
+It detects **shadowed composer dependencies** and **unused composer dependencies** similar to other tools, but **MUCH faster**:
 
-| Project                                   | Dead dependency  | Shadow dependency | Time*       |
-|-------------------------------------------|------------------|-------------------|-------------|
-| maglnet/composer-require-checker          | ❌                | ✅                 | 124 secs |
-| icanhazstring/composer-unused             | ✅                | ❌                 | 72 secs  |
-| **shipmonk/composer-dependency-analyser** | ✅                | ✅                 | **3 secs** |
+| Project                                   | Dead<br/>dependency | Shadow<br/>dependency  | Misplaced<br/>in `require` | Misplaced<br/> in `require-dev` | Time*      |
+|-------------------------------------------|---------------------|------------------------|--------------------------|-------------------------------|------------|
+| maglnet/composer-require-checker          | ❌                   | ✅                     | ❌                         |  ❌                             | 124 secs   |
+| icanhazstring/composer-unused             | ✅                   | ❌                     | ❌                         |  ❌                             | 72 secs    |
+| **shipmonk/composer-dependency-analyser** | ✅                   | ✅                     | ✅                         |  ✅                             | **3 secs** |
 
 <sup><sub>\*Time measured on codebase with ~13 000 files</sub></sup>
 
@@ -21,7 +21,7 @@ This means you can safely add this tool to CI without wasting resources.
 composer require --dev shipmonk/composer-dependency-analyser
 ```
 
-*Note that this package itself has zero composer dependencies.*
+*Note that this package itself has **zero composer dependencies.***
 
 ## Usage:
 
@@ -67,6 +67,11 @@ This tool reads your `composer.json` and scans all paths listed in both `autoloa
   - For applications, it can break once you run it with `composer install --no-dev`
   - You should move those from `require-dev` to `require`
   - Ignorable by `--ignore-dev-in-prod-deps` or more granularly by `--config`
+
+### Prod dependencies used only in dev paths
+  - For libraries, this miscategorization can lead to uselessly required dependencies for your users
+  - You should move those from `require` to `require-dev`
+  - Ignorable by `--ignore-prod-only-in-dev-deps` or more granularly by `--config`
 
 ### Unknown classes
   - Any class missing in composer classmap gets reported as we cannot say if that one is shadowed or not

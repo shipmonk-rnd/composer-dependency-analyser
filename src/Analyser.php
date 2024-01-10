@@ -52,8 +52,6 @@ class Analyser
     private $vendorDir;
 
     /**
-     * Contents of vendor/composer/autoload_classmap.php after composer dump-autoload -o was called
-     *
      * className => realPath
      *
      * @var array<string, string>
@@ -97,8 +95,11 @@ class Analyser
         $classmapErrors = [];
         $shadowErrors = [];
         $devInProdErrors = [];
+        $prodOnlyInDevErrors = [];
         $unusedErrors = [];
+
         $usedPackages = [];
+        $prodPackagesUsedInProdPath = [];
 
         foreach ($this->config->getPathsToScan() as $scanPath) {
             foreach ($this->listPhpFilesIn($scanPath->getPath()) as $filePath) {
@@ -158,10 +159,19 @@ class Analyser
                         }
                     }
 
+                    if (
+                        !$scanPath->isDev()
+                        && !$this->isDevDependency($packageName)
+                    ) {
+                        $prodPackagesUsedInProdPath[$packageName] = true;
+                    }
+
                     $usedPackages[$packageName] = true;
                 }
             }
         }
+
+        $forceUsedPackages = [];
 
         foreach ($this->config->getForceUsedSymbols() as $forceUsedSymbol) {
             if (!$this->isInClassmap($forceUsedSymbol)) {
@@ -176,6 +186,7 @@ class Analyser
 
             $forceUsedPackage = $this->getPackageNameFromVendorPath($classmapPath);
             $usedPackages[$forceUsedPackage] = true;
+            $forceUsedPackages[$forceUsedPackage] = true;
         }
 
         if ($this->config->shouldReportUnusedDevDependencies()) {
@@ -197,9 +208,26 @@ class Analyser
             }
         }
 
+        $prodDependencies = array_keys(array_filter($this->composerJsonDependencies, static function (bool $devDependency) {
+            return !$devDependency;
+        }));
+        $prodPackagesUsedOnlyInDev = array_diff(
+            $prodDependencies,
+            array_keys($prodPackagesUsedInProdPath),
+            array_keys($forceUsedPackages), // we dont know where are those used, lets not report them
+            $unusedDependencies
+        );
+
+        foreach ($prodPackagesUsedOnlyInDev as $prodPackageUsedOnlyInDev) {
+            if (!$this->config->shouldIgnoreError(ErrorType::PROD_DEPENDENCY_ONLY_IN_DEV, null, $prodPackageUsedOnlyInDev)) {
+                $prodOnlyInDevErrors[] = $prodPackageUsedOnlyInDev;
+            }
+        }
+
         ksort($classmapErrors);
         ksort($shadowErrors);
         ksort($devInProdErrors);
+        sort($prodOnlyInDevErrors);
         sort($unusedErrors);
 
         return new AnalysisResult(
@@ -208,6 +236,7 @@ class Analyser
             $classmapErrors,
             $shadowErrors,
             $devInProdErrors,
+            $prodOnlyInDevErrors,
             $unusedErrors
         );
     }

@@ -33,12 +33,18 @@ class AnalysisResult
     /**
      * @var list<string>
      */
+    private $prodDependencyOnlyInDevErrors;
+
+    /**
+     * @var list<string>
+     */
     private $unusedDependencyErrors;
 
     /**
      * @param array<string, list<SymbolUsage>> $classmapErrors package => [ usage[] ]
      * @param array<string, array<string, list<SymbolUsage>>> $shadowDependencyErrors package => [ classname => usage[] ]
      * @param array<string, array<string, list<SymbolUsage>>> $devDependencyInProductionErrors package => [ classname => usage[] ]
+     * @param list<string> $prodDependencyOnlyInDevErrors package[]
      * @param list<string> $unusedDependencyErrors package[]
      */
     public function __construct(
@@ -47,6 +53,7 @@ class AnalysisResult
         array $classmapErrors,
         array $shadowDependencyErrors,
         array $devDependencyInProductionErrors,
+        array $prodDependencyOnlyInDevErrors,
         array $unusedDependencyErrors
     )
     {
@@ -55,6 +62,7 @@ class AnalysisResult
         $this->classmapErrors = $classmapErrors;
         $this->shadowDependencyErrors = $shadowDependencyErrors;
         $this->devDependencyInProductionErrors = $devDependencyInProductionErrors;
+        $this->prodDependencyOnlyInDevErrors = $prodDependencyOnlyInDevErrors;
         $this->unusedDependencyErrors = $unusedDependencyErrors;
     }
 
@@ -95,6 +103,14 @@ class AnalysisResult
     /**
      * @return list<string>
      */
+    public function getProdDependencyOnlyInDevErrors(): array
+    {
+        return $this->prodDependencyOnlyInDevErrors;
+    }
+
+    /**
+     * @return list<string>
+     */
     public function getUnusedDependencyErrors(): array
     {
         return $this->unusedDependencyErrors;
@@ -105,6 +121,7 @@ class AnalysisResult
         return $this->unusedDependencyErrors === []
             && $this->classmapErrors === []
             && $this->devDependencyInProductionErrors === []
+            && $this->prodDependencyOnlyInDevErrors === []
             && $this->shadowDependencyErrors === [];
     }
 
