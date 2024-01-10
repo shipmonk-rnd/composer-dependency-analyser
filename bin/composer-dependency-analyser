@@ -116,9 +116,6 @@ if ($ignoreDevInProd) {
     $config->ignoreErrors([ErrorType::DEV_DEPENDENCY_IN_PROD]);
 }
 
-/** @var non-empty-string $cwd */
-$cwd = getcwd();
-
 $composerJsonPath = isset($providedOptions['composer-json'])
     ? ($cwd . "/" . $providedOptions['composer-json'])
     : ($cwd . "/composer.json");
