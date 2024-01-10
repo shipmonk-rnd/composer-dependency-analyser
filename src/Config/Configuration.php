@@ -22,6 +22,11 @@ class Configuration
     private $scanComposerAutoloadPaths = true;
 
     /**
+     * @var bool
+     */
+    private $reportUnusedDevDependencies = false;
+
+    /**
      * @var list<ErrorType::*>
      */
     private $ignoredErrors = [];
@@ -67,6 +72,15 @@ class Configuration
     public function disableComposerAutoloadPathScan(): self
     {
         $this->scanComposerAutoloadPaths = false;
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    public function enableAnalysisOfUnusedDevDependencies(): self
+    {
+        $this->reportUnusedDevDependencies = true;
         return $this;
     }
 
@@ -251,6 +265,11 @@ class Configuration
     public function shouldScanComposerAutoloadPaths(): bool
     {
         return $this->scanComposerAutoloadPaths;
+    }
+
+    public function shouldReportUnusedDevDependencies(): bool
+    {
+        return $this->reportUnusedDevDependencies;
     }
 
     public function shouldIgnoreUnknownClass(string $class): bool

@@ -69,6 +69,14 @@ class ComposerDependencyAnalyserTest extends TestCase
                 ErrorType::UNUSED_DEPENDENCY => ['regular/dead', 'regular/package'],
             ])
         ];
+        yield 'no paths, report even unused dev' => [
+            static function (Configuration $config): void {
+                $config->enableAnalysisOfUnusedDevDependencies();
+            },
+            $this->createAnalysisResult([
+                ErrorType::UNUSED_DEPENDENCY => ['dev/dead', 'dev/package', 'regular/dead', 'regular/package'],
+            ])
+        ];
 
         yield 'all paths excluded' => [
             static function (Configuration $config) use ($variousUsagesPath, $unknownClassesPath): void {
@@ -98,6 +106,19 @@ class ComposerDependencyAnalyserTest extends TestCase
                 ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16)]]],
                 ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24)]]],
                 ErrorType::UNUSED_DEPENDENCY => ['regular/dead']
+            ])
+        ];
+
+        yield 'default, report dev dead' => [
+            static function (Configuration $config) use ($variousUsagesPath): void {
+                $config->enableAnalysisOfUnusedDevDependencies();
+                $config->addPathToScan($variousUsagesPath, false);
+            },
+            $this->createAnalysisResult([
+                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11)]],
+                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16)]]],
+                ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24)]]],
+                ErrorType::UNUSED_DEPENDENCY => ['dev/dead', 'regular/dead']
             ])
         ];
 
