@@ -156,6 +156,7 @@ $config->addForceUsedSymbols($matches[1]); // possibly filter by class_exists ||
 ```
 
 Similar approach should help you to avoid false positives in unused dependencies due to the usages being present in e.g. DIC config files only.
+Another approach for DIC-only usages is to scan the generated php file, but that gave us worse results.
 
 ## Limitations:
 - Files without namespace has limited support
