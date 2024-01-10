@@ -25,5 +25,10 @@ parameters:
             missingCheckedExceptionInThrows: true
             tooWideThrowType: true
         implicitThrows: false
-        uncheckedExceptionClasses:
-            - LogicException
+        checkedExceptionClasses:
+            - ShipMonk\ComposerDependencyAnalyser\Exception\RuntimeException
+
+    ignoreErrors:
+        -
+            message: "#but it's missing from the PHPDoc @throws tag\\.$#" # allow uncatched exceptions in tests
+            path: tests/*

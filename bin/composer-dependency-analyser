@@ -2,10 +2,12 @@
 <?php declare(strict_types=1);
 
 use Composer\Autoload\ClassLoader;
+use ShipMonk\ComposerDependencyAnalyser\Cli;
 use ShipMonk\ComposerDependencyAnalyser\ComposerDependencyAnalyser;
 use ShipMonk\ComposerDependencyAnalyser\ComposerJson;
 use ShipMonk\ComposerDependencyAnalyser\Config\Configuration;
 use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
+use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidCliException;
 use ShipMonk\ComposerDependencyAnalyser\Printer;
 
 $usage = <<<EOD
@@ -27,6 +29,7 @@ Ignore options:
     --ignore-unused-deps        Ignore all unused dependency issues
     --ignore-shadow-deps        Ignore all shadow dependency issues
     --ignore-dev-in-prod-deps   Ignore all dev dependency in production code issues
+
 
 EOD;
 
@@ -52,21 +55,21 @@ $exit = static function (string $message) use ($printer): void {
     exit(255);
 };
 
-/** @var string[] $providedOptions */
-$providedOptions = getopt('', [
-    'help',
-    'verbose',
-    'ignore-shadow-deps',
-    'ignore-unused-deps',
-    'ignore-dev-in-prod-deps',
-    'ignore-unknown-classes',
-    'composer-json:',
-    'config:'
-], $restIndex);
-
-/** @var int $restIndex */
-$providedPaths = array_slice($argv, $restIndex);
 $cwd = getcwd();
+if ($cwd === false) {
+    $exit('Cannot get current working directory');
+}
+if (!isset($argv)) {
+    $exit('No $argv available, possibly disabled register_argc_argv?');
+}
+
+try {
+    $cli = new Cli();
+    $cli->validateArgv($cwd, $argv);
+    $providedOptions = $cli->getProvidedOptions();
+} catch (InvalidCliException $e) {
+    $exit($e->getMessage());
+}
 
 if (isset($providedOptions['help'])) {
     echo $usage;
