@@ -37,6 +37,11 @@ class ComposerDependencyAnalyser
 {
 
     /**
+     * @var Stopwatch
+     */
+    private $stopwatch;
+
+    /**
      * @var Configuration
      */
     private $config;
@@ -67,6 +72,7 @@ class ComposerDependencyAnalyser
      * @param array<string, bool> $composerJsonDependencies package name => is dev dependency
      */
     public function __construct(
+        Stopwatch $stopwatch,
         Configuration $config,
         string $vendorDir,
         array $optimizedClassmap,
@@ -77,6 +83,7 @@ class ComposerDependencyAnalyser
             $this->optimizedClassmap[$className] = $this->realPath($filePath);
         }
 
+        $this->stopwatch = $stopwatch;
         $this->config = $config;
         $this->vendorDir = $this->realPath($vendorDir);
         $this->composerJsonDependencies = $composerJsonDependencies;
@@ -84,6 +91,9 @@ class ComposerDependencyAnalyser
 
     public function run(): AnalysisResult
     {
+        $this->stopwatch->start();
+
+        $scannedFilesCount = 0;
         $classmapErrors = [];
         $shadowErrors = [];
         $devInProdErrors = [];
@@ -95,6 +105,8 @@ class ComposerDependencyAnalyser
                 if ($this->config->isExcludedFilepath($filePath)) {
                     continue;
                 }
+
+                $scannedFilesCount++;
 
                 foreach ($this->getUsedSymbolsInFile($filePath) as $usedSymbol => $lineNumbers) {
                     if ($this->isInternalClass($usedSymbol)) {
@@ -191,6 +203,8 @@ class ComposerDependencyAnalyser
         sort($unusedErrors);
 
         return new AnalysisResult(
+            $scannedFilesCount,
+            $this->stopwatch->stop(),
             $classmapErrors,
             $shadowErrors,
             $devInProdErrors,

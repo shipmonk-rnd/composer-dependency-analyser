@@ -31,12 +31,22 @@ class PrinterTest extends TestCase
         $printer = new Printer('/app');
 
         $noIssuesOutput = $this->captureAndNormalizeOutput(static function () use ($printer): void {
-            $printer->printResult(new AnalysisResult([], [], [], []), false);
+            $printer->printResult(new AnalysisResult(2, 0.123, [], [], [], []), false);
         });
 
-        self::assertSame("No composer issues found\n\n", $this->removeColors($noIssuesOutput));
+        $expectedNoIssuesOutput = <<<'OUT'
+
+No composer issues found
+(scanned 2 files in 0.123 s)
+
+
+OUT;
+
+        self::assertSame($this->normalizeEol($expectedNoIssuesOutput), $this->removeColors($noIssuesOutput));
 
         $analysisResult = new AnalysisResult(
+            10,
+            0.123,
             ['Unknown\\Thing' => [new SymbolUsage('/app/app/init.php', 1093)]],
             [
                 'shadow/package' => [

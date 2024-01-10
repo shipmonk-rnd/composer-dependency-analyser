@@ -9,6 +9,7 @@ use function array_keys;
 use function array_reduce;
 use function array_values;
 use function count;
+use function round;
 use function str_replace;
 use function strlen;
 use function strpos;
@@ -44,7 +45,10 @@ class Printer
     public function printResult(AnalysisResult $result, bool $verbose): int
     {
         if ($result->hasNoErrors()) {
-            $this->printLine('<green>No composer issues found</green>' . PHP_EOL);
+            $elapsed = round($result->getElapsedTime(), 3);
+            $this->printLine('');
+            $this->printLine('<green>No composer issues found</green>');
+            $this->printLine("<gray>(scanned</gray> {$result->getScannedFilesCount()} <gray>files in</gray> {$elapsed} <gray>s)</gray>" . PHP_EOL);
             return 0;
         }
 
