@@ -131,6 +131,7 @@ return $config
 
     // force certain classes to treated as used
     // handy when dealing with dependencies in non-php files (e.g. DIC config), see example below
+    // beware that those are not validated and do not even trigger unknown class error
     ->addForceUsedSymbols($classesExtractedFromNeonJsonYamlXmlEtc)
 ;
 ```
