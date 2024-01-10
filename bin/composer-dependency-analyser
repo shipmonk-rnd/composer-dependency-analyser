@@ -58,17 +58,22 @@ if (isset($providedOptions['help'])) {
 }
 
 if (isset($providedOptions['config'])) {
-    $printer->printLine('Using config ' . $providedOptions['config'] . PHP_EOL);
-
     $configPath = $cwd . "/" . $providedOptions['config'];
+
     if (!is_file($configPath)) {
-        $exit("Invalid config path given, {$providedOptions['config']} is not a file.");
+        $exit("Invalid config path given, {$configPath} is not a file.");
     }
+} else {
+    $configPath = $cwd . "/composer-dependency-analyser.php";
+}
+
+if (is_file($configPath)) {
+    $printer->printLine('Using config ' . $configPath . PHP_EOL);
 
     $config = require $configPath;
 
     if (!$config instanceof Configuration) {
-        $exit("Invalid config file, must return instance of " . Configuration::class);
+        $exit("Invalid config file, it must return instance of " . Configuration::class);
     }
 } else {
     $config = new Configuration();

@@ -77,6 +77,7 @@ Currently, it only supports those autoload sections: `psr-4`, `psr-0`, `files`.
 
 ## Configuration:
 You can provide custom path to config file by `--config=path/to/config.php` where the config file is PHP file returning `ShipMonk\ComposerDependencyAnalyser\Config\Configuration` object.
+It gets loaded automatically if it is located in cwd as `composer-dependency-analyser.php`.
 Here is example of what you can do:
 
 ```php
