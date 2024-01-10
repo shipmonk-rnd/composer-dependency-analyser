@@ -16,7 +16,7 @@ class PrinterTest extends TestCase
 
     public function testPrintLine(): void
     {
-        $printer = new Printer();
+        $printer = new Printer('');
 
         $output = $this->captureAndNormalizeOutput(static function () use ($printer): void {
             $printer->printLine('Hello, <red>world</red>!');
@@ -28,7 +28,7 @@ class PrinterTest extends TestCase
 
     public function testPrintResult(): void
     {
-        $printer = new Printer();
+        $printer = new Printer('/app');
 
         $noIssuesOutput = $this->captureAndNormalizeOutput(static function () use ($printer): void {
             $printer->printResult(new AnalysisResult([], [], [], []), false);
@@ -37,24 +37,24 @@ class PrinterTest extends TestCase
         self::assertSame("No composer issues found\n\n", $this->removeColors($noIssuesOutput));
 
         $analysisResult = new AnalysisResult(
-            ['Unknown\\Thing' => [new SymbolUsage('app/init.php', 1093)]],
+            ['Unknown\\Thing' => [new SymbolUsage('/app/app/init.php', 1093)]],
             [
                 'shadow/package' => [
                     'Shadow\Utils' => [
-                        new SymbolUsage('src/Utils.php', 19),
-                        new SymbolUsage('src/Utils.php', 22),
-                        new SymbolUsage('src/Application.php', 128),
-                        new SymbolUsage('src/Controller.php', 229),
+                        new SymbolUsage('/app/src/Utils.php', 19),
+                        new SymbolUsage('/app/src/Utils.php', 22),
+                        new SymbolUsage('/app/src/Application.php', 128),
+                        new SymbolUsage('/app/src/Controller.php', 229),
                     ],
-                    'Shadow\Comparator' => [new SymbolUsage('src/Printer.php', 25)],
-                    'Third\Parser' => [new SymbolUsage('src/bootstrap.php', 317)],
-                    'Forth\Provider' => [new SymbolUsage('src/bootstrap.php', 873)],
+                    'Shadow\Comparator' => [new SymbolUsage('/app/src/Printer.php', 25)],
+                    'Third\Parser' => [new SymbolUsage('/app/src/bootstrap.php', 317)],
+                    'Forth\Provider' => [new SymbolUsage('/app/src/bootstrap.php', 873)],
                 ],
                 'shadow/another' => [
-                    'Another\Controller' => [new SymbolUsage('src/bootstrap.php', 173)],
+                    'Another\Controller' => [new SymbolUsage('/app/src/bootstrap.php', 173)],
                 ],
             ],
-            ['some/package' => ['Another\Command' => [new SymbolUsage('src/ProductGenerator.php', 28)]]],
+            ['some/package' => ['Another\Command' => [new SymbolUsage('/app/src/ProductGenerator.php', 28)]]],
             ['dead/package']
         );
 

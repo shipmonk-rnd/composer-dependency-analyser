@@ -28,6 +28,16 @@ class Printer
         '</gray>' => "\033[0m",
     ];
 
+    /**
+     * @var string
+     */
+    private $cwd;
+
+    public function __construct(string $cwd)
+    {
+        $this->cwd = $cwd;
+    }
+
     public function printResult(AnalysisResult $result, bool $verbose): int
     {
         if ($result->hasNoErrors()) {
@@ -91,7 +101,7 @@ class Printer
 
             if ($verbose) {
                 foreach ($usages as $index => $usage) {
-                    $this->printLine("      <gray>{$usage->getFilepath()}:{$usage->getLineNumber()}</gray>");
+                    $this->printLine("      <gray>{$this->relativizeUsage($usage)}</gray>");
 
                     if ($index === self::VERBOSE_MAX_EXAMPLE_USAGES - 1) {
                         $restUsagesCount = count($usages) - $index - 1;
@@ -109,7 +119,7 @@ class Printer
                 $firstUsage = $usages[0];
                 $restUsagesCount = count($usages) - 1;
                 $rest = $restUsagesCount > 0 ? " (+ {$restUsagesCount} more)" : '';
-                $this->printLine("    <gray>in {$firstUsage->getFilepath()}:{$firstUsage->getLineNumber()}</gray>$rest" . PHP_EOL);
+                $this->printLine("    <gray>in {$this->relativizeUsage($firstUsage)}</gray>$rest" . PHP_EOL);
             }
         }
 
@@ -139,7 +149,7 @@ class Printer
                     $firstUsage = $usages[0];
                     $restUsagesCount = $countOfAllUsages - 1;
                     $rest = $countOfAllUsages > 1 ? " (+ {$restUsagesCount} more)" : '';
-                    $this->printLine("      <gray>e.g. </gray>{$classname}<gray> in {$firstUsage->getFilepath()}:{$firstUsage->getLineNumber()}</gray>$rest" . PHP_EOL);
+                    $this->printLine("      <gray>e.g. </gray>{$classname}<gray> in {$this->relativizeUsage($firstUsage)}</gray>$rest" . PHP_EOL);
                     break;
                 }
             } else {
@@ -150,7 +160,7 @@ class Printer
                     $this->printLine("      {$classname}");
 
                     foreach ($usages as $index => $usage) {
-                        $this->printLine("       <gray> {$usage->getFilepath()}:{$usage->getLineNumber()}</gray>");
+                        $this->printLine("       <gray> {$this->relativizeUsage($usage)}</gray>");
 
                         if ($index === self::VERBOSE_MAX_EXAMPLE_USAGES - 1) {
                             $restUsagesCount = count($usages) - $index - 1;
@@ -187,6 +197,19 @@ class Printer
     public function printLine(string $string): void
     {
         echo $this->colorize($string) . PHP_EOL;
+    }
+
+    private function relativizeUsage(SymbolUsage $usage): string
+    {
+        $filePath = $usage->getFilepath();
+
+        if (strpos($filePath, $this->cwd) === 0) {
+            $relativeFilePath = substr($filePath, strlen($this->cwd) + 1);
+        } else {
+            $relativeFilePath = $filePath;
+        }
+
+        return "{$relativeFilePath}:{$usage->getLineNumber()}";
     }
 
     private function colorize(string $string): string
