@@ -10,6 +10,9 @@ use function array_reduce;
 use function array_values;
 use function count;
 use function str_replace;
+use function strlen;
+use function strpos;
+use function substr;
 use const PHP_EOL;
 
 class Printer
