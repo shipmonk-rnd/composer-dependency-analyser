@@ -95,6 +95,11 @@ return $config
     // with such option, you should add custom paths by addPathToScan() or addPathsToScan()
     ->disableComposerAutoloadPathScan()
 
+    // report unused dependencies even for dev packages
+    // dev packages are often used only in CI, so this is not enabled by default
+    // but you may want to ignore those packages manually to be sure
+    ->enableAnalysisOfUnusedDevDependencies()
+
     // disable detection of dev dependencies in production code globally
     ->ignoreErrors([ErrorType::DEV_DEPENDENCY_IN_PROD])
 
@@ -123,10 +128,6 @@ return $config
     // allow using classes not present in composer's autoloader by regex
     // e.g. when you want to ignore whole namespace of classes
     ->ignoreUnknownClassesRegex('~^PHPStan\\.*?~')
-
-    // report unused dependencies even for dev packages
-    // typically, dev packages is some CI tooling without references in code, so this is not enabled by default
-    ->enableAnalysisOfUnusedDevDependencies()
 ;
 ```
 
