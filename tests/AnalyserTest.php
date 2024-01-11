@@ -6,6 +6,8 @@ use LogicException;
 use PHPUnit\Framework\TestCase;
 use ShipMonk\ComposerDependencyAnalyser\Config\Configuration;
 use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
+use ShipMonk\ComposerDependencyAnalyser\Config\Ignore\UnusedClassIgnore;
+use ShipMonk\ComposerDependencyAnalyser\Config\Ignore\UnusedErrorIgnore;
 use ShipMonk\ComposerDependencyAnalyser\Result\AnalysisResult;
 use ShipMonk\ComposerDependencyAnalyser\Result\SymbolUsage;
 use function array_filter;
@@ -249,6 +251,9 @@ class AnalyserTest extends TestCase
             },
             $this->createAnalysisResult(2, [
                 ErrorType::UNUSED_DEPENDENCY => ['regular/dead'],
+            ], [
+                new UnusedErrorIgnore(ErrorType::SHADOW_DEPENDENCY, $unknownClassesPath, null),
+                new UnusedErrorIgnore(ErrorType::DEV_DEPENDENCY_IN_PROD, $unknownClassesPath, null),
             ])
         ];
 
@@ -361,8 +366,9 @@ class AnalyserTest extends TestCase
 
     /**
      * @param array<ErrorType::*, array<mixed>> $args
+     * @param list<UnusedErrorIgnore|UnusedClassIgnore> $unusedIgnores
      */
-    private function createAnalysisResult(int $scannedFiles, array $args): AnalysisResult
+    private function createAnalysisResult(int $scannedFiles, array $args, array $unusedIgnores = []): AnalysisResult
     {
         return new AnalysisResult(
             $scannedFiles,
@@ -371,7 +377,8 @@ class AnalyserTest extends TestCase
             array_filter($args[ErrorType::SHADOW_DEPENDENCY] ?? []), // @phpstan-ignore-line ignore mixed
             array_filter($args[ErrorType::DEV_DEPENDENCY_IN_PROD] ?? []), // @phpstan-ignore-line ignore mixed
             array_filter($args[ErrorType::PROD_DEPENDENCY_ONLY_IN_DEV] ?? []), // @phpstan-ignore-line ignore mixed
-            array_filter($args[ErrorType::UNUSED_DEPENDENCY] ?? []) // @phpstan-ignore-line ignore mixed
+            array_filter($args[ErrorType::UNUSED_DEPENDENCY] ?? []), // @phpstan-ignore-line ignore mixed
+            $unusedIgnores
         );
     }
 

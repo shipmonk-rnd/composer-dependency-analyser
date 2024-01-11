@@ -105,6 +105,9 @@ return $config
     // but you may want to ignore those packages manually to be sure
     ->enableAnalysisOfUnusedDevDependencies()
 
+    // do not report ignores that never matched any error
+    ->disableReportingUnmatchedIgnores()
+
     // disable detection of dev dependencies in production code globally
     ->ignoreErrors([ErrorType::DEV_DEPENDENCY_IN_PROD])
 

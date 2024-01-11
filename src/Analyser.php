@@ -101,6 +101,8 @@ class Analyser
         $usedPackages = [];
         $prodPackagesUsedInProdPath = [];
 
+        $ignoreList = $this->config->getIgnoreList();
+
         foreach ($this->config->getPathsToScan() as $scanPath) {
             foreach ($this->listPhpFilesIn($scanPath->getPath()) as $filePath) {
                 if ($this->config->isExcludedFilepath($filePath)) {
@@ -121,8 +123,8 @@ class Analyser
                     if (!$this->isInClassmap($usedSymbol)) {
                         if (
                             !$this->isConstOrFunction($usedSymbol)
-                            && !$this->config->shouldIgnoreUnknownClass($usedSymbol)
-                            && !$this->config->shouldIgnoreError(ErrorType::UNKNOWN_CLASS, $filePath, null)
+                            && !$ignoreList->shouldIgnoreUnknownClass($usedSymbol)
+                            && !$ignoreList->shouldIgnoreError(ErrorType::UNKNOWN_CLASS, $filePath, null)
                         ) {
                             foreach ($lineNumbers as $lineNumber) {
                                 $classmapErrors[$usedSymbol][] = new SymbolUsage($filePath, $lineNumber);
@@ -142,7 +144,7 @@ class Analyser
 
                     if (
                         $this->isShadowDependency($packageName)
-                        && !$this->config->shouldIgnoreError(ErrorType::SHADOW_DEPENDENCY, $filePath, $packageName)
+                        && !$ignoreList->shouldIgnoreError(ErrorType::SHADOW_DEPENDENCY, $filePath, $packageName)
                     ) {
                         foreach ($lineNumbers as $lineNumber) {
                             $shadowErrors[$packageName][$usedSymbol][] = new SymbolUsage($filePath, $lineNumber);
@@ -152,7 +154,7 @@ class Analyser
                     if (
                         !$scanPath->isDev()
                         && $this->isDevDependency($packageName)
-                        && !$this->config->shouldIgnoreError(ErrorType::DEV_DEPENDENCY_IN_PROD, $filePath, $packageName)
+                        && !$ignoreList->shouldIgnoreError(ErrorType::DEV_DEPENDENCY_IN_PROD, $filePath, $packageName)
                     ) {
                         foreach ($lineNumbers as $lineNumber) {
                             $devInProdErrors[$packageName][$usedSymbol][] = new SymbolUsage($filePath, $lineNumber);
@@ -203,7 +205,7 @@ class Analyser
         );
 
         foreach ($unusedDependencies as $unusedDependency) {
-            if (!$this->config->shouldIgnoreError(ErrorType::UNUSED_DEPENDENCY, null, $unusedDependency)) {
+            if (!$ignoreList->shouldIgnoreError(ErrorType::UNUSED_DEPENDENCY, null, $unusedDependency)) {
                 $unusedErrors[] = $unusedDependency;
             }
         }
@@ -219,7 +221,7 @@ class Analyser
         );
 
         foreach ($prodPackagesUsedOnlyInDev as $prodPackageUsedOnlyInDev) {
-            if (!$this->config->shouldIgnoreError(ErrorType::PROD_DEPENDENCY_ONLY_IN_DEV, null, $prodPackageUsedOnlyInDev)) {
+            if (!$ignoreList->shouldIgnoreError(ErrorType::PROD_DEPENDENCY_ONLY_IN_DEV, null, $prodPackageUsedOnlyInDev)) {
                 $prodOnlyInDevErrors[] = $prodPackageUsedOnlyInDev;
             }
         }
@@ -237,7 +239,8 @@ class Analyser
             $shadowErrors,
             $devInProdErrors,
             $prodOnlyInDevErrors,
-            $unusedErrors
+            $unusedErrors,
+            $ignoreList->getUnusedIgnores()
         );
     }
 

@@ -3,13 +3,10 @@
 namespace ShipMonk\ComposerDependencyAnalyser\Config;
 
 use LogicException;
-use function array_flip;
+use ShipMonk\ComposerDependencyAnalyser\Config\Ignore\IgnoreList;
 use function array_keys;
 use function array_merge;
-use function get_defined_constants;
 use function in_array;
-use function preg_last_error;
-use function preg_match;
 use function realpath;
 use function strpos;
 
@@ -25,6 +22,11 @@ class Configuration
      * @var bool
      */
     private $reportUnusedDevDependencies = false;
+
+    /**
+     * @var bool
+     */
+    private $reportUnmatchedIgnores = true;
 
     /**
      * @var list<string>
@@ -77,6 +79,12 @@ class Configuration
     public function disableComposerAutoloadPathScan(): self
     {
         $this->scanComposerAutoloadPaths = false;
+        return $this;
+    }
+
+    public function disableReportingUnmatchedIgnores(): self
+    {
+        $this->reportUnmatchedIgnores = false;
         return $this;
     }
 
@@ -259,7 +267,16 @@ class Configuration
         return $this;
     }
 
-    // getters below
+    public function getIgnoreList(): IgnoreList
+    {
+        return new IgnoreList(
+            $this->ignoredErrors,
+            $this->ignoredErrorsOnPath,
+            $this->ignoredErrorsOnPackage,
+            $this->ignoredUnknownClasses,
+            $this->ignoredUnknownClassesRegexes
+        );
+    }
 
     /**
      * @return list<string>
@@ -311,78 +328,9 @@ class Configuration
         return $this->reportUnusedDevDependencies;
     }
 
-    public function shouldIgnoreUnknownClass(string $class): bool
+    public function shouldReportUnmatchedIgnoredErrors(): bool
     {
-        if (in_array($class, $this->ignoredUnknownClasses, true)) {
-            return true;
-        }
-
-        foreach ($this->ignoredUnknownClassesRegexes as $regex) {
-            $matches = preg_match($regex, $class);
-
-            if ($matches === false) {
-                /** @var array<string, int> $pcreConstants */
-                $pcreConstants = get_defined_constants(true)['pcre'] ?? [];
-                $error = array_flip($pcreConstants)[preg_last_error()] ?? 'unknown error';
-                throw new LogicException("Invalid regex: '$regex', error: $error");
-            }
-
-            if ($matches === 1) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * @param ErrorType::* $errorType
-     */
-    public function shouldIgnoreError(string $errorType, ?string $filePath, ?string $packageName): bool
-    {
-        if ($this->shouldIgnoreErrorGlobally($errorType)) {
-            return true;
-        }
-
-        if ($filePath !== null && $this->shouldIgnoreErrorOnPath($errorType, $filePath)) {
-            return true;
-        }
-
-        if ($packageName !== null && $this->shouldIgnoreErrorOnPackage($errorType, $packageName)) {
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * @param ErrorType::* $errorType
-     */
-    private function shouldIgnoreErrorGlobally(string $errorType): bool
-    {
-        return in_array($errorType, $this->ignoredErrors, true);
-    }
-
-    /**
-     * @param ErrorType::* $errorType
-     */
-    private function shouldIgnoreErrorOnPath(string $errorType, string $filePath): bool
-    {
-        foreach ($this->ignoredErrorsOnPath as $path => $errorTypes) {
-            if ($this->isFilepathWithinPath($filePath, $path)) {
-                return in_array($errorType, $errorTypes, true);
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * @param ErrorType::* $errorType
-     */
-    private function shouldIgnoreErrorOnPackage(string $errorType, string $packageName): bool
-    {
-        return in_array($errorType, $this->ignoredErrorsOnPackage[$packageName] ?? [], true);
+        return $this->reportUnmatchedIgnores;
     }
 
     public function isExcludedFilepath(string $filePath): bool
