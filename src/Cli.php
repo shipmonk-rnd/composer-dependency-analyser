@@ -24,7 +24,6 @@ class Cli
         'ignore-dev-in-prod-deps',
         'ignore-prod-only-in-dev-deps',
         'ignore-unknown-classes',
-        'report-unmatched-ignored-errors',
         'composer-json:',
         'config:'
     ];
@@ -122,7 +121,6 @@ class Cli
      *     ignore-dev-in-prod-deps?: bool,
      *     ignore-prod-only-in-dev-deps?: bool,
      *     ignore-unknown-classes?: bool,
-     *     report-unmatched-ignored-errors?: bool,
      *     composer-json?: string,
      *     config?: string
      * }
