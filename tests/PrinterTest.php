@@ -4,6 +4,8 @@ namespace ShipMonk\ComposerDependencyAnalyser;
 
 use Closure;
 use PHPUnit\Framework\TestCase;
+use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
+use ShipMonk\ComposerDependencyAnalyser\Config\Ignore\UnusedErrorIgnore;
 use ShipMonk\ComposerDependencyAnalyser\Result\AnalysisResult;
 use ShipMonk\ComposerDependencyAnalyser\Result\SymbolUsage;
 use function ob_get_clean;
@@ -28,10 +30,14 @@ class PrinterTest extends TestCase
 
     public function testPrintResult(): void
     {
+        // editorconfig-checker-disable
         $printer = new Printer('/app');
 
         $noIssuesOutput = $this->captureAndNormalizeOutput(static function () use ($printer): void {
-            $printer->printResult(new AnalysisResult(2, 0.123, [], [], [], [], []), false);
+            $printer->printResult(new AnalysisResult(2, 0.123, [], [], [], [], [], []), false, true);
+        });
+        $noIssuesButUnusedIgnores = $this->captureAndNormalizeOutput(static function () use ($printer): void {
+            $printer->printResult(new AnalysisResult(2, 0.123, [], [], [], [], [], [new UnusedErrorIgnore(ErrorType::SHADOW_DEPENDENCY, null, null)]), false, true);
         });
 
         $expectedNoIssuesOutput = <<<'OUT'
@@ -42,7 +48,16 @@ No composer issues found
 
 OUT;
 
+        $expectedNoIssuesButWarningsOutput = <<<'OUT'
+
+Some ignored issues never occurred:
+ • Error 'shadow-dependency' was globally ignored, but it was never applied.
+
+
+OUT;
+
         self::assertSame($this->normalizeEol($expectedNoIssuesOutput), $this->removeColors($noIssuesOutput));
+        self::assertSame($this->normalizeEol($expectedNoIssuesButWarningsOutput), $this->removeColors($noIssuesButUnusedIgnores));
 
         $analysisResult = new AnalysisResult(
             10,
@@ -66,17 +81,17 @@ OUT;
             ],
             ['some/package' => ['Another\Command' => [new SymbolUsage('/app/src/ProductGenerator.php', 28)]]],
             ['misplaced/package'],
-            ['dead/package']
+            ['dead/package'],
+            []
         );
 
         $regularOutput = $this->captureAndNormalizeOutput(static function () use ($printer, $analysisResult): void {
-            $printer->printResult($analysisResult, false);
+            $printer->printResult($analysisResult, false, true);
         });
         $verboseOutput = $this->captureAndNormalizeOutput(static function () use ($printer, $analysisResult): void {
-            $printer->printResult($analysisResult, true);
+            $printer->printResult($analysisResult, true, true);
         });
 
-        // editorconfig-checker-disable
         $expectedRegularOutput = <<<'OUT'
 
 Unknown classes!
@@ -169,9 +184,10 @@ Found unused dependencies!
 
 
 OUT;
-        // editorconfig-checker-enable
+
         self::assertSame($this->normalizeEol($expectedRegularOutput), $this->removeColors($regularOutput));
         self::assertSame($this->normalizeEol($expectedVerboseOutput), $this->removeColors($verboseOutput));
+        // editorconfig-checker-enable
     }
 
     private function removeColors(string $output): string

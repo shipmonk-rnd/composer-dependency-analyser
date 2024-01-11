@@ -2,6 +2,8 @@
 
 namespace ShipMonk\ComposerDependencyAnalyser;
 
+use ShipMonk\ComposerDependencyAnalyser\Config\Ignore\UnusedClassIgnore;
+use ShipMonk\ComposerDependencyAnalyser\Config\Ignore\UnusedErrorIgnore;
 use ShipMonk\ComposerDependencyAnalyser\Result\AnalysisResult;
 use ShipMonk\ComposerDependencyAnalyser\Result\SymbolUsage;
 use function array_fill_keys;
@@ -42,15 +44,14 @@ class Printer
         $this->cwd = $cwd;
     }
 
-    public function printResult(AnalysisResult $result, bool $verbose): int
+    public function printResult(
+        AnalysisResult $result,
+        bool $verbose,
+        bool $reportUnmatchedIgnores
+    ): int
     {
-        if ($result->hasNoErrors()) {
-            $elapsed = round($result->getElapsedTime(), 3);
-            $this->printLine('');
-            $this->printLine('<green>No composer issues found</green>');
-            $this->printLine("<gray>(scanned</gray> {$result->getScannedFilesCount()} <gray>files in</gray> {$elapsed} <gray>s)</gray>" . PHP_EOL);
-            return 0;
-        }
+        $hasError = false;
+        $unusedIgnores = $result->getUnusedIgnores();
 
         $classmapErrors = $result->getClassmapErrors();
         $shadowDependencyErrors = $result->getShadowDependencyErrors();
@@ -59,6 +60,7 @@ class Printer
         $unusedDependencyErrors = $result->getUnusedDependencyErrors();
 
         if (count($classmapErrors) > 0) {
+            $hasError = true;
             $this->printClassBasedErrors(
                 'Unknown classes!',
                 'those are not present in composer classmap, so we cannot check them',
@@ -68,6 +70,7 @@ class Printer
         }
 
         if (count($shadowDependencyErrors) > 0) {
+            $hasError = true;
             $this->printPackageBasedErrors(
                 'Found shadow dependencies!',
                 'those are used, but not listed as dependency in composer.json',
@@ -77,6 +80,7 @@ class Printer
         }
 
         if (count($devDependencyInProductionErrors) > 0) {
+            $hasError = true;
             $this->printPackageBasedErrors(
                 'Found dev dependencies in production code!',
                 'those should probably be moved to "require" section in composer.json',
@@ -86,6 +90,7 @@ class Printer
         }
 
         if (count($prodDependencyOnlyInDevErrors) > 0) {
+            $hasError = true;
             $this->printPackageBasedErrors(
                 'Found prod dependencies used only in dev paths!',
                 'those should probably be moved to "require-dev" section in composer.json',
@@ -95,6 +100,7 @@ class Printer
         }
 
         if (count($unusedDependencyErrors) > 0) {
+            $hasError = true;
             $this->printPackageBasedErrors(
                 'Found unused dependencies!',
                 'those are listed in composer.json, but no usage was found in scanned paths',
@@ -103,7 +109,23 @@ class Printer
             );
         }
 
-        return 255;
+        if ($unusedIgnores !== [] && $reportUnmatchedIgnores) {
+            $hasError = true;
+            $this->printLine('');
+            $this->printLine('<orange>Some ignored issues never occurred:</orange>');
+            $this->printUnusedIgnores($unusedIgnores);
+        }
+
+        if ($hasError) {
+            return 255;
+        }
+
+        $elapsed = round($result->getElapsedTime(), 3);
+        $this->printLine('');
+        $this->printLine('<green>No composer issues found</green>');
+        $this->printLine("<gray>(scanned</gray> {$result->getScannedFilesCount()} <gray>files in</gray> {$elapsed} <gray>s)</gray>" . PHP_EOL);
+
+        return 0;
     }
 
     /**
@@ -218,20 +240,61 @@ class Printer
 
     private function relativizeUsage(SymbolUsage $usage): string
     {
-        $filePath = $usage->getFilepath();
+        return "{$this->relativizePath($usage->getFilepath())}:{$usage->getLineNumber()}";
+    }
 
-        if (strpos($filePath, $this->cwd) === 0) {
-            $relativeFilePath = substr($filePath, strlen($this->cwd) + 1);
-        } else {
-            $relativeFilePath = $filePath;
+    private function relativizePath(string $path): string
+    {
+        if (strpos($path, $this->cwd) === 0) {
+            return (string) substr($path, strlen($this->cwd) + 1);
         }
 
-        return "{$relativeFilePath}:{$usage->getLineNumber()}";
+        return $path;
     }
 
     private function colorize(string $string): string
     {
         return str_replace(array_keys(self::COLORS), array_values(self::COLORS), $string);
+    }
+
+    /**
+     * @param list<UnusedClassIgnore|UnusedErrorIgnore> $unusedIgnores
+     */
+    private function printUnusedIgnores(array $unusedIgnores): void
+    {
+        foreach ($unusedIgnores as $unusedIgnore) {
+            if ($unusedIgnore instanceof UnusedClassIgnore) {
+                $this->printClassBasedUnusedIgnore($unusedIgnore);
+            } else {
+                $this->printErrorBasedUnusedIgnore($unusedIgnore);
+            }
+        }
+
+        $this->printLine('');
+    }
+
+    private function printClassBasedUnusedIgnore(UnusedClassIgnore $unusedIgnore): void
+    {
+        $regex = $unusedIgnore->isRegex() ? ' regex' : '';
+        $this->printLine(" • <gray>Unknown class{$regex}</gray> '{$unusedIgnore->getUnknownClass()}' <gray>was ignored, but it was never applied.</gray>");
+    }
+
+    private function printErrorBasedUnusedIgnore(UnusedErrorIgnore $unusedIgnore): void
+    {
+        $package = $unusedIgnore->getPackage();
+        $path = $unusedIgnore->getPath();
+
+        if ($package === null && $path === null) {
+            $this->printLine(" • <gray>Error</gray> '{$unusedIgnore->getErrorType()}' <gray>was globally ignored, but it was never applied.</gray>");
+        }
+
+        if ($package !== null && $path === null) {
+            $this->printLine(" • <gray>Error</gray> '{$unusedIgnore->getErrorType()}' <gray>was ignored for package</gray> '{$package}', <gray>but it was never applied.</gray>");
+        }
+
+        if ($package === null && $path !== null) {
+            $this->printLine(" • <gray>Error</gray> '{$unusedIgnore->getErrorType()}' <gray>was ignored for path</gray> '{$this->relativizePath($path)}', <gray>but it was never applied.</gray>");
+        }
     }
 
 }

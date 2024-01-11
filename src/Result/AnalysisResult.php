@@ -2,6 +2,9 @@
 
 namespace ShipMonk\ComposerDependencyAnalyser\Result;
 
+use ShipMonk\ComposerDependencyAnalyser\Config\Ignore\UnusedClassIgnore;
+use ShipMonk\ComposerDependencyAnalyser\Config\Ignore\UnusedErrorIgnore;
+
 class AnalysisResult
 {
 
@@ -41,11 +44,17 @@ class AnalysisResult
     private $unusedDependencyErrors;
 
     /**
+     * @var list<UnusedClassIgnore|UnusedErrorIgnore>
+     */
+    private $unusedIgnores;
+
+    /**
      * @param array<string, list<SymbolUsage>> $classmapErrors package => [ usage[] ]
      * @param array<string, array<string, list<SymbolUsage>>> $shadowDependencyErrors package => [ classname => usage[] ]
      * @param array<string, array<string, list<SymbolUsage>>> $devDependencyInProductionErrors package => [ classname => usage[] ]
      * @param list<string> $prodDependencyOnlyInDevErrors package[]
      * @param list<string> $unusedDependencyErrors package[]
+     * @param list<UnusedClassIgnore|UnusedErrorIgnore> $unusedIgnores
      */
     public function __construct(
         int $scannedFilesCount,
@@ -54,7 +63,8 @@ class AnalysisResult
         array $shadowDependencyErrors,
         array $devDependencyInProductionErrors,
         array $prodDependencyOnlyInDevErrors,
-        array $unusedDependencyErrors
+        array $unusedDependencyErrors,
+        array $unusedIgnores
     )
     {
         $this->scannedFilesCount = $scannedFilesCount;
@@ -64,6 +74,7 @@ class AnalysisResult
         $this->devDependencyInProductionErrors = $devDependencyInProductionErrors;
         $this->prodDependencyOnlyInDevErrors = $prodDependencyOnlyInDevErrors;
         $this->unusedDependencyErrors = $unusedDependencyErrors;
+        $this->unusedIgnores = $unusedIgnores;
     }
 
     public function getScannedFilesCount(): int
@@ -114,6 +125,14 @@ class AnalysisResult
     public function getUnusedDependencyErrors(): array
     {
         return $this->unusedDependencyErrors;
+    }
+
+    /**
+     * @return list<UnusedClassIgnore|UnusedErrorIgnore>
+     */
+    public function getUnusedIgnores(): array
+    {
+        return $this->unusedIgnores;
     }
 
     public function hasNoErrors(): bool
