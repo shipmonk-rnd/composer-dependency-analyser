@@ -5,8 +5,18 @@
         "MIT"
     ],
     "keywords": [
+        "dev",
+        "static analysis",
         "composer",
-        "dependency"
+        "detector",
+        "analyser",
+        "composer dependency",
+        "unused dependency",
+        "dead dependency",
+        "shadow dependency",
+        "misplaced dependency",
+        "dead code",
+        "unused code"
     ],
     "require": {
         "php": "^7.2 || ^8.0",
