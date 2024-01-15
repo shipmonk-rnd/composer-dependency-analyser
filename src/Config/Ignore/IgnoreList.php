@@ -30,6 +30,11 @@ class IgnoreList
     private $ignoredErrorsOnPackage = [];
 
     /**
+     * @var array<string, array<string, array<ErrorType::*, bool>>>
+     */
+    private $ignoredErrorsOnPackageAndPath = [];
+
+    /**
      * @var array<string, bool>
      */
     private $ignoredUnknownClasses;
@@ -43,6 +48,7 @@ class IgnoreList
      * @param list<ErrorType::*> $ignoredErrors
      * @param array<string, list<ErrorType::*>> $ignoredErrorsOnPath
      * @param array<string, list<ErrorType::*>> $ignoredErrorsOnPackage
+     * @param array<string, array<string, list<ErrorType::*>>> $ignoredErrorsOnPackageAndPath
      * @param list<string> $ignoredUnknownClasses
      * @param list<string> $ignoredUnknownClassesRegexes
      */
@@ -50,6 +56,7 @@ class IgnoreList
         array $ignoredErrors,
         array $ignoredErrorsOnPath,
         array $ignoredErrorsOnPackage,
+        array $ignoredErrorsOnPackageAndPath,
         array $ignoredUnknownClasses,
         array $ignoredUnknownClassesRegexes
     )
@@ -62,6 +69,12 @@ class IgnoreList
 
         foreach ($ignoredErrorsOnPackage as $packageName => $errorTypes) {
             $this->ignoredErrorsOnPackage[$packageName] = array_fill_keys($errorTypes, false);
+        }
+
+        foreach ($ignoredErrorsOnPackageAndPath as $packageName => $paths) {
+            foreach ($paths as $path => $errorTypes) {
+                $this->ignoredErrorsOnPackageAndPath[$packageName][$path] = array_fill_keys($errorTypes, false);
+            }
         }
 
         $this->ignoredUnknownClasses = array_fill_keys($ignoredUnknownClasses, false);
@@ -93,6 +106,16 @@ class IgnoreList
             foreach ($errorTypes as $errorType => $ignored) {
                 if (!$ignored) {
                     $unused[] = new UnusedErrorIgnore($errorType, null, $packageName);
+                }
+            }
+        }
+
+        foreach ($this->ignoredErrorsOnPackageAndPath as $packageName => $paths) {
+            foreach ($paths as $path => $errorTypes) {
+                foreach ($errorTypes as $errorType => $ignored) {
+                    if (!$ignored) {
+                        $unused[] = new UnusedErrorIgnore($errorType, $path, $packageName);
+                    }
                 }
             }
         }
@@ -143,19 +166,12 @@ class IgnoreList
      */
     public function shouldIgnoreError(string $errorType, ?string $filePath, ?string $packageName): bool
     {
-        if ($this->shouldIgnoreErrorGlobally($errorType)) {
-            return true;
-        }
+        $ignoredGlobally = $this->shouldIgnoreErrorGlobally($errorType);
+        $ignoredByPath = $filePath !== null && $this->shouldIgnoreErrorOnPath($errorType, $filePath);
+        $ignoredByPackage = $packageName !== null && $this->shouldIgnoreErrorOnPackage($errorType, $packageName);
+        $ignoredByPackageAndPath = $filePath !== null && $packageName !== null && $this->shouldIgnoreErrorOnPackageAndPath($errorType, $packageName, $filePath);
 
-        if ($filePath !== null && $this->shouldIgnoreErrorOnPath($errorType, $filePath)) {
-            return true;
-        }
-
-        if ($packageName !== null && $this->shouldIgnoreErrorOnPackage($errorType, $packageName)) {
-            return true;
-        }
-
-        return false;
+        return $ignoredGlobally || $ignoredByPackageAndPath || $ignoredByPath || $ignoredByPackage;
     }
 
     /**
@@ -194,6 +210,23 @@ class IgnoreList
         if (isset($this->ignoredErrorsOnPackage[$packageName][$errorType])) {
             $this->ignoredErrorsOnPackage[$packageName][$errorType] = true;
             return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @param ErrorType::* $errorType
+     */
+    private function shouldIgnoreErrorOnPackageAndPath(string $errorType, string $packageName, string $filePath): bool
+    {
+        if (isset($this->ignoredErrorsOnPackageAndPath[$packageName])) {
+            foreach ($this->ignoredErrorsOnPackageAndPath[$packageName] as $path => $errorTypes) {
+                if ($this->isFilepathWithinPath($filePath, $path) && isset($errorTypes[$errorType])) {
+                    $this->ignoredErrorsOnPackageAndPath[$packageName][$path][$errorType] = true;
+                    return true;
+                }
+            }
         }
 
         return false;

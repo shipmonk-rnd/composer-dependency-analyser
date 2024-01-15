@@ -281,6 +281,72 @@ class AnalyserTest extends TestCase
             ])
         ];
 
+        yield 'ignore on package and path' => [
+            static function (Configuration $config) use ($variousUsagesPath): void {
+                $config->addPathToScan($variousUsagesPath, false);
+                $config->ignoreErrorsOnPackageAndPath('shadow/package', $variousUsagesPath, [ErrorType::SHADOW_DEPENDENCY]);
+            },
+            $this->createAnalysisResult(1, [
+                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11)]],
+                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16)]]],
+                ErrorType::UNUSED_DEPENDENCY => ['regular/dead'],
+            ])
+        ];
+
+        yield 'ignore on package and path (overlapping with other ignores), all used' => [
+            static function (Configuration $config) use ($variousUsagesPath): void {
+                $config->addPathToScan($variousUsagesPath, false);
+                $config->ignoreErrors([ErrorType::SHADOW_DEPENDENCY]);
+                $config->ignoreErrorsOnPath($variousUsagesPath, [ErrorType::SHADOW_DEPENDENCY]);
+                $config->ignoreErrorsOnPackage('shadow/package', [ErrorType::SHADOW_DEPENDENCY]);
+                $config->ignoreErrorsOnPackageAndPath('shadow/package', $variousUsagesPath, [ErrorType::SHADOW_DEPENDENCY]);
+            },
+            $this->createAnalysisResult(1, [
+                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11)]],
+                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16)]]],
+                ErrorType::UNUSED_DEPENDENCY => ['regular/dead'],
+            ])
+        ];
+
+        yield 'ignore on package and path (overlapping with other ignores), one unused' => [
+            static function (Configuration $config) use ($variousUsagesPath, $unknownClassesPath): void {
+                $config->addPathToScan($variousUsagesPath, false);
+                $config->ignoreErrors([ErrorType::SHADOW_DEPENDENCY]);
+                $config->ignoreErrorsOnPath($variousUsagesPath, [ErrorType::SHADOW_DEPENDENCY]);
+                $config->ignoreErrorsOnPackage('shadow/package', [ErrorType::SHADOW_DEPENDENCY]);
+                $config->ignoreErrorsOnPackageAndPath('shadow/package', $unknownClassesPath, [ErrorType::SHADOW_DEPENDENCY]);
+            },
+            $this->createAnalysisResult(1, [
+                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11)]],
+                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16)]]],
+                ErrorType::UNUSED_DEPENDENCY => ['regular/dead'],
+            ], [
+                new UnusedErrorIgnore(ErrorType::SHADOW_DEPENDENCY, $unknownClassesPath, 'shadow/package'),
+            ])
+        ];
+
+        yield 'ignore on package and path (overlapping with other ignores), all unused' => [
+            static function (Configuration $config) use ($unknownClassesPath): void {
+                $config->addPathToScan($unknownClassesPath, false);
+                $config->ignoreErrors([ErrorType::SHADOW_DEPENDENCY]);
+                $config->ignoreErrorsOnPath($unknownClassesPath, [ErrorType::SHADOW_DEPENDENCY]);
+                $config->ignoreErrorsOnPackage('invalid/package', [ErrorType::SHADOW_DEPENDENCY]);
+                $config->ignoreErrorsOnPackageAndPath('invalid/package', $unknownClassesPath, [ErrorType::SHADOW_DEPENDENCY]);
+            },
+            $this->createAnalysisResult(1, [
+                ErrorType::UNKNOWN_CLASS => [
+                    'Unknown\One' => [new SymbolUsage($unknownClassesPath, 3)],
+                    'Unknown\Two' => [new SymbolUsage($unknownClassesPath, 4)],
+                ],
+                ErrorType::UNUSED_DEPENDENCY => ['regular/dead', 'regular/package'],
+            ], [
+                new UnusedErrorIgnore(ErrorType::SHADOW_DEPENDENCY, null, null),
+                new UnusedErrorIgnore(ErrorType::SHADOW_DEPENDENCY, $unknownClassesPath, null),
+                new UnusedErrorIgnore(ErrorType::SHADOW_DEPENDENCY, null, 'invalid/package'),
+                new UnusedErrorIgnore(ErrorType::SHADOW_DEPENDENCY, $unknownClassesPath, 'invalid/package'),
+            ])
+        ];
+
         yield 'ignore all unused' => [
             static function (Configuration $config) use ($variousUsagesPath): void {
                 $config->addPathToScan($variousUsagesPath, false);

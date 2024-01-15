@@ -2,7 +2,6 @@
 
 namespace ShipMonk\ComposerDependencyAnalyser\Config\Ignore;
 
-use LogicException;
 use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
 
 class UnusedErrorIgnore
@@ -28,10 +27,6 @@ class UnusedErrorIgnore
      */
     public function __construct(string $errorType, ?string $filePath, ?string $package)
     {
-        if ($filePath !== null && $package !== null) {
-            throw new LogicException('Cannot ignore both file and package');
-        }
-
         $this->errorType = $errorType;
         $this->filePath = $filePath;
         $this->package = $package;
