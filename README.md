@@ -172,6 +172,8 @@ Another approach for DIC-only usages is to scan the generated php file, but that
   - Only classes with use statements and FQNs are detected
 - Function and constant usages are not analysed
   - Therefore, if some package contains only functions, it will be reported as unused
+- Phar-based packages (e.g. phpstan) are not present in classmap
+  - Beware that there are even some other vendor packages bundled inside the phpstan.phar
 
 -----
 
