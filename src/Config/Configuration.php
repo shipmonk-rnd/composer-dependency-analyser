@@ -253,7 +253,7 @@ class Configuration
      */
     public function ignoreUnknownClasses(array $classNames): self
     {
-        $this->ignoredUnknownClasses = $classNames;
+        $this->ignoredUnknownClasses = array_merge($this->ignoredUnknownClasses, $classNames);
 
         return $this;
     }
