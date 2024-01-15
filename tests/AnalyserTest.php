@@ -362,6 +362,17 @@ class AnalyserTest extends TestCase
                 ErrorType::UNUSED_DEPENDENCY => ['regular/dead', 'regular/package'],
             ])
         ];
+
+        yield 'ignore unknown classes multiple calls' => [
+            static function (Configuration $config) use ($unknownClassesPath): void {
+                $config->addPathToScan($unknownClassesPath, false);
+                $config->ignoreUnknownClasses(['Unknown\One']);
+                $config->ignoreUnknownClasses(['Unknown\Two']);
+            },
+            $this->createAnalysisResult(1, [
+                ErrorType::UNUSED_DEPENDENCY => ['regular/dead', 'regular/package'],
+            ])
+        ];
     }
 
     /**
