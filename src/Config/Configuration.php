@@ -64,6 +64,11 @@ class Configuration
     private $ignoredErrorsOnPackage = [];
 
     /**
+     * @var array<string, array<string, list<ErrorType::*>>>
+     */
+    private $ignoredErrorsOnPackageAndPath = [];
+
+    /**
      * @var list<string>
      */
     private $ignoredUnknownClasses = [];
@@ -248,6 +253,58 @@ class Configuration
     }
 
     /**
+     * @param list<ErrorType::*> $errorTypes
+     * @return $this
+     */
+    public function ignoreErrorsOnPackageAndPath(string $packageName, string $path, array $errorTypes): self
+    {
+        if (in_array(ErrorType::UNKNOWN_CLASS, $errorTypes, true)) {
+            throw new LogicException('UNKNOWN_CLASS errors cannot be ignored on a package');
+        }
+
+        if (in_array(ErrorType::UNUSED_DEPENDENCY, $errorTypes, true)) {
+            throw new LogicException('UNUSED_DEPENDENCY errors cannot be ignored on a path');
+        }
+
+        if (in_array(ErrorType::PROD_DEPENDENCY_ONLY_IN_DEV, $errorTypes, true)) {
+            throw new LogicException('PROD_DEPENDENCY_ONLY_IN_DEV errors cannot be ignored on a path');
+        }
+
+        $previousErrorTypes = $this->ignoredErrorsOnPackageAndPath[$packageName][$path] ?? [];
+        $this->ignoredErrorsOnPackageAndPath[$packageName][$path] = array_merge($previousErrorTypes, $errorTypes);
+        return $this;
+    }
+
+    /**
+     * @param list<string> $paths
+     * @param list<ErrorType::*> $errorTypes
+     * @return $this
+     */
+    public function ignoreErrorsOnPackageAndPaths(string $packageName, array $paths, array $errorTypes): self
+    {
+        foreach ($paths as $path) {
+            $this->ignoreErrorsOnPackageAndPath($packageName, $path, $errorTypes);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param list<string> $packages
+     * @param list<string> $paths
+     * @param list<ErrorType::*> $errorTypes
+     * @return $this
+     */
+    public function ignoreErrorsOnPackagesAndPaths(array $packages, array $paths, array $errorTypes): self
+    {
+        foreach ($packages as $package) {
+            $this->ignoreErrorsOnPackageAndPaths($package, $paths, $errorTypes);
+        }
+
+        return $this;
+    }
+
+    /**
      * @param list<string> $classNames
      * @return $this
      */
@@ -273,6 +330,7 @@ class Configuration
             $this->ignoredErrors,
             $this->ignoredErrorsOnPath,
             $this->ignoredErrorsOnPackage,
+            $this->ignoredErrorsOnPackageAndPath,
             $this->ignoredUnknownClasses,
             $this->ignoredUnknownClassesRegexes
         );

@@ -129,6 +129,10 @@ return $config
     // for multiple packages at once, use ignoreErrorsOnPackages()
     ->ignoreErrorsOnPackage('symfony/polyfill-php73', [ErrorType::UNUSED_DEPENDENCY])
 
+    // ignore errors on specific packages and paths
+    // for multiple, use ignoreErrorsOnPackagesAndPaths() or ignoreErrorsOnPackageAndPaths()
+    ->ignoreErrorsOnPackageAndPath('symfony/console', __DIR__ . '/src/OptionalCommand.php', [ErrorType::SHADOW_DEPENDENCY])
+
     // allow using classes not present in composer's autoloader
     // e.g. a library may conditionally support some feature only when Memcached is available
     ->ignoreUnknownClasses(['Memcached'])

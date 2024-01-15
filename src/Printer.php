@@ -295,6 +295,10 @@ class Printer
         if ($package === null && $path !== null) {
             $this->printLine(" • <gray>Error</gray> '{$unusedIgnore->getErrorType()}' <gray>was ignored for path</gray> '{$this->relativizePath($path)}', <gray>but it was never applied.</gray>");
         }
+
+        if ($package !== null && $path !== null) {
+            $this->printLine(" • <gray>Error</gray> '{$unusedIgnore->getErrorType()}' <gray>was ignored for package</gray> '{$package}' <gray> and path</gray> '{$this->relativizePath($path)}', <gray>but it was never applied.</gray>");
+        }
     }
 
 }
