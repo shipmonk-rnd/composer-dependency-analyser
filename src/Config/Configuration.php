@@ -270,8 +270,10 @@ class Configuration
             throw new LogicException('PROD_DEPENDENCY_ONLY_IN_DEV errors cannot be ignored on a path');
         }
 
-        $previousErrorTypes = $this->ignoredErrorsOnPackageAndPath[$packageName][$path] ?? [];
-        $this->ignoredErrorsOnPackageAndPath[$packageName][$path] = array_merge($previousErrorTypes, $errorTypes);
+        $realpath = $this->realpath($path);
+
+        $previousErrorTypes = $this->ignoredErrorsOnPackageAndPath[$packageName][$realpath] ?? [];
+        $this->ignoredErrorsOnPackageAndPath[$packageName][$realpath] = array_merge($previousErrorTypes, $errorTypes);
         return $this;
     }
 
@@ -373,7 +375,16 @@ class Configuration
      */
     public function getPathsWithIgnore(): array
     {
-        return array_keys($this->ignoredErrorsOnPath);
+        $paths = array_keys($this->ignoredErrorsOnPath);
+
+        foreach ($this->ignoredErrorsOnPackageAndPath as $packagePaths) {
+            $paths = array_merge(
+                $paths,
+                array_keys($packagePaths)
+            );
+        }
+
+        return $paths;
     }
 
     public function shouldScanComposerAutoloadPaths(): bool
