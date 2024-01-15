@@ -5,6 +5,7 @@ namespace ShipMonk\ComposerDependencyAnalyser;
 use PHPUnit\Framework\TestCase;
 use ShipMonk\ComposerDependencyAnalyser\Config\Configuration;
 use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
+use const DIRECTORY_SEPARATOR;
 
 class ConfigurationTest extends TestCase
 {
@@ -18,7 +19,7 @@ class ConfigurationTest extends TestCase
         self::assertEquals(
             [
                 __DIR__,
-                __DIR__ . '/app',
+                __DIR__ . DIRECTORY_SEPARATOR . 'app',
             ],
             $configuration->getPathsWithIgnore()
         );
