@@ -10,6 +10,7 @@ use RecursiveIteratorIterator;
 use ReflectionClass;
 use ShipMonk\ComposerDependencyAnalyser\Config\Configuration;
 use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
+use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidPathException;
 use ShipMonk\ComposerDependencyAnalyser\Result\AnalysisResult;
 use ShipMonk\ComposerDependencyAnalyser\Result\SymbolUsage;
 use UnexpectedValueException;
@@ -23,7 +24,9 @@ use function file_get_contents;
 use function function_exists;
 use function in_array;
 use function interface_exists;
+use function is_dir;
 use function is_file;
+use function is_readable;
 use function ksort;
 use function realpath;
 use function sort;
@@ -68,6 +71,7 @@ class Analyser
     /**
      * @param array<string, string> $optimizedClassmap className => filePath
      * @param array<string, bool> $composerJsonDependencies package name => is dev dependency
+     * @throws InvalidPathException
      */
     public function __construct(
         Stopwatch $stopwatch,
@@ -87,6 +91,9 @@ class Analyser
         $this->composerJsonDependencies = $composerJsonDependencies;
     }
 
+    /**
+     * @throws InvalidPathException
+     */
     public function run(): AnalysisResult
     {
         $this->stopwatch->start();
@@ -264,13 +271,18 @@ class Analyser
 
     /**
      * @return array<string, list<int>>
+     * @throws InvalidPathException
      */
     private function getUsedSymbolsInFile(string $filePath): array
     {
+        if (!is_readable($filePath)) {
+            throw new InvalidPathException("File '$filePath' is not readable");
+        }
+
         $code = file_get_contents($filePath);
 
         if ($code === false) {
-            throw new LogicException("Unable to get contents of $filePath");
+            throw new InvalidPathException("Unable to get contents of '$filePath'");
         }
 
         return (new UsedSymbolExtractor($code))->parseUsedClasses();
@@ -278,6 +290,7 @@ class Analyser
 
     /**
      * @return Generator<string>
+     * @throws InvalidPathException
      */
     private function listPhpFilesIn(string $path): Generator
     {
@@ -289,7 +302,7 @@ class Analyser
         try {
             $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path));
         } catch (UnexpectedValueException $e) {
-            throw new LogicException("Unable to list files in $path", 0, $e);
+            throw new InvalidPathException("Unable to list files in $path", 0, $e);
         }
 
         foreach ($iterator as $entry) {
@@ -338,12 +351,19 @@ class Analyser
         return $this->optimizedClassmap[$usedSymbol];
     }
 
+    /**
+     * @throws InvalidPathException
+     */
     private function realPath(string $filePath): string
     {
+        if (!is_file($filePath) && !is_dir($filePath)) {
+            throw new InvalidPathException("'$filePath' is not a file nor directory");
+        }
+
         $realPath = realpath($filePath);
 
         if ($realPath === false) {
-            throw new LogicException("Unable to realpath '$filePath'");
+            throw new InvalidPathException("Unable to realpath '$filePath'");
         }
 
         return $realPath;

@@ -5,9 +5,6 @@ namespace ShipMonk\ComposerDependencyAnalyser\Config\Ignore;
 use LogicException;
 use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
 use function array_fill_keys;
-use function array_flip;
-use function get_defined_constants;
-use function preg_last_error;
 use function preg_match;
 use function strpos;
 
@@ -146,10 +143,7 @@ class IgnoreList
             $matches = preg_match($regex, $class);
 
             if ($matches === false) {
-                /** @var array<string, int> $pcreConstants */
-                $pcreConstants = get_defined_constants(true)['pcre'] ?? [];
-                $error = array_flip($pcreConstants)[preg_last_error()] ?? 'unknown error';
-                throw new LogicException("Invalid regex: '$regex', error: $error");
+                throw new LogicException("Invalid regex: '$regex'");
             }
 
             if ($matches === 1) {
@@ -164,12 +158,12 @@ class IgnoreList
     /**
      * @param ErrorType::* $errorType
      */
-    public function shouldIgnoreError(string $errorType, ?string $filePath, ?string $packageName): bool
+    public function shouldIgnoreError(string $errorType, ?string $realPath, ?string $packageName): bool
     {
         $ignoredGlobally = $this->shouldIgnoreErrorGlobally($errorType);
-        $ignoredByPath = $filePath !== null && $this->shouldIgnoreErrorOnPath($errorType, $filePath);
+        $ignoredByPath = $realPath !== null && $this->shouldIgnoreErrorOnPath($errorType, $realPath);
         $ignoredByPackage = $packageName !== null && $this->shouldIgnoreErrorOnPackage($errorType, $packageName);
-        $ignoredByPackageAndPath = $filePath !== null && $packageName !== null && $this->shouldIgnoreErrorOnPackageAndPath($errorType, $packageName, $filePath);
+        $ignoredByPackageAndPath = $realPath !== null && $packageName !== null && $this->shouldIgnoreErrorOnPackageAndPath($errorType, $packageName, $realPath);
 
         return $ignoredGlobally || $ignoredByPackageAndPath || $ignoredByPath || $ignoredByPackage;
     }
