@@ -2,11 +2,14 @@
 
 namespace ShipMonk\ComposerDependencyAnalyser\Config;
 
-use LogicException;
 use ShipMonk\ComposerDependencyAnalyser\Config\Ignore\IgnoreList;
-use function array_keys;
+use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidConfigException;
+use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidPathException;
 use function array_merge;
 use function in_array;
+use function is_dir;
+use function is_file;
+use function preg_match;
 use function realpath;
 use function strpos;
 
@@ -146,6 +149,7 @@ class Configuration
 
     /**
      * @return $this
+     * @throws InvalidPathException
      */
     public function addPathToScan(string $path, bool $isDev): self
     {
@@ -156,6 +160,7 @@ class Configuration
     /**
      * @param list<string> $paths
      * @return $this
+     * @throws InvalidPathException
      */
     public function addPathsToScan(array $paths, bool $isDev): self
     {
@@ -168,6 +173,7 @@ class Configuration
 
     /**
      * @return $this
+     * @throws InvalidPathException
      */
     public function addPathToExclude(string $path): self
     {
@@ -178,6 +184,7 @@ class Configuration
     /**
      * @param list<string> $paths
      * @return $this
+     * @throws InvalidPathException
      */
     public function addPathsToExclude(array $paths): self
     {
@@ -191,16 +198,12 @@ class Configuration
     /**
      * @param list<ErrorType::*> $errorTypes
      * @return $this
+     * @throws InvalidPathException
+     * @throws InvalidConfigException
      */
     public function ignoreErrorsOnPath(string $path, array $errorTypes): self
     {
-        if (in_array(ErrorType::UNUSED_DEPENDENCY, $errorTypes, true)) {
-            throw new LogicException('UNUSED_DEPENDENCY errors cannot be ignored on a path');
-        }
-
-        if (in_array(ErrorType::PROD_DEPENDENCY_ONLY_IN_DEV, $errorTypes, true)) {
-            throw new LogicException('PROD_DEPENDENCY_ONLY_IN_DEV errors cannot be ignored on a path');
-        }
+        $this->checkAllowedErrorTypeForPathIgnore($errorTypes);
 
         $realpath = $this->realpath($path);
 
@@ -213,6 +216,8 @@ class Configuration
      * @param list<string> $paths
      * @param list<ErrorType::*> $errorTypes
      * @return $this
+     * @throws InvalidPathException
+     * @throws InvalidConfigException
      */
     public function ignoreErrorsOnPaths(array $paths, array $errorTypes): self
     {
@@ -226,12 +231,12 @@ class Configuration
     /**
      * @param list<ErrorType::*> $errorTypes
      * @return $this
+     * @throws InvalidConfigException
      */
     public function ignoreErrorsOnPackage(string $packageName, array $errorTypes): self
     {
-        if (in_array(ErrorType::UNKNOWN_CLASS, $errorTypes, true)) {
-            throw new LogicException('Unknown class errors cannot be ignored on a package');
-        }
+        $this->checkPackageName($packageName);
+        $this->checkAllowedErrorTypeForPackageIgnore($errorTypes);
 
         $previousErrorTypes = $this->ignoredErrorsOnPackage[$packageName] ?? [];
         $this->ignoredErrorsOnPackage[$packageName] = array_merge($previousErrorTypes, $errorTypes);
@@ -242,6 +247,7 @@ class Configuration
      * @param list<string> $packageNames
      * @param list<ErrorType::*> $errorTypes
      * @return $this
+     * @throws InvalidConfigException
      */
     public function ignoreErrorsOnPackages(array $packageNames, array $errorTypes): self
     {
@@ -255,20 +261,14 @@ class Configuration
     /**
      * @param list<ErrorType::*> $errorTypes
      * @return $this
+     * @throws InvalidPathException
+     * @throws InvalidConfigException
      */
     public function ignoreErrorsOnPackageAndPath(string $packageName, string $path, array $errorTypes): self
     {
-        if (in_array(ErrorType::UNKNOWN_CLASS, $errorTypes, true)) {
-            throw new LogicException('UNKNOWN_CLASS errors cannot be ignored on a package');
-        }
-
-        if (in_array(ErrorType::UNUSED_DEPENDENCY, $errorTypes, true)) {
-            throw new LogicException('UNUSED_DEPENDENCY errors cannot be ignored on a path');
-        }
-
-        if (in_array(ErrorType::PROD_DEPENDENCY_ONLY_IN_DEV, $errorTypes, true)) {
-            throw new LogicException('PROD_DEPENDENCY_ONLY_IN_DEV errors cannot be ignored on a path');
-        }
+        $this->checkPackageName($packageName);
+        $this->checkAllowedErrorTypeForPathIgnore($errorTypes);
+        $this->checkAllowedErrorTypeForPackageIgnore($errorTypes);
 
         $realpath = $this->realpath($path);
 
@@ -281,6 +281,8 @@ class Configuration
      * @param list<string> $paths
      * @param list<ErrorType::*> $errorTypes
      * @return $this
+     * @throws InvalidPathException
+     * @throws InvalidConfigException
      */
     public function ignoreErrorsOnPackageAndPaths(string $packageName, array $paths, array $errorTypes): self
     {
@@ -296,6 +298,8 @@ class Configuration
      * @param list<string> $paths
      * @param list<ErrorType::*> $errorTypes
      * @return $this
+     * @throws InvalidPathException
+     * @throws InvalidConfigException
      */
     public function ignoreErrorsOnPackagesAndPaths(array $packages, array $paths, array $errorTypes): self
     {
@@ -319,9 +323,14 @@ class Configuration
 
     /**
      * @return $this
+     * @throws InvalidConfigException
      */
     public function ignoreUnknownClassesRegex(string $classNameRegex): self
     {
+        if (@preg_match($classNameRegex, '') === false) {
+            throw new InvalidConfigException("Invalid regex '$classNameRegex'");
+        }
+
         $this->ignoredUnknownClassesRegexes[] = $classNameRegex;
         return $this;
     }
@@ -362,31 +371,6 @@ class Configuration
         return $this->pathsToScan;
     }
 
-    /**
-     * @return list<string>
-     */
-    public function getPathsToExclude(): array
-    {
-        return $this->pathsToExclude;
-    }
-
-    /**
-     * @return list<string>
-     */
-    public function getPathsWithIgnore(): array
-    {
-        $paths = array_keys($this->ignoredErrorsOnPath);
-
-        foreach ($this->ignoredErrorsOnPackageAndPath as $packagePaths) {
-            $paths = array_merge(
-                $paths,
-                array_keys($packagePaths)
-            );
-        }
-
-        return $paths;
-    }
-
     public function shouldScanComposerAutoloadPaths(): bool
     {
         return $this->scanComposerAutoloadPaths;
@@ -418,15 +402,60 @@ class Configuration
         return strpos($filePath, $path) === 0;
     }
 
+    /**
+     * @throws InvalidPathException
+     */
     private function realpath(string $filePath): string
     {
+        if (!is_file($filePath) && !is_dir($filePath)) {
+            throw new InvalidPathException("'$filePath' is not a file nor directory");
+        }
+
         $realPath = realpath($filePath);
 
         if ($realPath === false) {
-            throw new LogicException("Unable to realpath '$filePath'");
+            throw new InvalidPathException("Unable to realpath '$filePath'");
         }
 
         return $realPath;
+    }
+
+    /**
+     * @throws InvalidConfigException
+     */
+    private function checkPackageName(string $packageName): void
+    {
+        $regex = '~^[a-z0-9]([_.-]?[a-z0-9]+)*/[a-z0-9](([_.]|-{1,2})?[a-z0-9]+)*$~'; // https://getcomposer.org/doc/04-schema.md
+
+        if (preg_match($regex, $packageName) !== 1) {
+            throw new InvalidConfigException("Invalid package name '$packageName'");
+        }
+    }
+
+    /**
+     * @param list<ErrorType::*> $errorTypes
+     * @throws InvalidConfigException
+     */
+    private function checkAllowedErrorTypeForPathIgnore(array $errorTypes): void
+    {
+        if (in_array(ErrorType::UNUSED_DEPENDENCY, $errorTypes, true)) {
+            throw new InvalidConfigException('UNUSED_DEPENDENCY errors cannot be ignored on a path');
+        }
+
+        if (in_array(ErrorType::PROD_DEPENDENCY_ONLY_IN_DEV, $errorTypes, true)) {
+            throw new InvalidConfigException('PROD_DEPENDENCY_ONLY_IN_DEV errors cannot be ignored on a path');
+        }
+    }
+
+    /**
+     * @param list<ErrorType::*> $errorTypes
+     * @throws InvalidConfigException
+     */
+    private function checkAllowedErrorTypeForPackageIgnore(array $errorTypes): void
+    {
+        if (in_array(ErrorType::UNKNOWN_CLASS, $errorTypes, true)) {
+            throw new InvalidConfigException('UNKNOWN_CLASS errors cannot be ignored on a package');
+        }
     }
 
 }

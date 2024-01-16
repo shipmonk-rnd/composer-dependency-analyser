@@ -8,6 +8,7 @@ use ShipMonk\ComposerDependencyAnalyser\ComposerJson;
 use ShipMonk\ComposerDependencyAnalyser\Config\Configuration;
 use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
 use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidCliException;
+use ShipMonk\ComposerDependencyAnalyser\Exception\RuntimeException as OurRuntimeException;
 use ShipMonk\ComposerDependencyAnalyser\Printer;
 use ShipMonk\ComposerDependencyAnalyser\Stopwatch;
 
@@ -91,7 +92,11 @@ if (isset($providedOptions['config'])) {
 if (is_file($configPath)) {
     $printer->printLine('<gray>Using config</gray> ' . $configPath);
 
-    $config = require $configPath;
+    try {
+        $config = require $configPath;
+    } catch (OurRuntimeException $e) {
+        $exit($e->getMessage());
+    }
 
     if (!$config instanceof Configuration) {
         $exit("Invalid config file, it must return instance of " . Configuration::class);
@@ -127,7 +132,7 @@ $composerJsonPath = isset($providedOptions['composer-json'])
     : ($cwd . "/composer.json");
 
 if (!is_file($composerJsonPath)) {
-    $exit("File composer.json not found, $composerJsonPath is not a file.");
+    $exit("File composer.json not found, '$composerJsonPath' is not a file.");
 }
 
 $composerJsonRawData = file_get_contents($composerJsonPath);
@@ -160,42 +165,28 @@ if (!$loaders[$vendorDir]->isClassMapAuthoritative()) {
     $exit('Run \'composer dump-autoload --classmap-authoritative\' first');
 }
 
-if ($config->shouldScanComposerAutoloadPaths()) {
-    foreach ($composerJson->autoloadPaths as $relativePath => $isDevPath) {
-        $absolutePath = dirname($composerJsonPath) . '/' . $relativePath;
-        $config->addPathToScan($absolutePath, $isDevPath);
+try {
+    if ($config->shouldScanComposerAutoloadPaths()) {
+        foreach ($composerJson->autoloadPaths as $relativePath => $isDevPath) {
+            $absolutePath = dirname($composerJsonPath) . '/' . $relativePath;
+            $config->addPathToScan($absolutePath, $isDevPath);
+        }
+
+        if ($config->getPathsToScan() === []) {
+            $exit('No paths to scan! There is no composer autoload section and no extra path to scan configured.');
+        }
+    } else {
+        if ($config->getPathsToScan() === []) {
+            $exit('No paths to scan! Scanning composer\'s \'autoload\' sections is disabled and no extra path to scan was configured.');
+        }
     }
 
-    if ($config->getPathsToScan() === []) {
-        $exit('No paths to scan! There is no composer autoload section and no extra path to scan configured.');
-    }
-} else {
-    if ($config->getPathsToScan() === []) {
-        $exit('No paths to scan! Scanning composer\'s \'autoload\' sections is disabled and no extra path to scan was configured.');
-    }
+    $stopwatch = new Stopwatch();
+    $analyser = new Analyser($stopwatch, $config, $vendorDir, $loaders[$vendorDir]->getClassMap(), $composerJson->dependencies);
+    $result = $analyser->run();
+} catch (OurRuntimeException $e) {
+    $exit($e->getMessage());
 }
-
-foreach ($config->getPathsToScan() as $pathToScan) {
-    if (!is_dir($pathToScan->getPath()) && !is_file($pathToScan->getPath())) {
-        $exit("Invalid scan path given, {$pathToScan->getPath()} is not a file nor directory.");
-    }
-}
-
-foreach ($config->getPathsToExclude() as $pathToExclude) {
-    if (!is_dir($pathToExclude) && !is_file($pathToExclude)) {
-        $exit("Invalid exclude path given, {$pathToExclude} is not a file nor directory.");
-    }
-}
-
-foreach ($config->getPathsWithIgnore() as $pathWithIgnore) {
-    if (!is_dir($pathWithIgnore) && !is_file($pathWithIgnore)) {
-        $exit("Invalid ignore path given, {$pathWithIgnore} is not a file nor directory.");
-    }
-}
-
-$stopwatch = new Stopwatch();
-$analyser = new Analyser($stopwatch, $config, $vendorDir, $loaders[$vendorDir]->getClassMap(), $composerJson->dependencies);
-$result = $analyser->run();
 
 $exitCode = $printer->printResult($result, isset($providedOptions['verbose']), $config->shouldReportUnmatchedIgnoredErrors());
 exit($exitCode);
