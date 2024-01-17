@@ -60,6 +60,11 @@ class CliTest extends TestCase
             ['bin/script.php', '--composer-json', '../composer.json', '--verbose']
         ];
 
+        yield 'valid options with values, multiple' => [
+            null,
+            ['bin/script.php', '--composer-json', '../composer.json', '--config', '../config.php']
+        ];
+
         yield 'valid options with values using "' => [
             null,
             ['bin/script.php', '--composer-json', '"../composer.json"', '--verbose']
