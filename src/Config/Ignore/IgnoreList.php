@@ -132,13 +132,28 @@ class IgnoreList
         return $unused;
     }
 
-    public function shouldIgnoreUnknownClass(string $class): bool
+    public function shouldIgnoreUnknownClass(string $class, string $filePath): bool
+    {
+        $ignoredGlobally = $this->shouldIgnoreErrorGlobally(ErrorType::UNKNOWN_CLASS);
+        $ignoredByPath = $this->shouldIgnoreErrorOnPath(ErrorType::UNKNOWN_CLASS, $filePath);
+        $ignoredByRegex = $this->shouldIgnoreUnknownClassByRegex($class);
+        $ignoredByBlacklist = $this->shouldIgnoreUnknownClassByBlacklist($class);
+
+        return $ignoredGlobally || $ignoredByPath || $ignoredByRegex || $ignoredByBlacklist;
+    }
+
+    private function shouldIgnoreUnknownClassByBlacklist(string $class): bool
     {
         if (isset($this->ignoredUnknownClasses[$class])) {
             $this->ignoredUnknownClasses[$class] = true;
             return true;
         }
 
+        return false;
+    }
+
+    private function shouldIgnoreUnknownClassByRegex(string $class): bool
+    {
         foreach ($this->ignoredUnknownClassesRegexes as $regex => $ignoreUsed) {
             $matches = preg_match($regex, $class);
 
@@ -156,7 +171,7 @@ class IgnoreList
     }
 
     /**
-     * @param ErrorType::* $errorType
+     * @param ErrorType::SHADOW_DEPENDENCY|ErrorType::UNUSED_DEPENDENCY|ErrorType::DEV_DEPENDENCY_IN_PROD|ErrorType::PROD_DEPENDENCY_ONLY_IN_DEV $errorType
      */
     public function shouldIgnoreError(string $errorType, ?string $realPath, ?string $packageName): bool
     {
