@@ -7,7 +7,6 @@ use function array_slice;
 use function getopt;
 use function is_dir;
 use function is_file;
-use function next;
 use function rtrim;
 use function strlen;
 use function strpos;
@@ -37,7 +36,7 @@ class Cli
         $ignoreNextArg = false;
         $argsWithoutScript = array_slice($argv, 1);
 
-        foreach ($argsWithoutScript as $arg) {
+        foreach ($argsWithoutScript as $argIndex => $arg) {
             if ($ignoreNextArg === true) {
                 $ignoreNextArg = false;
                 continue;
@@ -71,7 +70,7 @@ class Cli
 
                 if ($optionArgument === null) { // next $arg is the argument
                     $ignoreNextArg = true;
-                    $nextArg = next($argsWithoutScript);
+                    $nextArg = $argsWithoutScript[$argIndex + 1] ?? false;
 
                     if ($nextArg === false || strpos($nextArg, '-') === 0) {
                         throw new InvalidCliException("Missing argument for $arg, see --help");
