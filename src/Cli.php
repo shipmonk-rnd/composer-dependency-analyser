@@ -7,7 +7,6 @@ use function array_slice;
 use function getopt;
 use function is_dir;
 use function is_file;
-use function next;
 use function rtrim;
 use function strlen;
 use function strpos;
