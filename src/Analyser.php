@@ -130,8 +130,7 @@ class Analyser
                     if (!$this->isInClassmap($usedSymbol)) {
                         if (
                             !$this->isConstOrFunction($usedSymbol)
-                            && !$ignoreList->shouldIgnoreUnknownClass($usedSymbol)
-                            && !$ignoreList->shouldIgnoreError(ErrorType::UNKNOWN_CLASS, $filePath, null)
+                            && !$ignoreList->shouldIgnoreUnknownClass($usedSymbol, $filePath)
                         ) {
                             foreach ($lineNumbers as $lineNumber) {
                                 $classmapErrors[$usedSymbol][] = new SymbolUsage($filePath, $lineNumber);

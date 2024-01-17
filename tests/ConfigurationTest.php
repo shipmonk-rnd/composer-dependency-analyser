@@ -5,6 +5,7 @@ namespace ShipMonk\ComposerDependencyAnalyser;
 use PHPUnit\Framework\TestCase;
 use ShipMonk\ComposerDependencyAnalyser\Config\Configuration;
 use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
+use ShipMonk\ComposerDependencyAnalyser\Config\Ignore\UnusedClassIgnore;
 use ShipMonk\ComposerDependencyAnalyser\Config\Ignore\UnusedErrorIgnore;
 use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidConfigException;
 use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidPathException;
@@ -17,12 +18,17 @@ class ConfigurationTest extends TestCase
     public function testShouldIgnore(): void
     {
         $configuration = new Configuration();
-        $configuration->ignoreErrors([ErrorType::UNUSED_DEPENDENCY]);
+        $configuration->ignoreUnknownClasses(['Unknown\Clazz']);
+        $configuration->ignoreErrors([ErrorType::UNUSED_DEPENDENCY, ErrorType::UNKNOWN_CLASS]);
         $configuration->ignoreErrorsOnPath(__DIR__ . '/app/../', [ErrorType::SHADOW_DEPENDENCY]);
         $configuration->ignoreErrorsOnPackage('my/package', [ErrorType::PROD_DEPENDENCY_ONLY_IN_DEV]);
         $configuration->ignoreErrorsOnPackageAndPath('vendor/package', __DIR__ . '/../tests/app', [ErrorType::DEV_DEPENDENCY_IN_PROD]);
 
         $ignoreList = $configuration->getIgnoreList();
+
+        self::assertTrue($ignoreList->shouldIgnoreUnknownClass('Unknown\Clazz', __DIR__));
+        self::assertTrue($ignoreList->shouldIgnoreUnknownClass('Unknown\Clazz', __DIR__ . '/app'));
+        self::assertTrue($ignoreList->shouldIgnoreUnknownClass('Any\Clazz', __DIR__));
 
         self::assertTrue($ignoreList->shouldIgnoreError(ErrorType::UNUSED_DEPENDENCY, null, null));
         self::assertTrue($ignoreList->shouldIgnoreError(ErrorType::UNUSED_DEPENDENCY, null, 'some/package'));
@@ -84,6 +90,46 @@ class ConfigurationTest extends TestCase
         self::assertEquals([
             new UnusedErrorIgnore(ErrorType::SHADOW_DEPENDENCY, null, 'vendor/package'),
             new UnusedErrorIgnore(ErrorType::SHADOW_DEPENDENCY, __DIR__, 'vendor/package'),
+        ], $ignoreList3->getUnusedIgnores());
+    }
+
+    public function testOverlappingUnusedIgnoresOfUnknownClass(): void
+    {
+        $configuration = new Configuration();
+        $configuration->ignoreErrors([ErrorType::UNKNOWN_CLASS]);
+        $configuration->ignoreErrorsOnPath(__DIR__, [ErrorType::UNKNOWN_CLASS]);
+        $configuration->ignoreUnknownClasses(['Unknown\Clazz']);
+        $configuration->ignoreUnknownClassesRegex('~^Unknown~');
+
+        $ignoreList1 = $configuration->getIgnoreList();
+        $ignoreList2 = $configuration->getIgnoreList();
+        $ignoreList3 = $configuration->getIgnoreList();
+
+        $parentDir = realpath(__DIR__ . '/..');
+        self::assertNotFalse($parentDir);
+
+        foreach ([$ignoreList1, $ignoreList2, $ignoreList3] as $ignoreList) {
+            self::assertEquals([
+                new UnusedErrorIgnore(ErrorType::UNKNOWN_CLASS, null, null),
+                new UnusedErrorIgnore(ErrorType::UNKNOWN_CLASS, __DIR__, null),
+                new UnusedClassIgnore('Unknown\Clazz', false),
+                new UnusedClassIgnore('~^Unknown~', true),
+            ], $ignoreList->getUnusedIgnores());
+        }
+
+        self::assertTrue($ignoreList1->shouldIgnoreUnknownClass('Unknown\Clazz', __DIR__));
+        self::assertEquals([], $ignoreList1->getUnusedIgnores());
+
+        self::assertTrue($ignoreList2->shouldIgnoreUnknownClass('Unknown\Clazz', $parentDir));
+        self::assertEquals([
+            new UnusedErrorIgnore(ErrorType::UNKNOWN_CLASS, __DIR__, null),
+        ], $ignoreList2->getUnusedIgnores());
+
+        self::assertTrue($ignoreList3->shouldIgnoreUnknownClass('Another\Clazz', $parentDir));
+        self::assertEquals([
+            new UnusedErrorIgnore(ErrorType::UNKNOWN_CLASS, __DIR__, null),
+            new UnusedClassIgnore('Unknown\Clazz', false),
+            new UnusedClassIgnore('~^Unknown~', true),
         ], $ignoreList3->getUnusedIgnores());
     }
 
