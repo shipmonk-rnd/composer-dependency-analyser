@@ -12,6 +12,9 @@ use ShipMonk\ComposerDependencyAnalyser\Exception\RuntimeException as OurRuntime
 use ShipMonk\ComposerDependencyAnalyser\Printer;
 use ShipMonk\ComposerDependencyAnalyser\Stopwatch;
 
+error_reporting(E_ALL);
+ini_set('display_errors', 'stderr');
+
 $usage = <<<EOD
 
 Usage:
@@ -131,7 +134,11 @@ $composerJsonPath = isset($providedOptions['composer-json'])
     ? ($cwd . "/" . $providedOptions['composer-json'])
     : ($cwd . "/composer.json");
 
-$composerJson = new ComposerJson($composerJsonPath);
+try {
+    $composerJson = new ComposerJson($composerJsonPath);
+} catch (OurRuntimeException $e) {
+    $exit($e->getMessage());
+}
 
 $loaders = ClassLoader::getRegisteredLoaders();
 if (count($loaders) !== 1) {
