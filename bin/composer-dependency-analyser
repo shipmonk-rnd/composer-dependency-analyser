@@ -131,29 +131,7 @@ $composerJsonPath = isset($providedOptions['composer-json'])
     ? ($cwd . "/" . $providedOptions['composer-json'])
     : ($cwd . "/composer.json");
 
-if (!is_file($composerJsonPath)) {
-    $exit("File composer.json not found, '$composerJsonPath' is not a file.");
-}
-
-$composerJsonRawData = file_get_contents($composerJsonPath);
-
-if ($composerJsonRawData === false) {
-    $exit("Failure while reading $composerJsonPath file.");
-}
-
-$composerJsonData = json_decode($composerJsonRawData, true);
-
-$jsonError = json_last_error();
-
-if ($jsonError !== JSON_ERROR_NONE) {
-    $exit("Failure while parsing $composerJsonPath file: " . json_last_error_msg());
-}
-
-$composerJson = new ComposerJson($composerJsonData); // @phpstan-ignore-line ignore mixed given
-
-if (count($composerJson->dependencies) === 0) {
-    $exit("No packages found in $composerJsonPath file.");
-}
+$composerJson = new ComposerJson($composerJsonPath);
 
 $loaders = ClassLoader::getRegisteredLoaders();
 if (count($loaders) !== 1) {
@@ -167,8 +145,7 @@ if (!$loaders[$vendorDir]->isClassMapAuthoritative()) {
 
 try {
     if ($config->shouldScanComposerAutoloadPaths()) {
-        foreach ($composerJson->autoloadPaths as $relativePath => $isDevPath) {
-            $absolutePath = dirname($composerJsonPath) . '/' . $relativePath;
+        foreach ($composerJson->autoloadPaths as $absolutePath => $isDevPath) {
             $config->addPathToScan($absolutePath, $isDevPath);
         }
 
