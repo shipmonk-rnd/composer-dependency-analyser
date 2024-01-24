@@ -3,6 +3,7 @@
 namespace ShipMonk\ComposerDependencyAnalyser;
 
 use PHPUnit\Framework\TestCase;
+use function realpath;
 
 class ComposerJsonTest extends TestCase
 {
@@ -21,9 +22,9 @@ class ComposerJsonTest extends TestCase
 
         self::assertSame(
             [
-                __DIR__ . '/composer/dir2/file1.php' => false,
-                __DIR__ . '/composer/dir1' => false,
-                __DIR__ . '/composer/dir2' => false,
+                realpath(__DIR__ . '/composer/dir2/file1.php') => false,
+                realpath(__DIR__ . '/composer/dir1') => false,
+                realpath(__DIR__ . '/composer/dir2') => false,
             ],
             $composerJson->autoloadPaths
         );
