@@ -118,7 +118,7 @@ return $config
 
     // exclude path from scanning
     // for multiple paths at once, use addPathsToExclude()
-    ->addPathToExclude(__DIR__ . '/samples', isDev: false)
+    ->addPathToExclude(__DIR__ . '/samples')
 
     // ignore errors on specific paths
     // this can be handy when DIC container file was passed as extra path, but you want to ignore shadow dependencies there
