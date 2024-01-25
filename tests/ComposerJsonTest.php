@@ -3,34 +3,14 @@
 namespace ShipMonk\ComposerDependencyAnalyser;
 
 use PHPUnit\Framework\TestCase;
+use function realpath;
 
 class ComposerJsonTest extends TestCase
 {
 
     public function testComposerJson(): void
     {
-        $composerJson = new ComposerJson([
-            'require' => [
-                'php' => '^8.0',
-                'nette/utils' => '^3.0',
-            ],
-            'require-dev' => [
-                'phpstan/phpstan' => '^1.0',
-            ],
-            'autoload' => [
-                'psr-4' => [
-                    'App\\' => 'src/',
-                ],
-                'files' => [
-                    'public/bootstrap.php',
-                ],
-            ],
-            'autoload-dev' => [
-                'psr-4' => [
-                    'App\\' => ['build/', 'tests/'],
-                ],
-            ],
-        ]);
+        $composerJson = new ComposerJson(__DIR__ . '/composer/sample.json');
 
         self::assertSame(
             [
@@ -42,10 +22,9 @@ class ComposerJsonTest extends TestCase
 
         self::assertSame(
             [
-                'src/' => false,
-                'public/bootstrap.php' => false,
-                'build/' => true,
-                'tests/' => true,
+                realpath(__DIR__ . '/composer/dir2/file1.php') => false,
+                realpath(__DIR__ . '/composer/dir1') => false,
+                realpath(__DIR__ . '/composer/dir2') => false,
             ],
             $composerJson->autoloadPaths
         );

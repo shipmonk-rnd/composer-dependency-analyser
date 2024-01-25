@@ -63,15 +63,20 @@ class BinTest extends TestCase
             fclose($pipe);
         }
 
+        $extraInfo = "Output was:\n" . $output . "\nError was:\n" . $errorOutput . "\n";
+
         $exitCode = proc_close($procHandle);
         self::assertSame(
             $expectedExitCode,
             $exitCode,
-            "Output was:\n" . $output . "\n" .
-            "Error was:\n" . $errorOutput . "\n"
+            $extraInfo
         );
 
-        self::assertStringContainsString($expectedOutputContains, $output);
+        self::assertStringContainsString(
+            $expectedOutputContains,
+            $output,
+            $extraInfo
+        );
     }
 
 }

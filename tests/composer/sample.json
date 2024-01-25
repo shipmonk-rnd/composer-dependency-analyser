@@ -1,0 +1,17 @@
+{
+    "require": {
+        "php": "^8.0",
+        "nette/utils": "^3.0"
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^1.0"
+    },
+    "autoload": {
+        "classmap": [
+            "dir*"
+        ],
+        "files": [
+            "dir2/file1.php"
+        ]
+    }
+}

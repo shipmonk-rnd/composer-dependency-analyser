@@ -80,8 +80,6 @@ This tool reads your `composer.json` and scans all paths listed in both `autoloa
 It is expected to run this tool in root of your project, where the `composer.json` is located.
 If you want to run it elsewhere, you can use `--composer-json=path/to/composer.json` option.
 
-Currently, it only supports those `composer.json` autoload sections: `psr-4`, `psr-0`, `files`.
-
 ## Configuration:
 You can provide custom path to config file by `--config=path/to/config.php` where the config file is PHP file returning `ShipMonk\ComposerDependencyAnalyser\Config\Configuration` object.
 It gets loaded automatically if it is located in cwd as `composer-dependency-analyser.php`.
