@@ -106,7 +106,7 @@ return $config
     // do not report ignores that never matched any error
     ->disableReportingUnmatchedIgnores()
 
-    // disable detection of dev dependencies in production code globally
+    // globally disable specific error type
     ->ignoreErrors([ErrorType::DEV_DEPENDENCY_IN_PROD])
 
     // overwrite file extensions to scan, defaults to 'php'
