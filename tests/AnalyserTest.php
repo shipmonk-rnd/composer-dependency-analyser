@@ -459,4 +459,35 @@ class AnalyserTest extends TestCase
         );
     }
 
+    public function testNativeTypesNotReported(): void
+    {
+        $path = __DIR__ . '/data/builtin/native-symbols.php';
+
+        $config = new Configuration();
+        $config->addPathToScan($path, false);
+
+        $stopwatch = $this->createMock(Stopwatch::class);
+        $stopwatch->expects(self::once())
+            ->method('stop')
+            ->willReturn(0.0);
+
+        $detector = new Analyser(
+            $stopwatch,
+            $config,
+            __DIR__,
+            [],
+            []
+        );
+        $result = $detector->run();
+
+        self::assertEquals($this->createAnalysisResult(1, [
+            ErrorType::UNKNOWN_CLASS => [
+                'resource' => [
+                    new SymbolUsage($path, 34),
+                    new SymbolUsage($path, 53),
+                ],
+            ],
+        ]), $result);
+    }
+
 }
