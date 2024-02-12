@@ -127,7 +127,10 @@ class UsedSymbolExtractor
 
                 if ($token[0] === T_NS_SEPARATOR) { // fully qualified name
                     $symbolName = $this->normalizeBackslash($this->parseNameForOldPhp());
-                    $usedSymbols[$symbolName][] = $tokenLine;
+
+                    if ($symbolName !== '') { // e.g. \array (NS separator followed by not-a-name)
+                        $usedSymbols[$symbolName][] = $tokenLine;
+                    }
                 }
 
                 if ($token[0] === T_STRING) {
