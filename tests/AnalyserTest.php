@@ -461,7 +461,8 @@ class AnalyserTest extends TestCase
 
     public function testNativeTypesNotReported(): void
     {
-        $path = __DIR__ . '/data/builtin/native-symbols.php';
+        $path = realpath(__DIR__ . '/data/builtin/native-symbols.php');
+        self::assertNotFalse($path);
 
         $config = new Configuration();
         $config->addPathToScan($path, false);
