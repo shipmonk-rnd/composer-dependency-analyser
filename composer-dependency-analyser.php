@@ -4,4 +4,4 @@ use ShipMonk\ComposerDependencyAnalyser\Config\Configuration;
 use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
 
 return (new Configuration())
-    ->ignoreErrorsOnPath(__DIR__ . '/tests/data/analysis', [ErrorType::UNKNOWN_CLASS]);
+    ->ignoreErrorsOnPath(__DIR__ . '/tests/data', [ErrorType::UNKNOWN_CLASS]);
