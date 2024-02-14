@@ -49,12 +49,12 @@ Found unused dependencies!
 You can add `--verbose` to see more example classes & usages.
 
 ## Detected issues:
-This tool reads your `composer.json` and scans all paths listed in both `autoload` sections while analysing:
+This tool reads your `composer.json` and scans all paths listed in `autoload` & `autoload-dev` sections while analysing:
 
 ### Shadowed dependencies
   - Those are dependencies of your dependencies, which are not listed in `composer.json`
   - Your code can break when your direct dependency gets updated to newer version which does not require that shadowed dependency anymore
-  - You should list all those classes within your dependencies
+  - You should list all those packages within your dependencies
   - Ignorable by `--ignore-shadow-deps` or more granularly by `--config`
 
 ### Unused dependencies
