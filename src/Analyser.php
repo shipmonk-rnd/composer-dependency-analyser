@@ -127,15 +127,8 @@ class Analyser
                 }
 
                 if (!$this->isInClassmap($usedSymbol)) {
-                    $addedToClassmapManually = false;
-
-                    if ($this->isAutoloadableClass($usedSymbol)) {
-                        $addedToClassmapManually = $this->addToClassmap($usedSymbol);
-                    }
-
                     if (
-                        !$addedToClassmapManually
-                        && !$this->isConstOrFunction($usedSymbol)
+                        !$this->isConstOrFunction($usedSymbol)
                         && !$this->isNativeType($usedSymbol)
                         && !$ignoreList->shouldIgnoreUnknownClass($usedSymbol, $filePath)
                     ) {
@@ -144,9 +137,7 @@ class Analyser
                         }
                     }
 
-                    if (!$addedToClassmapManually) {
-                        continue;
-                    }
+                    continue;
                 }
 
                 $classmapPath = $this->getPathFromClassmap($usedSymbol);
@@ -370,7 +361,13 @@ class Analyser
 
     private function isInClassmap(string $usedSymbol): bool
     {
-        return isset($this->classmap[$usedSymbol]);
+        $foundInClassmap = isset($this->classmap[$usedSymbol]);
+
+        if (!$foundInClassmap && $this->isAutoloadableClass($usedSymbol)) {
+            return $this->addToClassmap($usedSymbol);
+        }
+
+        return $foundInClassmap;
     }
 
     private function getPathFromClassmap(string $usedSymbol): string

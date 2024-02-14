@@ -484,18 +484,23 @@ class AnalyserTest extends TestCase
     public function testAutoloadableClassNotInClassmap(): void
     {
         require __DIR__ . '/vendor/dev/package/Clazz.php';
+        require __DIR__ . '/vendor/regular/package/Clazz.php';
 
         $path = realpath(__DIR__ . '/data/autoloadable-no-classmap/usage.php');
         self::assertNotFalse($path);
 
         $config = new Configuration();
         $config->addPathToScan($path, true);
+        $config->addForceUsedSymbol('Regular\Package\Clazz');
 
         $detector = new Analyser(
             $this->getStopwatchMock(),
             $config,
             __DIR__ . '/vendor',
-            ['dev/package' => true],
+            [
+                'regular/package' => false,
+                'dev/package' => true
+            ],
             []
         );
         $result = $detector->run();
