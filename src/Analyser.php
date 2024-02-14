@@ -8,6 +8,7 @@ use LogicException;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use ReflectionClass;
+use ReflectionException;
 use ShipMonk\ComposerDependencyAnalyser\Config\Configuration;
 use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
 use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidPathException;
@@ -129,8 +130,15 @@ class Analyser
                     }
 
                     if (!$this->isInClassmap($usedSymbol)) {
+                        $addedToClassmapManually = false;
+
+                        if ($this->isAutoloadableClass($usedSymbol)) {
+                            $addedToClassmapManually = $this->addToClassmap($usedSymbol);
+                        }
+
                         if (
-                            !$this->isConstOrFunction($usedSymbol)
+                            !$addedToClassmapManually
+                            && !$this->isConstOrFunction($usedSymbol)
                             && !$this->isNativeType($usedSymbol)
                             && !$ignoreList->shouldIgnoreUnknownClass($usedSymbol, $filePath)
                         ) {
@@ -139,7 +147,9 @@ class Analyser
                             }
                         }
 
-                        continue;
+                        if (!$addedToClassmapManually) {
+                            continue;
+                        }
                     }
 
                     $classmapPath = $this->getPathFromClassmap($usedSymbol);
@@ -420,6 +430,42 @@ class Analyser
             'Composer\\InstalledVersions',
             'Composer\\Autoload\\ClassLoader'
         ], true);
+    }
+
+    /**
+     * For classes not present in composer's classmap,
+     * but autoloadable (required manually or via composer's autoload-files section),
+     * we add them to classmap
+     */
+    private function isAutoloadableClass(string $usedSymbol): bool
+    {
+        if ($this->isConstOrFunction($usedSymbol)) {
+            return false;
+        }
+
+        return class_exists($usedSymbol, true) || interface_exists($usedSymbol, true);
+    }
+
+    private function addToClassmap(string $usedSymbol): bool
+    {
+        try {
+            $reflection = new ReflectionClass($usedSymbol); // @phpstan-ignore-line ignore not a class-string, we catch the exception
+        } catch (ReflectionException $e) {
+            return false;
+        }
+
+        $filePath = $reflection->getFileName();
+
+        if ($filePath === false) {
+            return false; // should probably never happen as internal classes are handled earlier
+        }
+
+        try {
+            $this->optimizedClassmap[$usedSymbol] = $this->realPath($filePath);
+            return true;
+        } catch (InvalidPathException $e) {
+            return false; // unable to realpath filepath from reflection, probably cannot happen
+        }
     }
 
 }

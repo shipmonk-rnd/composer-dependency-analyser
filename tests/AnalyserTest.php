@@ -42,13 +42,8 @@ class AnalyserTest extends TestCase
         $config = new Configuration();
         $editConfig($config);
 
-        $stopwatch = $this->createMock(Stopwatch::class);
-        $stopwatch->expects(self::once())
-            ->method('stop')
-            ->willReturn(0.0);
-
         $detector = new Analyser(
-            $stopwatch,
+            $this->getStopwatchMock(),
             $config,
             $vendorDir,
             $classmap,
@@ -467,13 +462,8 @@ class AnalyserTest extends TestCase
         $config = new Configuration();
         $config->addPathToScan($path, false);
 
-        $stopwatch = $this->createMock(Stopwatch::class);
-        $stopwatch->expects(self::once())
-            ->method('stop')
-            ->willReturn(0.0);
-
         $detector = new Analyser(
-            $stopwatch,
+            $this->getStopwatchMock(),
             $config,
             __DIR__,
             [],
@@ -489,6 +479,38 @@ class AnalyserTest extends TestCase
                 ],
             ],
         ]), $result);
+    }
+
+    public function testAutoloadableClassNotInClassmap(): void
+    {
+        require __DIR__ . '/vendor/dev/package/Clazz.php';
+
+        $path = realpath(__DIR__ . '/data/autoloadable-no-classmap/usage.php');
+        self::assertNotFalse($path);
+
+        $config = new Configuration();
+        $config->addPathToScan($path, true);
+
+        $detector = new Analyser(
+            $this->getStopwatchMock(),
+            $config,
+            __DIR__ . '/vendor',
+            [],
+            ['dev/package' => true]
+        );
+        $result = $detector->run();
+
+        self::assertEquals($this->createAnalysisResult(1, []), $result);
+    }
+
+    private function getStopwatchMock(): Stopwatch
+    {
+        $stopwatch = $this->createMock(Stopwatch::class);
+        $stopwatch->expects(self::once())
+            ->method('stop')
+            ->willReturn(0.0);
+
+        return $stopwatch;
     }
 
 }
