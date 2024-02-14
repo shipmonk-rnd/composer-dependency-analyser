@@ -33,6 +33,7 @@ use function realpath;
 use function sort;
 use function str_replace;
 use function strlen;
+use function strpos;
 use function strtolower;
 use function substr;
 use function trim;
@@ -460,12 +461,15 @@ class Analyser
             return false; // should probably never happen as internal classes are handled earlier
         }
 
-        try {
-            $this->optimizedClassmap[$usedSymbol] = $this->realPath($filePath);
-            return true;
-        } catch (InvalidPathException $e) {
-            return false; // unable to realpath filepath from reflection, probably cannot happen
+        $pharPrefix = 'phar://';
+
+        if (strpos($filePath, $pharPrefix) === 0) {
+            /** @var string $filePath */
+            $filePath = substr($filePath, strlen($pharPrefix));
         }
+
+        $this->optimizedClassmap[$usedSymbol] = $filePath;
+        return true;
     }
 
 }
