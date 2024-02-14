@@ -1,0 +1,5 @@
+{
+    "excludePaths": [
+        "tests/data/builtin/native-symbols.php"
+    ]
+}

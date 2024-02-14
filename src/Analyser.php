@@ -32,6 +32,7 @@ use function realpath;
 use function sort;
 use function str_replace;
 use function strlen;
+use function strtolower;
 use function substr;
 use function trim;
 use const DIRECTORY_SEPARATOR;
@@ -130,6 +131,7 @@ class Analyser
                     if (!$this->isInClassmap($usedSymbol)) {
                         if (
                             !$this->isConstOrFunction($usedSymbol)
+                            && !$this->isNativeType($usedSymbol)
                             && !$ignoreList->shouldIgnoreUnknownClass($usedSymbol, $filePath)
                         ) {
                             foreach ($lineNumbers as $lineNumber) {
@@ -375,6 +377,38 @@ class Analyser
     private function isConstOrFunction(string $usedClass): bool
     {
         return defined($usedClass) || function_exists($usedClass);
+    }
+
+    /**
+     * It is almost impossible to sneak a native type here without reaching fatal or parse error.
+     * Only very few edgecases are possible (using \array and \callable).
+     *
+     * See test native-symbols.php
+     *
+     * List taken from https://www.php.net/manual/en/language.types.type-system.php
+     */
+    private function isNativeType(string $usedClass): bool
+    {
+        return in_array(
+            strtolower($usedClass),
+            [
+                // built-in types
+                'bool', 'int', 'float', 'string', 'null', 'array', 'object', 'never', 'void',
+
+                // value types
+                'false', 'true',
+
+                // callable
+                'callable',
+
+                // relative class types
+                'self', 'parent', 'static',
+
+                // aliases
+                'mixed', 'iterable'
+            ],
+            true
+        );
     }
 
     /**
