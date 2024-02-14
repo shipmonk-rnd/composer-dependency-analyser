@@ -466,7 +466,6 @@ class AnalyserTest extends TestCase
             $this->getStopwatchMock(),
             $config,
             __DIR__,
-            [],
             []
         );
         $result = $detector->run();
@@ -500,8 +499,7 @@ class AnalyserTest extends TestCase
             [
                 'regular/package' => false,
                 'dev/package' => true
-            ],
-            []
+            ]
         );
         $result = $detector->run();
 
@@ -521,7 +519,6 @@ class AnalyserTest extends TestCase
             $this->getStopwatchMock(),
             $config,
             __DIR__ . '/vendor',
-            [],
             []
         );
         $result = $detector->run();

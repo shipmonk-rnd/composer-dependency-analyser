@@ -162,7 +162,7 @@ try {
     }
 
     $stopwatch = new Stopwatch();
-    $analyser = new Analyser($stopwatch, $config, $vendorDir, $composerJson->dependencies, $loaders[$vendorDir]->getClassMap());
+    $analyser = new Analyser($stopwatch, $config, $vendorDir, $composerJson->dependencies);
     $result = $analyser->run();
 } catch (OurRuntimeException $e) {
     $exit($e->getMessage());
