@@ -113,82 +113,76 @@ class Analyser
 
         $ignoreList = $this->config->getIgnoreList();
 
-        foreach ($this->config->getPathsToScan() as $scanPath) {
-            foreach ($this->listPhpFilesIn($scanPath->getPath()) as $filePath) {
-                if ($this->config->isExcludedFilepath($filePath)) {
+        foreach ($this->getUniqueFilePathsToScan() as $filePath => $isDevFilePath) {
+            $scannedFilesCount++;
+
+            foreach ($this->getUsedSymbolsInFile($filePath) as $usedSymbol => $lineNumbers) {
+                if ($this->isInternalClass($usedSymbol)) {
                     continue;
                 }
 
-                $scannedFilesCount++;
-
-                foreach ($this->getUsedSymbolsInFile($filePath) as $usedSymbol => $lineNumbers) {
-                    if ($this->isInternalClass($usedSymbol)) {
-                        continue;
-                    }
-
-                    if ($this->isComposerInternalClass($usedSymbol)) {
-                        continue;
-                    }
-
-                    if (!$this->isInClassmap($usedSymbol)) {
-                        $addedToClassmapManually = false;
-
-                        if ($this->isAutoloadableClass($usedSymbol)) {
-                            $addedToClassmapManually = $this->addToClassmap($usedSymbol);
-                        }
-
-                        if (
-                            !$addedToClassmapManually
-                            && !$this->isConstOrFunction($usedSymbol)
-                            && !$this->isNativeType($usedSymbol)
-                            && !$ignoreList->shouldIgnoreUnknownClass($usedSymbol, $filePath)
-                        ) {
-                            foreach ($lineNumbers as $lineNumber) {
-                                $classmapErrors[$usedSymbol][] = new SymbolUsage($filePath, $lineNumber);
-                            }
-                        }
-
-                        if (!$addedToClassmapManually) {
-                            continue;
-                        }
-                    }
-
-                    $classmapPath = $this->getPathFromClassmap($usedSymbol);
-
-                    if (!$this->isVendorPath($classmapPath)) {
-                        continue; // local class
-                    }
-
-                    $packageName = $this->getPackageNameFromVendorPath($classmapPath);
-
-                    if (
-                        $this->isShadowDependency($packageName)
-                        && !$ignoreList->shouldIgnoreError(ErrorType::SHADOW_DEPENDENCY, $filePath, $packageName)
-                    ) {
-                        foreach ($lineNumbers as $lineNumber) {
-                            $shadowErrors[$packageName][$usedSymbol][] = new SymbolUsage($filePath, $lineNumber);
-                        }
-                    }
-
-                    if (
-                        !$scanPath->isDev()
-                        && $this->isDevDependency($packageName)
-                        && !$ignoreList->shouldIgnoreError(ErrorType::DEV_DEPENDENCY_IN_PROD, $filePath, $packageName)
-                    ) {
-                        foreach ($lineNumbers as $lineNumber) {
-                            $devInProdErrors[$packageName][$usedSymbol][] = new SymbolUsage($filePath, $lineNumber);
-                        }
-                    }
-
-                    if (
-                        !$scanPath->isDev()
-                        && !$this->isDevDependency($packageName)
-                    ) {
-                        $prodPackagesUsedInProdPath[$packageName] = true;
-                    }
-
-                    $usedPackages[$packageName] = true;
+                if ($this->isComposerInternalClass($usedSymbol)) {
+                    continue;
                 }
+
+                if (!$this->isInClassmap($usedSymbol)) {
+                    $addedToClassmapManually = false;
+
+                    if ($this->isAutoloadableClass($usedSymbol)) {
+                        $addedToClassmapManually = $this->addToClassmap($usedSymbol);
+                    }
+
+                    if (
+                        !$addedToClassmapManually
+                        && !$this->isConstOrFunction($usedSymbol)
+                        && !$this->isNativeType($usedSymbol)
+                        && !$ignoreList->shouldIgnoreUnknownClass($usedSymbol, $filePath)
+                    ) {
+                        foreach ($lineNumbers as $lineNumber) {
+                            $classmapErrors[$usedSymbol][] = new SymbolUsage($filePath, $lineNumber);
+                        }
+                    }
+
+                    if (!$addedToClassmapManually) {
+                        continue;
+                    }
+                }
+
+                $classmapPath = $this->getPathFromClassmap($usedSymbol);
+
+                if (!$this->isVendorPath($classmapPath)) {
+                    continue; // local class
+                }
+
+                $packageName = $this->getPackageNameFromVendorPath($classmapPath);
+
+                if (
+                    $this->isShadowDependency($packageName)
+                    && !$ignoreList->shouldIgnoreError(ErrorType::SHADOW_DEPENDENCY, $filePath, $packageName)
+                ) {
+                    foreach ($lineNumbers as $lineNumber) {
+                        $shadowErrors[$packageName][$usedSymbol][] = new SymbolUsage($filePath, $lineNumber);
+                    }
+                }
+
+                if (
+                    !$isDevFilePath
+                    && $this->isDevDependency($packageName)
+                    && !$ignoreList->shouldIgnoreError(ErrorType::DEV_DEPENDENCY_IN_PROD, $filePath, $packageName)
+                ) {
+                    foreach ($lineNumbers as $lineNumber) {
+                        $devInProdErrors[$packageName][$usedSymbol][] = new SymbolUsage($filePath, $lineNumber);
+                    }
+                }
+
+                if (
+                    !$isDevFilePath
+                    && !$this->isDevDependency($packageName)
+                ) {
+                    $prodPackagesUsedInProdPath[$packageName] = true;
+                }
+
+                $usedPackages[$packageName] = true;
             }
         }
 
@@ -261,6 +255,30 @@ class Analyser
             $unusedErrors,
             $ignoreList->getUnusedIgnores()
         );
+    }
+
+    /**
+     * What paths overlap in composer.json autoload sections,
+     * we don't want to scan paths multiple times
+     *
+     * @return array<string, bool>
+     * @throws InvalidPathException
+     */
+    private function getUniqueFilePathsToScan(): array
+    {
+        $allFilePaths = [];
+
+        foreach ($this->config->getPathsToScan() as $scanPath) {
+            foreach ($this->listPhpFilesIn($scanPath->getPath()) as $filePath) {
+                if ($this->config->isExcludedFilepath($filePath)) {
+                    continue;
+                }
+
+                $allFilePaths[$filePath] = $scanPath->isDev();
+            }
+        }
+
+        return $allFilePaths;
     }
 
     private function isShadowDependency(string $packageName): bool
