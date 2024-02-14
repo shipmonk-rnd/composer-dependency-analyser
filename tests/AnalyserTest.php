@@ -46,8 +46,8 @@ class AnalyserTest extends TestCase
             $this->getStopwatchMock(),
             $config,
             $vendorDir,
-            $classmap,
-            $dependencies
+            $dependencies,
+            $classmap
         );
         $result = $detector->run();
 
@@ -495,8 +495,8 @@ class AnalyserTest extends TestCase
             $this->getStopwatchMock(),
             $config,
             __DIR__ . '/vendor',
-            [],
-            ['dev/package' => true]
+            ['dev/package' => true],
+            []
         );
         $result = $detector->run();
 

@@ -26,7 +26,6 @@ composer require --dev shipmonk/composer-dependency-analyser
 ## Usage:
 
 ```sh
-composer dump-autoload --classmap-authoritative # we use composer's autoloader to detect which class belongs to which package
 vendor/bin/composer-dependency-analyser
 ```
 

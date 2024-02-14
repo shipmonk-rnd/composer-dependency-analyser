@@ -146,10 +146,6 @@ if (count($loaders) !== 1) {
 }
 $vendorDir = key($loaders);
 
-if (!$loaders[$vendorDir]->isClassMapAuthoritative()) {
-    $exit('Run \'composer dump-autoload --classmap-authoritative\' first');
-}
-
 try {
     if ($config->shouldScanComposerAutoloadPaths()) {
         foreach ($composerJson->autoloadPaths as $absolutePath => $isDevPath) {
@@ -166,7 +162,7 @@ try {
     }
 
     $stopwatch = new Stopwatch();
-    $analyser = new Analyser($stopwatch, $config, $vendorDir, $loaders[$vendorDir]->getClassMap(), $composerJson->dependencies);
+    $analyser = new Analyser($stopwatch, $config, $vendorDir, $composerJson->dependencies, $loaders[$vendorDir]->getClassMap());
     $result = $analyser->run();
 } catch (OurRuntimeException $e) {
     $exit($e->getMessage());

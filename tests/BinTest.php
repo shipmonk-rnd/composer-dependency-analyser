@@ -23,8 +23,6 @@ class BinTest extends TestCase
         $okOutput = 'No composer issues found';
         $helpOutput = 'Usage:';
 
-        $this->runCommand('composer dump-autoload --classmap-authoritative', $rootDir, 0, 'Generated optimized autoload files');
-
         $this->runCommand('php bin/composer-dependency-analyser', $rootDir, 0, $okOutput);
         $this->runCommand('php bin/composer-dependency-analyser --verbose', $rootDir, 0, $okOutput);
         $this->runCommand('php ../bin/composer-dependency-analyser', $testsDir, 255, $noComposerJsonError);
