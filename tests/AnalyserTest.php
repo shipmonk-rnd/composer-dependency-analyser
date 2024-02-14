@@ -503,6 +503,32 @@ class AnalyserTest extends TestCase
         self::assertEquals($this->createAnalysisResult(1, []), $result);
     }
 
+    public function testNoMultipleScansOfTheSameFile(): void
+    {
+        $path = realpath(__DIR__ . '/data/analysis/unknown-classes.php');
+        self::assertNotFalse($path);
+
+        $config = new Configuration();
+        $config->addPathToScan($path, true);
+        $config->addPathToScan($path, true);
+
+        $detector = new Analyser(
+            $this->getStopwatchMock(),
+            $config,
+            __DIR__ . '/vendor',
+            [],
+            []
+        );
+        $result = $detector->run();
+
+        self::assertEquals($this->createAnalysisResult(1, [
+            ErrorType::UNKNOWN_CLASS => [
+                'Unknown\One' => [new SymbolUsage($path, 3)],
+                'Unknown\Two' => [new SymbolUsage($path, 4)],
+            ],
+        ]), $result);
+    }
+
     private function getStopwatchMock(): Stopwatch
     {
         $stopwatch = $this->createMock(Stopwatch::class);
