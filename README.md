@@ -73,7 +73,7 @@ This tool reads your `composer.json` and scans all paths listed in `autoload` & 
   - Ignorable by `--ignore-prod-only-in-dev-deps` or more granularly by `--config`
 
 ### Unknown classes
-  - Any class missing in composer classmap gets reported as we cannot say if that one is shadowed or not
+  - Any class that cannot be autoloaded gets reported as we cannot say if that one is shadowed or not
   - Ignorable by `--ignore-unknown-classes` or more granularly by `--config`
 
 It is expected to run this tool in root of your project, where the `composer.json` is located.
