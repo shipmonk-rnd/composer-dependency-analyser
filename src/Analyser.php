@@ -37,7 +37,6 @@ use function strlen;
 use function strpos;
 use function strtolower;
 use function substr;
-use function trait_exists;
 use function trim;
 use const DIRECTORY_SEPARATOR;
 
@@ -369,13 +368,17 @@ class Analyser
 
     private function isInClassmap(string $usedSymbol): bool
     {
+        if ($this->isConstOrFunction($usedSymbol)) {
+            return false;
+        }
+
         $foundInClassmap = isset($this->classmap[$usedSymbol]);
 
-        if (!$foundInClassmap && $this->isAutoloadableClass($usedSymbol)) {
+        if (!$foundInClassmap) {
             return $this->addToClassmap($usedSymbol);
         }
 
-        return $foundInClassmap;
+        return true;
     }
 
     private function getPathFromClassmap(string $usedSymbol): string
@@ -457,17 +460,6 @@ class Analyser
         ], true);
     }
 
-    private function isAutoloadableClass(string $usedSymbol): bool
-    {
-        if ($this->isConstOrFunction($usedSymbol)) {
-            return false;
-        }
-
-        return class_exists($usedSymbol, true)
-            || interface_exists($usedSymbol, true)
-            || trait_exists($usedSymbol, true);
-    }
-
     private function addToClassmap(string $usedSymbol): bool
     {
         $filePath = $this->detectFileByClassLoader($usedSymbol) ?? $this->detectFileByReflection($usedSymbol);
@@ -503,7 +495,7 @@ class Analyser
         try {
             $reflection = new ReflectionClass($usedSymbol); // @phpstan-ignore-line ignore not a class-string, we catch the exception
         } catch (ReflectionException $e) {
-            return null;
+            return null; // not autoloadable class
         }
 
         $filePath = $reflection->getFileName();
