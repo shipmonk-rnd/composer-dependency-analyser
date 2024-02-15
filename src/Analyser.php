@@ -2,6 +2,7 @@
 
 namespace ShipMonk\ComposerDependencyAnalyser;
 
+use Composer\Autoload\ClassLoader;
 use DirectoryIterator;
 use Generator;
 use LogicException;
@@ -36,7 +37,6 @@ use function strlen;
 use function strpos;
 use function strtolower;
 use function substr;
-use function trait_exists;
 use function trim;
 use const DIRECTORY_SEPARATOR;
 
@@ -47,6 +47,11 @@ class Analyser
      * @var Stopwatch
      */
     private $stopwatch;
+
+    /**
+     * @var ClassLoader
+     */
+    private $classLoader;
 
     /**
      * @var Configuration
@@ -79,6 +84,7 @@ class Analyser
      */
     public function __construct(
         Stopwatch $stopwatch,
+        ClassLoader $classLoader,
         Configuration $config,
         string $vendorDir,
         array $composerJsonDependencies,
@@ -90,6 +96,7 @@ class Analyser
         }
 
         $this->stopwatch = $stopwatch;
+        $this->classLoader = $classLoader;
         $this->config = $config;
         $this->vendorDir = $this->realPath($vendorDir);
         $this->composerJsonDependencies = $composerJsonDependencies;
@@ -361,13 +368,17 @@ class Analyser
 
     private function isInClassmap(string $usedSymbol): bool
     {
+        if ($this->isConstOrFunction($usedSymbol)) {
+            return false;
+        }
+
         $foundInClassmap = isset($this->classmap[$usedSymbol]);
 
-        if (!$foundInClassmap && $this->isAutoloadableClass($usedSymbol)) {
+        if (!$foundInClassmap) {
             return $this->addToClassmap($usedSymbol);
         }
 
-        return $foundInClassmap;
+        return true;
     }
 
     private function getPathFromClassmap(string $usedSymbol): string
@@ -449,40 +460,62 @@ class Analyser
         ], true);
     }
 
-    private function isAutoloadableClass(string $usedSymbol): bool
+    private function addToClassmap(string $usedSymbol): bool
     {
-        if ($this->isConstOrFunction($usedSymbol)) {
+        $filePath = $this->detectFileByClassLoader($usedSymbol) ?? $this->detectFileByReflection($usedSymbol);
+
+        if ($filePath === null) {
             return false;
         }
 
-        return class_exists($usedSymbol, true)
-            || interface_exists($usedSymbol, true)
-            || trait_exists($usedSymbol, true);
+        $this->classmap[$usedSymbol] = $this->trimPharPrefix($filePath);
+        return true;
     }
 
-    private function addToClassmap(string $usedSymbol): bool
+    /**
+     * This should minimize the amount autoloaded classes
+     */
+    private function detectFileByClassLoader(string $usedSymbol): ?string
+    {
+        $filePath = $this->classLoader->findFile($usedSymbol);
+
+        if ($filePath === false) {
+            return null;
+        }
+
+        try {
+            return $this->realPath($filePath);
+        } catch (InvalidPathException $e) {
+            return null;
+        }
+    }
+
+    private function detectFileByReflection(string $usedSymbol): ?string
     {
         try {
             $reflection = new ReflectionClass($usedSymbol); // @phpstan-ignore-line ignore not a class-string, we catch the exception
         } catch (ReflectionException $e) {
-            return false;
+            return null; // not autoloadable class
         }
 
         $filePath = $reflection->getFileName();
 
         if ($filePath === false) {
-            return false; // should probably never happen as internal classes are handled earlier
+            return null; // should probably never happen as internal classes are handled earlier
         }
 
+        return $filePath;
+    }
+
+    private function trimPharPrefix(string $filePath): string
+    {
         $pharPrefix = 'phar://';
 
         if (strpos($filePath, $pharPrefix) === 0) {
-            /** @var string $filePath */
-            $filePath = substr($filePath, strlen($pharPrefix));
+            return substr($filePath, strlen($pharPrefix)); // @phpstan-ignore-line substr cannot return false here
         }
 
-        $this->classmap[$usedSymbol] = $filePath;
-        return true;
+        return $filePath;
     }
 
 }

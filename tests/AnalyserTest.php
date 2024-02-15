@@ -2,6 +2,7 @@
 
 namespace ShipMonk\ComposerDependencyAnalyser;
 
+use Composer\Autoload\ClassLoader;
 use LogicException;
 use PHPUnit\Framework\TestCase;
 use ShipMonk\ComposerDependencyAnalyser\Config\Configuration;
@@ -44,6 +45,7 @@ class AnalyserTest extends TestCase
 
         $detector = new Analyser(
             $this->getStopwatchMock(),
+            $this->getClassLoaderMock(),
             $config,
             $vendorDir,
             $dependencies,
@@ -464,6 +466,7 @@ class AnalyserTest extends TestCase
 
         $detector = new Analyser(
             $this->getStopwatchMock(),
+            $this->getClassLoaderMock(),
             $config,
             __DIR__,
             []
@@ -494,6 +497,7 @@ class AnalyserTest extends TestCase
 
         $detector = new Analyser(
             $this->getStopwatchMock(),
+            $this->getClassLoaderMock(),
             $config,
             __DIR__ . '/vendor',
             [
@@ -517,6 +521,7 @@ class AnalyserTest extends TestCase
 
         $detector = new Analyser(
             $this->getStopwatchMock(),
+            $this->getClassLoaderMock(),
             $config,
             __DIR__ . '/vendor',
             []
@@ -544,6 +549,7 @@ class AnalyserTest extends TestCase
 
         $detector = new Analyser(
             $this->getStopwatchMock(),
+            $this->getClassLoaderMock(),
             $config,
             __DIR__ . '/vendor',
             [
@@ -564,6 +570,16 @@ class AnalyserTest extends TestCase
             ->willReturn(0.0);
 
         return $stopwatch;
+    }
+
+    private function getClassLoaderMock(): ClassLoader
+    {
+        $classLoader = $this->createMock(ClassLoader::class);
+        $classLoader->expects(self::any())
+            ->method('findFile')
+            ->willReturn(false);
+
+        return $classLoader;
     }
 
 }
