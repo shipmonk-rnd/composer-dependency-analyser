@@ -73,10 +73,7 @@
         "check:composer": "composer normalize --dry-run --no-check-lock --no-update-lock",
         "check:cs": "phpcs",
         "check:ec": "ec src tests",
-        "check:self": [
-            "composer dump -a",
-            "bin/composer-dependency-analyser"
-        ],
+        "check:self": "bin/composer-dependency-analyser",
         "check:tests": "phpunit -vvv tests",
         "check:types": "phpstan analyse -vvv --ansi",
         "fix:cs": "phpcbf"

@@ -36,6 +36,7 @@ use function strlen;
 use function strpos;
 use function strtolower;
 use function substr;
+use function trait_exists;
 use function trim;
 use const DIRECTORY_SEPARATOR;
 
@@ -62,7 +63,7 @@ class Analyser
      *
      * @var array<string, string>
      */
-    private $optimizedClassmap;
+    private $classmap;
 
     /**
      * package name => is dev dependency
@@ -72,7 +73,7 @@ class Analyser
     private $composerJsonDependencies;
 
     /**
-     * @param array<string, string> $optimizedClassmap className => filePath
+     * @param array<string, string> $classmap className => filePath
      * @param array<string, bool> $composerJsonDependencies package name => is dev dependency
      * @throws InvalidPathException
      */
@@ -80,12 +81,12 @@ class Analyser
         Stopwatch $stopwatch,
         Configuration $config,
         string $vendorDir,
-        array $optimizedClassmap,
-        array $composerJsonDependencies
+        array $composerJsonDependencies,
+        array $classmap = []
     )
     {
-        foreach ($optimizedClassmap as $className => $filePath) {
-            $this->optimizedClassmap[$className] = $this->realPath($filePath);
+        foreach ($classmap as $className => $filePath) {
+            $this->classmap[$className] = $this->realPath($filePath);
         }
 
         $this->stopwatch = $stopwatch;
@@ -126,15 +127,8 @@ class Analyser
                 }
 
                 if (!$this->isInClassmap($usedSymbol)) {
-                    $addedToClassmapManually = false;
-
-                    if ($this->isAutoloadableClass($usedSymbol)) {
-                        $addedToClassmapManually = $this->addToClassmap($usedSymbol);
-                    }
-
                     if (
-                        !$addedToClassmapManually
-                        && !$this->isConstOrFunction($usedSymbol)
+                        !$this->isConstOrFunction($usedSymbol)
                         && !$this->isNativeType($usedSymbol)
                         && !$ignoreList->shouldIgnoreUnknownClass($usedSymbol, $filePath)
                     ) {
@@ -143,9 +137,7 @@ class Analyser
                         }
                     }
 
-                    if (!$addedToClassmapManually) {
-                        continue;
-                    }
+                    continue;
                 }
 
                 $classmapPath = $this->getPathFromClassmap($usedSymbol);
@@ -369,7 +361,13 @@ class Analyser
 
     private function isInClassmap(string $usedSymbol): bool
     {
-        return isset($this->optimizedClassmap[$usedSymbol]);
+        $foundInClassmap = isset($this->classmap[$usedSymbol]);
+
+        if (!$foundInClassmap && $this->isAutoloadableClass($usedSymbol)) {
+            return $this->addToClassmap($usedSymbol);
+        }
+
+        return $foundInClassmap;
     }
 
     private function getPathFromClassmap(string $usedSymbol): string
@@ -378,7 +376,7 @@ class Analyser
             throw new LogicException("Class $usedSymbol not found in classmap");
         }
 
-        return $this->optimizedClassmap[$usedSymbol];
+        return $this->classmap[$usedSymbol];
     }
 
     /**
@@ -451,18 +449,15 @@ class Analyser
         ], true);
     }
 
-    /**
-     * For classes not present in composer's classmap,
-     * but autoloadable (required manually or via composer's autoload-files section),
-     * we add them to classmap
-     */
     private function isAutoloadableClass(string $usedSymbol): bool
     {
         if ($this->isConstOrFunction($usedSymbol)) {
             return false;
         }
 
-        return class_exists($usedSymbol, true) || interface_exists($usedSymbol, true);
+        return class_exists($usedSymbol, true)
+            || interface_exists($usedSymbol, true)
+            || trait_exists($usedSymbol, true);
     }
 
     private function addToClassmap(string $usedSymbol): bool
@@ -486,7 +481,7 @@ class Analyser
             $filePath = substr($filePath, strlen($pharPrefix));
         }
 
-        $this->optimizedClassmap[$usedSymbol] = $filePath;
+        $this->classmap[$usedSymbol] = $filePath;
         return true;
     }
 
