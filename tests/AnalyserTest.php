@@ -529,6 +529,32 @@ class AnalyserTest extends TestCase
         ]), $result);
     }
 
+    public function testDevPathInsideProdPath(): void
+    {
+        $prodPath = realpath(__DIR__ . '/data/dev-in-subdirectory');
+        $devPath = realpath(__DIR__ . '/data/dev-in-subdirectory/dev');
+        self::assertNotFalse($prodPath);
+        self::assertNotFalse($devPath);
+
+        $config = new Configuration();
+        $config->addPathToScan($prodPath, false);
+        $config->addPathToScan($devPath, true);
+
+        $detector = new Analyser(
+            $this->getStopwatchMock(),
+            $config,
+            __DIR__ . '/vendor',
+            [],
+            [
+                'regular/package' => false,
+                'dev/package' => true
+            ]
+        );
+        $result = $detector->run();
+
+        self::assertEquals($this->createAnalysisResult(2, []), $result);
+    }
+
     private function getStopwatchMock(): Stopwatch
     {
         $stopwatch = $this->createMock(Stopwatch::class);
