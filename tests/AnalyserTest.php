@@ -562,6 +562,28 @@ class AnalyserTest extends TestCase
         self::assertEquals($this->createAnalysisResult(2, []), $result);
     }
 
+    public function testExplicitFileWithoutExtension(): void
+    {
+        $path = realpath(__DIR__ . '/data/file-without-extension/script');
+        self::assertNotFalse($path);
+
+        $config = new Configuration();
+        $config->addPathToScan($path, true);
+
+        $detector = new Analyser(
+            $this->getStopwatchMock(),
+            $this->getClassLoaderMock(),
+            $config,
+            __DIR__ . '/vendor',
+            [
+                'dev/package' => true,
+            ]
+        );
+        $result = $detector->run();
+
+        self::assertEquals($this->createAnalysisResult(1, []), $result);
+    }
+
     private function getStopwatchMock(): Stopwatch
     {
         $stopwatch = $this->createMock(Stopwatch::class);
