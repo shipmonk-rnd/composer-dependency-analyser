@@ -546,7 +546,6 @@ class AnalyserTest extends TestCase
             $this->getStopwatchMock(),
             $config,
             __DIR__ . '/vendor',
-            [],
             [
                 'regular/package' => false,
                 'dev/package' => true
