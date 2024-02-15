@@ -43,6 +43,7 @@ Found unused dependencies!
 
   • nette/utils
 
+(scanned 13970 files in 2.297 s)
 ```
 
 You can add `--verbose` to see more example classes & usages.
