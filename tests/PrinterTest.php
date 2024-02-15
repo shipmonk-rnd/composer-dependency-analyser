@@ -53,6 +53,8 @@ OUT;
 Some ignored issues never occurred:
  • Error 'shadow-dependency' was globally ignored, but it was never applied.
 
+(scanned 2 files in 0.123 s)
+
 
 OUT;
 
@@ -132,6 +134,8 @@ Found unused dependencies!
 
   • dead/package
 
+(scanned 10 files in 0.123 s)
+
 
 OUT;
         $expectedVerboseOutput = <<<'OUT'
@@ -181,6 +185,8 @@ Found unused dependencies!
 (those are listed in composer.json, but no usage was found in scanned paths)
 
   • dead/package
+
+(scanned 10 files in 0.123 s)
 
 
 OUT;

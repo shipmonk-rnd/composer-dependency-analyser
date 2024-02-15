@@ -116,16 +116,14 @@ class Printer
             $this->printUnusedIgnores($unusedIgnores);
         }
 
-        if ($hasError) {
-            return 255;
+        if (!$hasError) {
+            $this->printLine('');
+            $this->printLine('<green>No composer issues found</green>');
         }
 
-        $elapsed = round($result->getElapsedTime(), 3);
-        $this->printLine('');
-        $this->printLine('<green>No composer issues found</green>');
-        $this->printLine("<gray>(scanned</gray> {$result->getScannedFilesCount()} <gray>files in</gray> {$elapsed} <gray>s)</gray>" . PHP_EOL);
+        $this->printRunSummary($result);
 
-        return 0;
+        return $hasError ? 255 : 0;
     }
 
     /**
@@ -299,6 +297,12 @@ class Printer
         if ($package !== null && $path !== null) {
             $this->printLine(" • <gray>Error</gray> '{$unusedIgnore->getErrorType()}' <gray>was ignored for package</gray> '{$package}' <gray> and path</gray> '{$this->relativizePath($path)}', <gray>but it was never applied.</gray>");
         }
+    }
+
+    private function printRunSummary(AnalysisResult $result): void
+    {
+        $elapsed = round($result->getElapsedTime(), 3);
+        $this->printLine("<gray>(scanned</gray> {$result->getScannedFilesCount()} <gray>files in</gray> {$elapsed} <gray>s)</gray>" . PHP_EOL);
     }
 
 }
