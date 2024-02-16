@@ -323,7 +323,7 @@ class Analyser
      */
     private function listPhpFilesIn(string $path): Generator
     {
-        if (is_file($path) && $this->isExtensionToCheck($path)) {
+        if (is_file($path)) {
             yield $path;
             return;
         }

@@ -110,6 +110,7 @@ return $config
     ->ignoreErrors([ErrorType::DEV_DEPENDENCY_IN_PROD])
 
     // overwrite file extensions to scan, defaults to 'php'
+    // applies only to directory scanning, not directly listed files
     ->setFileExtensions(['php'])
 
     // add extra path to scan
