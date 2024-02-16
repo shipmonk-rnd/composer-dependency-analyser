@@ -20,9 +20,9 @@ class ConfigurationTest extends TestCase
         $configuration = new Configuration();
         $configuration->ignoreUnknownClasses(['Unknown\Clazz']);
         $configuration->ignoreErrors([ErrorType::UNUSED_DEPENDENCY, ErrorType::UNKNOWN_CLASS]);
-        $configuration->ignoreErrorsOnPath(__DIR__ . '/app/../', [ErrorType::SHADOW_DEPENDENCY]);
+        $configuration->ignoreErrorsOnPath(__DIR__ . '/data/../', [ErrorType::SHADOW_DEPENDENCY]);
         $configuration->ignoreErrorsOnPackage('my/package', [ErrorType::PROD_DEPENDENCY_ONLY_IN_DEV]);
-        $configuration->ignoreErrorsOnPackageAndPath('vendor/package', __DIR__ . '/../tests/app', [ErrorType::DEV_DEPENDENCY_IN_PROD]);
+        $configuration->ignoreErrorsOnPackageAndPath('vendor/package', __DIR__ . '/../tests/data', [ErrorType::DEV_DEPENDENCY_IN_PROD]);
 
         $ignoreList = $configuration->getIgnoreList();
 
@@ -50,10 +50,10 @@ class ConfigurationTest extends TestCase
         self::assertTrue($ignoreList->shouldIgnoreError(ErrorType::PROD_DEPENDENCY_ONLY_IN_DEV, __DIR__, 'my/package'));
 
         self::assertFalse($ignoreList->shouldIgnoreError(ErrorType::DEV_DEPENDENCY_IN_PROD, __DIR__, null));
-        self::assertFalse($ignoreList->shouldIgnoreError(ErrorType::DEV_DEPENDENCY_IN_PROD, __DIR__ . DIRECTORY_SEPARATOR . 'app', null));
-        self::assertFalse($ignoreList->shouldIgnoreError(ErrorType::DEV_DEPENDENCY_IN_PROD, __DIR__ . DIRECTORY_SEPARATOR . 'app', 'wrong/package'));
-        self::assertFalse($ignoreList->shouldIgnoreError(ErrorType::DEV_DEPENDENCY_IN_PROD, __DIR__ . DIRECTORY_SEPARATOR . 'data', 'vendor/package'));
-        self::assertTrue($ignoreList->shouldIgnoreError(ErrorType::DEV_DEPENDENCY_IN_PROD, __DIR__ . DIRECTORY_SEPARATOR . 'app', 'vendor/package'));
+        self::assertFalse($ignoreList->shouldIgnoreError(ErrorType::DEV_DEPENDENCY_IN_PROD, __DIR__ . DIRECTORY_SEPARATOR . 'data', null));
+        self::assertFalse($ignoreList->shouldIgnoreError(ErrorType::DEV_DEPENDENCY_IN_PROD, __DIR__ . DIRECTORY_SEPARATOR . 'data', 'wrong/package'));
+        self::assertFalse($ignoreList->shouldIgnoreError(ErrorType::DEV_DEPENDENCY_IN_PROD, __DIR__ . DIRECTORY_SEPARATOR . '..', 'vendor/package'));
+        self::assertTrue($ignoreList->shouldIgnoreError(ErrorType::DEV_DEPENDENCY_IN_PROD, __DIR__ . DIRECTORY_SEPARATOR . 'data', 'vendor/package'));
     }
 
     public function testOverlappingUnusedIgnores(): void

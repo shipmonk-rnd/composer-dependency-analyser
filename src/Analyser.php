@@ -68,7 +68,7 @@ class Analyser
      *
      * @var array<string, string>
      */
-    private $classmap;
+    private $classmap = [];
 
     /**
      * package name => is dev dependency
@@ -78,7 +78,6 @@ class Analyser
     private $composerJsonDependencies;
 
     /**
-     * @param array<string, string> $classmap className => filePath
      * @param array<string, bool> $composerJsonDependencies package name => is dev dependency
      * @throws InvalidPathException
      */
@@ -87,14 +86,9 @@ class Analyser
         ClassLoader $classLoader,
         Configuration $config,
         string $vendorDir,
-        array $composerJsonDependencies,
-        array $classmap = []
+        array $composerJsonDependencies
     )
     {
-        foreach ($classmap as $className => $filePath) {
-            $this->classmap[$className] = $this->realPath($filePath);
-        }
-
         $this->stopwatch = $stopwatch;
         $this->classLoader = $classLoader;
         $this->config = $config;
