@@ -44,9 +44,6 @@
         "classmap": [
             "tests/vendor/",
             "tests/app/"
-        ],
-        "exclude-from-classmap": [
-            "tests/data/"
         ]
     },
     "bin": [

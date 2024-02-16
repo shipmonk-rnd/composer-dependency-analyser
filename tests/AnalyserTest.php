@@ -24,15 +24,7 @@ class AnalyserTest extends TestCase
      */
     public function test(callable $editConfig, AnalysisResult $expectedResult): void
     {
-        $appDir = __DIR__ . '/app';
         $vendorDir = __DIR__ . '/vendor';
-        $classmap = [
-            'Regular\Package\Clazz' => $vendorDir . '/regular/package/Clazz.php',
-            'Regular\Dead\Clazz' => $vendorDir . '/regular/dead/Clazz.php',
-            'Shadow\Package\Clazz' => $vendorDir . '/shadow/package/Clazz.php',
-            'Dev\Package\Clazz' => $vendorDir . '/dev/package/Clazz.php',
-            'App\Clazz' => $appDir . '/Clazz.php',
-        ];
         $dependencies = [
             'regular/package' => false,
             'dev/package' => true,
@@ -48,8 +40,7 @@ class AnalyserTest extends TestCase
             $this->getClassLoaderMock(),
             $config,
             $vendorDir,
-            $dependencies,
-            $classmap
+            $dependencies
         );
         $result = $detector->run();
 
@@ -481,33 +472,6 @@ class AnalyserTest extends TestCase
                 ],
             ],
         ]), $result);
-    }
-
-    public function testAutoloadableClassNotInClassmap(): void
-    {
-        require __DIR__ . '/vendor/dev/package/Clazz.php';
-        require __DIR__ . '/vendor/regular/package/Clazz.php';
-
-        $path = realpath(__DIR__ . '/data/autoloadable-no-classmap/usage.php');
-        self::assertNotFalse($path);
-
-        $config = new Configuration();
-        $config->addPathToScan($path, true);
-        $config->addForceUsedSymbol('Regular\Package\Clazz');
-
-        $detector = new Analyser(
-            $this->getStopwatchMock(),
-            $this->getClassLoaderMock(),
-            $config,
-            __DIR__ . '/vendor',
-            [
-                'regular/package' => false,
-                'dev/package' => true
-            ]
-        );
-        $result = $detector->run();
-
-        self::assertEquals($this->createAnalysisResult(1, []), $result);
     }
 
     public function testNoMultipleScansOfTheSameFile(): void
