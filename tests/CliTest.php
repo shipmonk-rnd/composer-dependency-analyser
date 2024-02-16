@@ -46,8 +46,8 @@ class CliTest extends TestCase
         ];
 
         yield 'path passed' => [
-            'Cannot pass paths (vendor) to analyse as arguments, use --config instead.',
-            ['bin/script.php', 'vendor']
+            'Cannot pass paths (data) to analyse as arguments, use --config instead.',
+            ['bin/script.php', 'data']
         ];
 
         yield 'valid bool options' => [

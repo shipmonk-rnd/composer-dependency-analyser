@@ -13,7 +13,7 @@ parameters:
         - tests
     excludePaths:
         analyseAndScan:
-            - tests/data/*
+            - tests/data/not-autoloaded/*
     tmpDir: cache/phpstan/
     checkMissingCallableSignature: true
     checkUninitializedProperties: true

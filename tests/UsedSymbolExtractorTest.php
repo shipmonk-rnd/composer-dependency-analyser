@@ -28,7 +28,7 @@ class UsedSymbolExtractorTest extends TestCase
     public function provideVariants(): iterable
     {
         yield 'use statements' => [
-            __DIR__ . '/data/used-symbols/use-statements.php',
+            __DIR__ . '/data/not-autoloaded/used-symbols/use-statements.php',
             [
                 'PHPUnit\Framework\Exception' => [11],
                 'PHPUnit\Framework\Warning' => [12],
@@ -42,7 +42,7 @@ class UsedSymbolExtractorTest extends TestCase
         ];
 
         yield 'various usages' => [
-            __DIR__ . '/data/used-symbols/various-usages.php',
+            __DIR__ . '/data/not-autoloaded/used-symbols/various-usages.php',
             [
                 'DateTimeImmutable' => [12],
                 'DateTimeInterface' => [12],
@@ -53,7 +53,7 @@ class UsedSymbolExtractorTest extends TestCase
         ];
 
         yield 'bracket namespace' => [
-            __DIR__ . '/data/used-symbols/bracket-namespace.php',
+            __DIR__ . '/data/not-autoloaded/used-symbols/bracket-namespace.php',
             [
                 'DateTimeImmutable' => [5],
                 'DateTime' => [11],
@@ -61,7 +61,7 @@ class UsedSymbolExtractorTest extends TestCase
         ];
 
         yield 'other symbols' => [
-            __DIR__ . '/data/used-symbols/other-symbols.php',
+            __DIR__ . '/data/not-autoloaded/used-symbols/other-symbols.php',
             [
                 'DIRECTORY_SEPARATOR' => [9],
                 'strlen' => [11],
@@ -69,14 +69,14 @@ class UsedSymbolExtractorTest extends TestCase
         ];
 
         yield 'relative namespace' => [
-            __DIR__ . '/data/used-symbols/relative-namespace.php',
+            __DIR__ . '/data/not-autoloaded/used-symbols/relative-namespace.php',
             [
                 'DateTimeImmutable' => [10],
             ]
         ];
 
         yield 'global namespace' => [
-            __DIR__ . '/data/used-symbols/global-namespace.php',
+            __DIR__ . '/data/not-autoloaded/used-symbols/global-namespace.php',
             [
                 'DateTimeImmutable' => [3],
             ]

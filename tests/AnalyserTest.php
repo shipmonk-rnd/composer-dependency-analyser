@@ -24,7 +24,7 @@ class AnalyserTest extends TestCase
      */
     public function test(callable $editConfig, AnalysisResult $expectedResult): void
     {
-        $vendorDir = __DIR__ . '/vendor';
+        $vendorDir = __DIR__ . '/data/autoloaded/vendor';
         $dependencies = [
             'regular/package' => false,
             'dev/package' => true,
@@ -52,8 +52,8 @@ class AnalyserTest extends TestCase
      */
     public function provideConfigs(): iterable
     {
-        $variousUsagesPath = realpath(__DIR__ . '/data/analysis/various-usages.php');
-        $unknownClassesPath = realpath(__DIR__ . '/data/analysis/unknown-classes.php');
+        $variousUsagesPath = realpath(__DIR__ . '/data/not-autoloaded/analysis/various-usages.php');
+        $unknownClassesPath = realpath(__DIR__ . '/data/not-autoloaded/analysis/unknown-classes.php');
 
         if ($unknownClassesPath === false || $variousUsagesPath === false) {
             throw new LogicException('Unable to realpath data files');
@@ -449,7 +449,7 @@ class AnalyserTest extends TestCase
 
     public function testNativeTypesNotReported(): void
     {
-        $path = realpath(__DIR__ . '/data/builtin/native-symbols.php');
+        $path = realpath(__DIR__ . '/data/not-autoloaded/builtin/native-symbols.php');
         self::assertNotFalse($path);
 
         $config = new Configuration();
@@ -476,7 +476,7 @@ class AnalyserTest extends TestCase
 
     public function testNoMultipleScansOfTheSameFile(): void
     {
-        $path = realpath(__DIR__ . '/data/analysis/unknown-classes.php');
+        $path = realpath(__DIR__ . '/data/not-autoloaded/analysis/unknown-classes.php');
         self::assertNotFalse($path);
 
         $config = new Configuration();
@@ -487,7 +487,7 @@ class AnalyserTest extends TestCase
             $this->getStopwatchMock(),
             $this->getClassLoaderMock(),
             $config,
-            __DIR__ . '/vendor',
+            __DIR__ . '/data/autoloaded/vendor',
             []
         );
         $result = $detector->run();
@@ -502,8 +502,8 @@ class AnalyserTest extends TestCase
 
     public function testDevPathInsideProdPath(): void
     {
-        $prodPath = realpath(__DIR__ . '/data/dev-in-subdirectory');
-        $devPath = realpath(__DIR__ . '/data/dev-in-subdirectory/dev');
+        $prodPath = realpath(__DIR__ . '/data/not-autoloaded/dev-in-subdirectory');
+        $devPath = realpath(__DIR__ . '/data/not-autoloaded/dev-in-subdirectory/dev');
         self::assertNotFalse($prodPath);
         self::assertNotFalse($devPath);
 
@@ -515,7 +515,7 @@ class AnalyserTest extends TestCase
             $this->getStopwatchMock(),
             $this->getClassLoaderMock(),
             $config,
-            __DIR__ . '/vendor',
+            __DIR__ . '/data/autoloaded/vendor',
             [
                 'regular/package' => false,
                 'dev/package' => true
@@ -528,7 +528,7 @@ class AnalyserTest extends TestCase
 
     public function testExplicitFileWithoutExtension(): void
     {
-        $path = realpath(__DIR__ . '/data/file-without-extension/script');
+        $path = realpath(__DIR__ . '/data/not-autoloaded/file-without-extension/script');
         self::assertNotFalse($path);
 
         $config = new Configuration();
@@ -538,7 +538,7 @@ class AnalyserTest extends TestCase
             $this->getStopwatchMock(),
             $this->getClassLoaderMock(),
             $config,
-            __DIR__ . '/vendor',
+            __DIR__ . '/data/autoloaded/vendor',
             [
                 'dev/package' => true,
             ]

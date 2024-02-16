@@ -42,8 +42,7 @@
             "ShipMonk\\ComposerDependencyAnalyser\\": "tests/"
         },
         "classmap": [
-            "tests/vendor/",
-            "tests/app/"
+            "tests/data/autoloaded/"
         ]
     },
     "bin": [

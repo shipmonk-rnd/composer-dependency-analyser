@@ -1,5 +1,5 @@
 {
     "excludePaths": [
-        "tests/data/builtin/native-symbols.php"
+        "tests/data/not-autoloaded/builtin/native-symbols.php"
     ]
 }
