@@ -76,8 +76,11 @@ class UsedSymbolExtractor
         $usedSymbols = [];
         $useStatements = [];
 
-        while ($this->pointer < $this->numTokens) {
-            $token = $this->tokens[$this->pointer++];
+        $numTokens = $this->numTokens;
+        $tokens = $this->tokens;
+
+        while ($this->pointer < $numTokens) {
+            $token = $tokens[$this->pointer++];
 
             if (is_array($token)) {
                 $tokenType = $token[0];
