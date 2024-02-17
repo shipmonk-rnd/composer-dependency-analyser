@@ -86,28 +86,22 @@ class UsedSymbolExtractor
                 if ($usedClass !== null) {
                     $useStatements = array_merge($useStatements, $usedClass);
                 }
-            }
-
-            if (PHP_VERSION_ID >= 80000) {
+            } elseif (PHP_VERSION_ID >= 80000) {
                 if ($token[0] === T_NAMESPACE) {
                     $useStatements = []; // reset use statements on namespace change
-                }
 
-                if ($token[0] === T_NAME_FULLY_QUALIFIED) {
+                } elseif ($token[0] === T_NAME_FULLY_QUALIFIED) {
                     $symbolName = $this->normalizeBackslash($token[1]);
                     $usedSymbols[$symbolName][] = $tokenLine;
-                }
 
-                if ($token[0] === T_NAME_QUALIFIED) {
+                } elseif ($token[0] === T_NAME_QUALIFIED) {
                     [$neededAlias] = explode('\\', $token[1], 2);
 
                     if (isset($useStatements[$neededAlias])) {
                         $symbolName = $this->normalizeBackslash($useStatements[$neededAlias] . substr($token[1], strlen($neededAlias)));
                         $usedSymbols[$symbolName][] = $tokenLine;
                     }
-                }
-
-                if ($token[0] === T_STRING) {
+                } elseif ($token[0] === T_STRING) {
                     $name = $token[1];
 
                     if (isset($useStatements[$name])) {
@@ -123,17 +117,13 @@ class UsedSymbolExtractor
                     if (substr($nextName, 0, 1) !== '\\') { // not a namespace-relative name, but a new namespace declaration
                         $useStatements = []; // reset use statements on namespace change
                     }
-                }
-
-                if ($token[0] === T_NS_SEPARATOR) { // fully qualified name
+                } elseif ($token[0] === T_NS_SEPARATOR) { // fully qualified name
                     $symbolName = $this->normalizeBackslash($this->parseNameForOldPhp());
 
                     if ($symbolName !== '') { // e.g. \array (NS separator followed by not-a-name)
                         $usedSymbols[$symbolName][] = $tokenLine;
                     }
-                }
-
-                if ($token[0] === T_STRING) {
+                } elseif ($token[0] === T_STRING) {
                     $name = $this->parseNameForOldPhp();
 
                     if (isset($useStatements[$name])) { // unqualified name
