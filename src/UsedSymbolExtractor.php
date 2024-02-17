@@ -76,71 +76,85 @@ class UsedSymbolExtractor
         $usedSymbols = [];
         $useStatements = [];
 
-        while ($token = $this->getNextEffectiveToken()) {
-            if (!is_array($token)) {
-                continue;
-            }
+        while ($this->pointer < $this->numTokens) {
+            $token = $this->tokens[$this->pointer++];
 
-            $tokenType = $token[0];
-            $tokenLine = $token[2];
+            if (is_array($token)) {
+                $tokenType = $token[0];
+                $tokenLine = $token[2];
 
-            if ($tokenType === T_USE) {
-                foreach ($this->parseUseStatement() as $alias => $class) {
-                    $useStatements[$alias] = $this->normalizeBackslash($class);
+                if ($tokenType === T_WHITESPACE || $tokenType === T_COMMENT || $tokenType === T_DOC_COMMENT) {
+                    continue;
                 }
-            } elseif (PHP_VERSION_ID >= 80000) {
-                if ($tokenType === T_NAMESPACE) {
-                    $useStatements = []; // reset use statements on namespace change
 
-                } elseif ($tokenType === T_NAME_FULLY_QUALIFIED) {
-                    $symbolName = $this->normalizeBackslash($token[1]);
-                    $usedSymbols[$symbolName][] = $tokenLine;
-
-                } elseif ($tokenType === T_NAME_QUALIFIED) {
-                    [$neededAlias] = explode('\\', $token[1], 2);
-
-                    if (isset($useStatements[$neededAlias])) {
-                        $symbolName = $useStatements[$neededAlias] . substr($token[1], strlen($neededAlias));
-                        $usedSymbols[$symbolName][] = $tokenLine;
+                if ($tokenType === T_CLASS || $tokenType === T_INTERFACE || $tokenType === T_TRAIT || (PHP_VERSION_ID >= 80100 && $tokenType === T_ENUM)) {
+                    $this->inClassLevel = $this->level + 1;
+                } elseif ($tokenType === T_USE) {
+                    foreach ($this->parseUseStatement() as $alias => $class) {
+                        $useStatements[$alias] = $this->normalizeBackslash($class);
                     }
-                } elseif ($tokenType === T_STRING) {
-                    $name = $token[1];
-
-                    if (isset($useStatements[$name])) {
-                        $symbolName = $useStatements[$name];
-                        $usedSymbols[$symbolName][] = $tokenLine;
-                    }
-                }
-            } else {
-                if ($tokenType === T_NAMESPACE) {
-                    $this->pointer++;
-                    $nextName = $this->parseNameForOldPhp();
-
-                    if (substr($nextName, 0, 1) !== '\\') { // not a namespace-relative name, but a new namespace declaration
+                } elseif (PHP_VERSION_ID >= 80000) {
+                    if ($tokenType === T_NAMESPACE) {
                         $useStatements = []; // reset use statements on namespace change
-                    }
-                } elseif ($tokenType === T_NS_SEPARATOR) { // fully qualified name
-                    $symbolName = $this->normalizeBackslash($this->parseNameForOldPhp());
 
-                    if ($symbolName !== '') { // e.g. \array (NS separator followed by not-a-name)
-                        $usedSymbols[$symbolName][] = $tokenLine;
-                    }
-                } elseif ($tokenType === T_STRING) {
-                    $name = $this->parseNameForOldPhp();
-
-                    if (isset($useStatements[$name])) { // unqualified name
-                        $symbolName = $useStatements[$name];
+                    } elseif ($tokenType === T_NAME_FULLY_QUALIFIED) {
+                        $symbolName = $this->normalizeBackslash($token[1]);
                         $usedSymbols[$symbolName][] = $tokenLine;
 
-                    } else {
-                        [$neededAlias] = explode('\\', $name, 2);
+                    } elseif ($tokenType === T_NAME_QUALIFIED) {
+                        [$neededAlias] = explode('\\', $token[1], 2);
 
-                        if (isset($useStatements[$neededAlias])) { // qualified name
-                            $symbolName = $useStatements[$neededAlias] . substr($name, strlen($neededAlias));
+                        if (isset($useStatements[$neededAlias])) {
+                            $symbolName = $useStatements[$neededAlias] . substr($token[1], strlen($neededAlias));
+                            $usedSymbols[$symbolName][] = $tokenLine;
+                        }
+                    } elseif ($tokenType === T_STRING) {
+                        $name = $token[1];
+
+                        if (isset($useStatements[$name])) {
+                            $symbolName = $useStatements[$name];
                             $usedSymbols[$symbolName][] = $tokenLine;
                         }
                     }
+                } else {
+                    if ($tokenType === T_NAMESPACE) {
+                        $this->pointer++;
+                        $nextName = $this->parseNameForOldPhp();
+
+                        if (substr($nextName, 0, 1) !== '\\') { // not a namespace-relative name, but a new namespace declaration
+                            $useStatements = []; // reset use statements on namespace change
+                        }
+                    } elseif ($tokenType === T_NS_SEPARATOR) { // fully qualified name
+                        $symbolName = $this->normalizeBackslash($this->parseNameForOldPhp());
+
+                        if ($symbolName !== '') { // e.g. \array (NS separator followed by not-a-name)
+                            $usedSymbols[$symbolName][] = $tokenLine;
+                        }
+                    } elseif ($tokenType === T_STRING) {
+                        $name = $this->parseNameForOldPhp();
+
+                        if (isset($useStatements[$name])) { // unqualified name
+                            $symbolName = $useStatements[$name];
+                            $usedSymbols[$symbolName][] = $tokenLine;
+
+                        } else {
+                            [$neededAlias] = explode('\\', $name, 2);
+
+                            if (isset($useStatements[$neededAlias])) { // qualified name
+                                $symbolName = $useStatements[$neededAlias] . substr($name, strlen($neededAlias));
+                                $usedSymbols[$symbolName][] = $tokenLine;
+                            }
+                        }
+                    }
                 }
+            } elseif ($token === '{') {
+                $this->level++;
+            } elseif ($token === '}') {
+                if ($this->level === $this->inClassLevel) {
+                    $this->inClassLevel = null;
+                }
+
+                $this->level--;
             }
         }
 
@@ -161,18 +175,6 @@ class UsedSymbolExtractor
                 if ($tokenType === T_WHITESPACE || $tokenType === T_COMMENT || $tokenType === T_DOC_COMMENT) {
                     continue;
                 }
-
-                if ($tokenType === T_CLASS || $tokenType === T_INTERFACE || $tokenType === T_TRAIT || (PHP_VERSION_ID >= 80100 && $tokenType === T_ENUM)) {
-                    $this->inClassLevel = $this->level + 1;
-                }
-            } elseif ($token === '{') {
-                $this->level++;
-            } elseif ($token === '}') {
-                if ($this->level === $this->inClassLevel) {
-                    $this->inClassLevel = null;
-                }
-
-                $this->level--;
             }
 
             return $token;
