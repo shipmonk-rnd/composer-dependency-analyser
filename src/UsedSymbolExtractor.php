@@ -83,10 +83,7 @@ class UsedSymbolExtractor
             $token = $tokens[$this->pointer++];
 
             if (is_array($token)) {
-                $tokenType = $token[0];
-                $tokenLine = $token[2];
-
-                switch ($tokenType) {
+                switch ($token[0]) {
                     case T_CLASS:
                     case T_INTERFACE:
                     case T_TRAIT:
@@ -107,7 +104,7 @@ class UsedSymbolExtractor
 
                     case PHP_VERSION_ID >= 80000 ? T_NAME_FULLY_QUALIFIED : -1:
                         $symbolName = $this->normalizeBackslash($token[1]);
-                        $usedSymbols[$symbolName][] = $tokenLine;
+                        $usedSymbols[$symbolName][] = $token[2];
                         break;
 
                     case PHP_VERSION_ID >= 80000 ? T_NAME_QUALIFIED : -1:
@@ -115,7 +112,7 @@ class UsedSymbolExtractor
 
                         if (isset($useStatements[$neededAlias])) {
                             $symbolName = $useStatements[$neededAlias] . substr($token[1], strlen($neededAlias));
-                            $usedSymbols[$symbolName][] = $tokenLine;
+                            $usedSymbols[$symbolName][] = $token[2];
                         }
 
                         break;
@@ -125,7 +122,7 @@ class UsedSymbolExtractor
 
                         if (isset($useStatements[$name])) {
                             $symbolName = $useStatements[$name];
-                            $usedSymbols[$symbolName][] = $tokenLine;
+                            $usedSymbols[$symbolName][] = $token[2];
                         }
 
                         break;
@@ -144,7 +141,7 @@ class UsedSymbolExtractor
                         $symbolName = $this->normalizeBackslash($this->parseNameForOldPhp());
 
                         if ($symbolName !== '') { // e.g. \array (NS separator followed by not-a-name)
-                            $usedSymbols[$symbolName][] = $tokenLine;
+                            $usedSymbols[$symbolName][] = $token[2];
                         }
 
                         break;
@@ -154,14 +151,14 @@ class UsedSymbolExtractor
 
                         if (isset($useStatements[$name])) { // unqualified name
                             $symbolName = $useStatements[$name];
-                            $usedSymbols[$symbolName][] = $tokenLine;
+                            $usedSymbols[$symbolName][] = $token[2];
 
                         } else {
                             [$neededAlias] = explode('\\', $name, 2);
 
                             if (isset($useStatements[$neededAlias])) { // qualified name
                                 $symbolName = $useStatements[$neededAlias] . substr($name, strlen($neededAlias));
-                                $usedSymbols[$symbolName][] = $tokenLine;
+                                $usedSymbols[$symbolName][] = $token[2];
                             }
                         }
 
