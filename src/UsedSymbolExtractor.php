@@ -160,19 +160,20 @@ class UsedSymbolExtractor
      */
     private function getNextEffectiveToken()
     {
-        for ($i = $this->pointer; $i < $this->numTokens; $i++) {
-            $this->pointer++;
-            $token = $this->tokens[$i];
+        while ($this->pointer < $this->numTokens) {
+            $token = $this->tokens[$this->pointer++];
 
-            if ($this->isNonEffectiveToken($token)) {
-                continue;
-            }
+            if (is_array($token)) {
+                $tokenType = $token[0];
 
-            if ($token[0] === T_CLASS || $token[0] === T_INTERFACE || $token[0] === T_TRAIT || (PHP_VERSION_ID >= 80100 && $token[0] === T_ENUM)) {
-                $this->inClassLevel = $this->level + 1;
-            }
+                if ($tokenType === T_WHITESPACE || $tokenType === T_COMMENT || $tokenType === T_DOC_COMMENT) {
+                    continue;
+                }
 
-            if ($token === '{') {
+                if ($tokenType === T_CLASS || $tokenType === T_INTERFACE || $tokenType === T_TRAIT || (PHP_VERSION_ID >= 80100 && $tokenType === T_ENUM)) {
+                    $this->inClassLevel = $this->level + 1;
+                }
+            } elseif ($token === '{') {
                 $this->level++;
             } elseif ($token === '}') {
                 if ($this->level === $this->inClassLevel) {
@@ -186,20 +187,6 @@ class UsedSymbolExtractor
         }
 
         return null;
-    }
-
-    /**
-     * @param array{int, string, int}|string $token
-     */
-    private function isNonEffectiveToken($token): bool
-    {
-        if (!is_array($token)) {
-            return false;
-        }
-
-        return $token[0] === T_WHITESPACE ||
-            $token[0] === T_COMMENT ||
-            $token[0] === T_DOC_COMMENT;
     }
 
     /**
