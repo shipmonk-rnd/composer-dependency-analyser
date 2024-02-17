@@ -43,18 +43,6 @@ class UsedSymbolExtractor
      */
     private $pointer = 0;
 
-    /**
-     * When not null, we are inside class-like and use statements dont need to be parsed
-     *
-     * @var int|null
-     */
-    private $inClassLevel = null;
-
-    /**
-     * @var int
-     */
-    private $level = 0;
-
     public function __construct(string $code)
     {
         $this->tokens = token_get_all($code);
@@ -76,6 +64,9 @@ class UsedSymbolExtractor
         $usedSymbols = [];
         $useStatements = [];
 
+        $level = 0;
+        $inClassLevel = null;
+
         $numTokens = $this->numTokens;
         $tokens = $this->tokens;
 
@@ -88,12 +79,14 @@ class UsedSymbolExtractor
                     case T_INTERFACE:
                     case T_TRAIT:
                     case PHP_VERSION_ID >= 80100 ? T_ENUM : -1:
-                        $this->inClassLevel = $this->level + 1;
+                        $inClassLevel = $level + 1;
                         break;
 
                     case T_USE:
-                        foreach ($this->parseUseStatement() as $alias => $class) {
-                            $useStatements[$alias] = $this->normalizeBackslash($class);
+                        if ($inClassLevel === null) {
+                            foreach ($this->parseUseStatement() as $alias => $class) {
+                                $useStatements[$alias] = $this->normalizeBackslash($class);
+                            }
                         }
 
                         break;
@@ -165,13 +158,13 @@ class UsedSymbolExtractor
                         break;
                 }
             } elseif ($token === '{') {
-                $this->level++;
+                $level++;
             } elseif ($token === '}') {
-                if ($this->level === $this->inClassLevel) {
-                    $this->inClassLevel = null;
+                if ($level === $inClassLevel) {
+                    $inClassLevel = null;
                 }
 
-                $this->level--;
+                $level--;
             }
         }
 
@@ -204,10 +197,6 @@ class UsedSymbolExtractor
      */
     public function parseUseStatement(): array
     {
-        if ($this->inClassLevel !== null) {
-            return [];
-        }
-
         $groupRoot = '';
         $class = '';
         $alias = '';
