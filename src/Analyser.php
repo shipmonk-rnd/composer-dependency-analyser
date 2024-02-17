@@ -26,6 +26,7 @@ use function get_declared_interfaces;
 use function get_declared_traits;
 use function get_defined_constants;
 use function get_defined_functions;
+use function in_array;
 use function is_file;
 use function ksort;
 use function realpath;
@@ -324,23 +325,12 @@ class Analyser
 
         foreach ($iterator as $entry) {
             /** @var DirectoryIterator $entry */
-            if (!$entry->isFile() || !$this->isExtensionToCheck($entry->getFilename())) {
+            if (!$entry->isFile() || !in_array($entry->getExtension(), $this->config->getFileExtensions(), true)) {
                 continue;
             }
 
             yield $entry->getPathname();
         }
-    }
-
-    private function isExtensionToCheck(string $filePath): bool
-    {
-        foreach ($this->config->getFileExtensions() as $extension) {
-            if (substr($filePath, -(strlen($extension) + 1)) === ".$extension") {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private function isVendorPath(string $realPath): bool
