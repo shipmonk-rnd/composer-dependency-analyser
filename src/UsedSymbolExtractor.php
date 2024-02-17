@@ -86,7 +86,7 @@ class UsedSymbolExtractor
 
             if ($tokenType === T_USE) {
                 foreach ($this->parseUseStatement() as $alias => $class) {
-                    $useStatements[$alias] = $class;
+                    $useStatements[$alias] = $this->normalizeBackslash($class);
                 }
             } elseif (PHP_VERSION_ID >= 80000) {
                 if ($tokenType === T_NAMESPACE) {
@@ -100,14 +100,14 @@ class UsedSymbolExtractor
                     [$neededAlias] = explode('\\', $token[1], 2);
 
                     if (isset($useStatements[$neededAlias])) {
-                        $symbolName = $this->normalizeBackslash($useStatements[$neededAlias] . substr($token[1], strlen($neededAlias)));
+                        $symbolName = $useStatements[$neededAlias] . substr($token[1], strlen($neededAlias));
                         $usedSymbols[$symbolName][] = $tokenLine;
                     }
                 } elseif ($tokenType === T_STRING) {
                     $name = $token[1];
 
                     if (isset($useStatements[$name])) {
-                        $symbolName = $this->normalizeBackslash($useStatements[$name]);
+                        $symbolName = $useStatements[$name];
                         $usedSymbols[$symbolName][] = $tokenLine;
                     }
                 }
@@ -129,14 +129,14 @@ class UsedSymbolExtractor
                     $name = $this->parseNameForOldPhp();
 
                     if (isset($useStatements[$name])) { // unqualified name
-                        $symbolName = $this->normalizeBackslash($useStatements[$name]);
+                        $symbolName = $useStatements[$name];
                         $usedSymbols[$symbolName][] = $tokenLine;
 
                     } else {
                         [$neededAlias] = explode('\\', $name, 2);
 
                         if (isset($useStatements[$neededAlias])) { // qualified name
-                            $symbolName = $this->normalizeBackslash($useStatements[$neededAlias] . substr($name, strlen($neededAlias)));
+                            $symbolName = $useStatements[$neededAlias] . substr($name, strlen($neededAlias));
                             $usedSymbols[$symbolName][] = $tokenLine;
                         }
                     }
