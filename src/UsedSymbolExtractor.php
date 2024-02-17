@@ -2,7 +2,6 @@
 
 namespace ShipMonk\ComposerDependencyAnalyser;
 
-use function array_merge;
 use function count;
 use function explode;
 use function is_array;
@@ -86,10 +85,8 @@ class UsedSymbolExtractor
             $tokenLine = $token[2];
 
             if ($tokenType === T_USE) {
-                $usedClass = $this->parseUseStatement();
-
-                if ($usedClass !== null) {
-                    $useStatements = array_merge($useStatements, $usedClass);
+                foreach ($this->parseUseStatement() as $alias => $class) {
+                    $useStatements[$alias] = $class;
                 }
             } elseif (PHP_VERSION_ID >= 80000) {
                 if ($tokenType === T_NAMESPACE) {
@@ -209,12 +206,12 @@ class UsedSymbolExtractor
     }
 
     /**
-     * @return array<string, string>|null
+     * @return array<string, string>
      */
-    public function parseUseStatement(): ?array
+    public function parseUseStatement(): array
     {
         if ($this->inClassLevel !== null) {
-            return null;
+            return [];
         }
 
         $groupRoot = '';
@@ -261,7 +258,7 @@ class UsedSymbolExtractor
             }
         }
 
-        return $statements === [] ? null : $statements;
+        return $statements;
     }
 
     private function normalizeBackslash(string $class): string
