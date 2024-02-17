@@ -239,26 +239,45 @@ class UsedSymbolExtractor
         $statements = [];
         $explicitAlias = false;
 
-        while (($token = $this->getNextEffectiveToken())) {
-            if (!$explicitAlias && $token[0] === T_STRING) {
-                $class .= $token[1];
-                $alias = $token[1];
-            } elseif ($explicitAlias && $token[0] === T_STRING) {
-                $alias = $token[1];
-            } elseif (
-                PHP_VERSION_ID >= 80000
-                && ($token[0] === T_NAME_QUALIFIED || $token[0] === T_NAME_FULLY_QUALIFIED)
-            ) {
-                $class .= $token[1];
+        while ($this->pointer < $this->numTokens) {
+            $token = $this->tokens[$this->pointer++];
 
-                $classSplit = explode('\\', $token[1]);
-                $alias = $classSplit[count($classSplit) - 1];
-            } elseif ($token[0] === T_NS_SEPARATOR) {
-                $class .= '\\';
-                $alias = '';
-            } elseif ($token[0] === T_AS) {
-                $explicitAlias = true;
-                $alias = '';
+            if (is_array($token)) {
+                switch ($token[0]) {
+                    case T_STRING:
+                        $alias = $token[1];
+
+                        if (!$explicitAlias) {
+                            $class .= $alias;
+                        }
+
+                        break;
+
+                    case PHP_VERSION_ID >= 80000 ? T_NAME_QUALIFIED : -1:
+                    case PHP_VERSION_ID >= 80000 ? T_NAME_FULLY_QUALIFIED : -1:
+                        $class .= $token[1];
+                        $classSplit = explode('\\', $token[1]);
+                        $alias = $classSplit[count($classSplit) - 1];
+                        break;
+
+                    case T_NS_SEPARATOR:
+                        $class .= '\\';
+                        $alias = '';
+                        break;
+
+                    case T_AS:
+                        $explicitAlias = true;
+                        $alias = '';
+                        break;
+
+                    case T_WHITESPACE:
+                    case T_COMMENT:
+                    case T_DOC_COMMENT:
+                        break;
+
+                    default:
+                        break 2;
+                }
             } elseif ($token === ',') {
                 $statements[$alias] = $groupRoot . $class;
                 $class = '';
