@@ -179,47 +179,22 @@ class UsedSymbolExtractor
     }
 
     /**
-     * @return array{int, string, int}|string|null The token if exists, null otherwise.
-     */
-    private function getNextEffectiveToken()
-    {
-        while ($this->pointer < $this->numTokens) {
-            $token = $this->tokens[$this->pointer++];
-
-            if (is_array($token)) {
-                $tokenType = $token[0];
-
-                if ($tokenType === T_WHITESPACE || $tokenType === T_COMMENT || $tokenType === T_DOC_COMMENT) {
-                    continue;
-                }
-            }
-
-            return $token;
-        }
-
-        return null;
-    }
-
-    /**
      * See old behaviour: https://wiki.php.net/rfc/namespaced_names_as_token
      */
     private function parseNameForOldPhp(): string
     {
         $this->pointer--; // we already detected start token above
-
         $name = '';
 
-        do {
-            $token = $this->getNextEffectiveToken();
-            $isNamePart = is_array($token) && ($token[0] === T_STRING || $token[0] === T_NS_SEPARATOR);
+        while ($this->pointer < $this->numTokens) {
+            $token = $this->tokens[$this->pointer++];
 
-            if (!$isNamePart) {
+            if (!is_array($token) || ($token[0] !== T_STRING && $token[0] !== T_NS_SEPARATOR)) {
                 break;
             }
 
             $name .= $token[1];
-
-        } while (true);
+        }
 
         return $name;
     }
