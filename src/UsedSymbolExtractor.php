@@ -78,7 +78,11 @@ class UsedSymbolExtractor
         $useStatements = [];
 
         while ($token = $this->getNextEffectiveToken()) {
-            $tokenLine = is_array($token) ? $token[2] : 0;
+            if (!is_array($token)) {
+                continue;
+            }
+
+            $tokenLine = $token[2];
 
             if ($token[0] === T_USE) {
                 $usedClass = $this->parseUseStatement();
