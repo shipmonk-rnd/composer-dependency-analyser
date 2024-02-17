@@ -26,9 +26,7 @@ use function get_declared_interfaces;
 use function get_declared_traits;
 use function get_defined_constants;
 use function get_defined_functions;
-use function is_dir;
 use function is_file;
-use function is_readable;
 use function ksort;
 use function realpath;
 use function sort;
@@ -298,10 +296,6 @@ class Analyser
      */
     private function getUsedSymbolsInFile(string $filePath): array
     {
-        if (!is_readable($filePath)) {
-            throw new InvalidPathException("File '$filePath' is not readable");
-        }
-
         $code = file_get_contents($filePath);
 
         if ($code === false) {
@@ -368,14 +362,10 @@ class Analyser
      */
     private function realPath(string $filePath): string
     {
-        if (!is_file($filePath) && !is_dir($filePath)) {
-            throw new InvalidPathException("'$filePath' is not a file nor directory");
-        }
-
         $realPath = realpath($filePath);
 
         if ($realPath === false) {
-            throw new InvalidPathException("Unable to realpath '$filePath'");
+            throw new InvalidPathException("'$filePath' is not a file nor directory");
         }
 
         return $realPath;
