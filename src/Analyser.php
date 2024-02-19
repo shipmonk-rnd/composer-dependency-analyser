@@ -5,7 +5,6 @@ namespace ShipMonk\ComposerDependencyAnalyser;
 use Composer\Autoload\ClassLoader;
 use DirectoryIterator;
 use Generator;
-use LogicException;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use ReflectionClass;
@@ -18,24 +17,23 @@ use ShipMonk\ComposerDependencyAnalyser\Result\SymbolUsage;
 use UnexpectedValueException;
 use function array_diff;
 use function array_filter;
+use function array_key_exists;
 use function array_keys;
-use function class_exists;
-use function defined;
 use function explode;
 use function file_get_contents;
-use function function_exists;
+use function get_declared_classes;
+use function get_declared_interfaces;
+use function get_declared_traits;
+use function get_defined_constants;
+use function get_defined_functions;
 use function in_array;
-use function interface_exists;
-use function is_dir;
 use function is_file;
-use function is_readable;
 use function ksort;
 use function realpath;
 use function sort;
 use function str_replace;
 use function strlen;
 use function strpos;
-use function strtolower;
 use function strtr;
 use function substr;
 use function trim;
@@ -67,7 +65,7 @@ class Analyser
     /**
      * className => realPath
      *
-     * @var array<string, string>
+     * @var array<string, ?string>
      */
     private $classmap = [];
 
@@ -77,6 +75,13 @@ class Analyser
      * @var array<string, bool>
      */
     private $composerJsonDependencies;
+
+    /**
+     * symbol name => true
+     *
+     * @var array<string, true>
+     */
+    private $ignoredSymbols;
 
     /**
      * @param array<string, bool> $composerJsonDependencies package name => is dev dependency
@@ -95,6 +100,7 @@ class Analyser
         $this->config = $config;
         $this->vendorDir = $this->realPath($vendorDir);
         $this->composerJsonDependencies = $composerJsonDependencies;
+        $this->ignoredSymbols = $this->getIgnoredSymbols();
     }
 
     /**
@@ -120,20 +126,14 @@ class Analyser
             $scannedFilesCount++;
 
             foreach ($this->getUsedSymbolsInFile($filePath) as $usedSymbol => $lineNumbers) {
-                if ($this->isInternalClass($usedSymbol)) {
+                if (isset($this->ignoredSymbols[$usedSymbol])) {
                     continue;
                 }
 
-                if ($this->isComposerInternalClass($usedSymbol)) {
-                    continue;
-                }
+                $symbolPath = $this->getSymbolPath($usedSymbol);
 
-                if (!$this->isInClassmap($usedSymbol)) {
-                    if (
-                        !$this->isConstOrFunction($usedSymbol)
-                        && !$this->isNativeType($usedSymbol)
-                        && !$ignoreList->shouldIgnoreUnknownClass($usedSymbol, $filePath)
-                    ) {
+                if ($symbolPath === null) {
+                    if (!$ignoreList->shouldIgnoreUnknownClass($usedSymbol, $filePath)) {
                         foreach ($lineNumbers as $lineNumber) {
                             $classmapErrors[$usedSymbol][] = new SymbolUsage($filePath, $lineNumber);
                         }
@@ -142,13 +142,11 @@ class Analyser
                     continue;
                 }
 
-                $classmapPath = $this->getPathFromClassmap($usedSymbol);
-
-                if (!$this->isVendorPath($classmapPath)) {
+                if (!$this->isVendorPath($symbolPath)) {
                     continue; // local class
                 }
 
-                $packageName = $this->getPackageNameFromVendorPath($classmapPath);
+                $packageName = $this->getPackageNameFromVendorPath($symbolPath);
 
                 if (
                     $this->isShadowDependency($packageName)
@@ -183,17 +181,17 @@ class Analyser
         $forceUsedPackages = [];
 
         foreach ($this->config->getForceUsedSymbols() as $forceUsedSymbol) {
-            if (!$this->isInClassmap($forceUsedSymbol)) {
+            if (isset($this->ignoredSymbols[$forceUsedSymbol])) {
                 continue;
             }
 
-            $classmapPath = $this->getPathFromClassmap($forceUsedSymbol);
+            $symbolPath = $this->getSymbolPath($forceUsedSymbol);
 
-            if (!$this->isVendorPath($classmapPath)) {
+            if ($symbolPath === null || !$this->isVendorPath($symbolPath)) {
                 continue;
             }
 
-            $forceUsedPackage = $this->getPackageNameFromVendorPath($classmapPath);
+            $forceUsedPackage = $this->getPackageNameFromVendorPath($symbolPath);
             $usedPackages[$forceUsedPackage] = true;
             $forceUsedPackages[$forceUsedPackage] = true;
         }
@@ -299,10 +297,6 @@ class Analyser
      */
     private function getUsedSymbolsInFile(string $filePath): array
     {
-        if (!is_readable($filePath)) {
-            throw new InvalidPathException("File '$filePath' is not readable");
-        }
-
         $code = file_get_contents($filePath);
 
         if ($code === false) {
@@ -331,7 +325,7 @@ class Analyser
 
         foreach ($iterator as $entry) {
             /** @var DirectoryIterator $entry */
-            if (!$entry->isFile() || !$this->isExtensionToCheck($entry->getFilename())) {
+            if (!$entry->isFile() || !in_array($entry->getExtension(), $this->config->getFileExtensions(), true)) {
                 continue;
             }
 
@@ -339,50 +333,18 @@ class Analyser
         }
     }
 
-    private function isInternalClass(string $className): bool
-    {
-        return (class_exists($className, false) || interface_exists($className, false))
-            && (new ReflectionClass($className))->getExtension() !== null;
-    }
-
-    private function isExtensionToCheck(string $filePath): bool
-    {
-        foreach ($this->config->getFileExtensions() as $extension) {
-            if (substr($filePath, -(strlen($extension) + 1)) === ".$extension") {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     private function isVendorPath(string $realPath): bool
     {
         return substr($realPath, 0, strlen($this->vendorDir)) === $this->vendorDir;
     }
 
-    private function isInClassmap(string $usedSymbol): bool
+    private function getSymbolPath(string $symbol): ?string
     {
-        if ($this->isConstOrFunction($usedSymbol)) {
-            return false;
+        if (!array_key_exists($symbol, $this->classmap)) {
+            $this->classmap[$symbol] = $this->detectFileByClassLoader($symbol) ?? $this->detectFileByReflection($symbol);
         }
 
-        $foundInClassmap = isset($this->classmap[$usedSymbol]);
-
-        if (!$foundInClassmap) {
-            return $this->addToClassmap($usedSymbol);
-        }
-
-        return true;
-    }
-
-    private function getPathFromClassmap(string $usedSymbol): string
-    {
-        if (!$this->isInClassmap($usedSymbol)) {
-            throw new LogicException("Class $usedSymbol not found in classmap");
-        }
-
-        return $this->classmap[$usedSymbol];
+        return $this->classmap[$symbol];
     }
 
     /**
@@ -390,81 +352,13 @@ class Analyser
      */
     private function realPath(string $filePath): string
     {
-        if (!is_file($filePath) && !is_dir($filePath)) {
-            throw new InvalidPathException("'$filePath' is not a file nor directory");
-        }
-
         $realPath = realpath($filePath);
 
         if ($realPath === false) {
-            throw new InvalidPathException("Unable to realpath '$filePath'");
+            throw new InvalidPathException("'$filePath' is not a file nor directory");
         }
 
         return $realPath;
-    }
-
-    /**
-     * Since UsedSymbolExtractor cannot reliably tell if FQN usages are classes or other symbols,
-     * we verify those edgecases only when such classname is not found in classmap.
-     */
-    private function isConstOrFunction(string $usedClass): bool
-    {
-        return defined($usedClass) || function_exists($usedClass);
-    }
-
-    /**
-     * It is almost impossible to sneak a native type here without reaching fatal or parse error.
-     * Only very few edgecases are possible (using \array and \callable).
-     *
-     * See test native-symbols.php
-     *
-     * List taken from https://www.php.net/manual/en/language.types.type-system.php
-     */
-    private function isNativeType(string $usedClass): bool
-    {
-        return in_array(
-            strtolower($usedClass),
-            [
-                // built-in types
-                'bool', 'int', 'float', 'string', 'null', 'array', 'object', 'never', 'void',
-
-                // value types
-                'false', 'true',
-
-                // callable
-                'callable',
-
-                // relative class types
-                'self', 'parent', 'static',
-
-                // aliases
-                'mixed', 'iterable'
-            ],
-            true
-        );
-    }
-
-    /**
-     * Those are always available: https://getcomposer.org/doc/07-runtime.md#installed-versions
-     */
-    private function isComposerInternalClass(string $usedSymbol): bool
-    {
-        return in_array($usedSymbol, [
-            'Composer\\InstalledVersions',
-            'Composer\\Autoload\\ClassLoader'
-        ], true);
-    }
-
-    private function addToClassmap(string $usedSymbol): bool
-    {
-        $filePath = $this->detectFileByClassLoader($usedSymbol) ?? $this->detectFileByReflection($usedSymbol);
-
-        if ($filePath === null) {
-            return false;
-        }
-
-        $this->classmap[$usedSymbol] = $filePath;
-        return true;
     }
 
     /**
@@ -511,6 +405,72 @@ class Analyser
         }
 
         return $filePath;
+    }
+
+    /**
+     * @return array<string, true>
+     */
+    private function getIgnoredSymbols(): array
+    {
+        $ignoredSymbols = [
+            // built-in types
+            'bool' => true,
+            'int' => true,
+            'float' => true,
+            'string' => true,
+            'null' => true,
+            'array' => true,
+            'object' => true,
+            'never' => true,
+            'void' => true,
+
+            // value types
+            'false' => true,
+            'true' => true,
+
+            // callable
+            'callable' => true,
+
+            // relative class types
+            'self' => true,
+            'parent' => true,
+            'static' => true,
+
+            // aliases
+            'mixed' => true,
+            'iterable' => true,
+
+            // composer internal classes
+            'Composer\\InstalledVersions' => true,
+            'Composer\\Autoload\\ClassLoader' => true,
+        ];
+
+        /** @var string $constantName */
+        foreach (get_defined_constants() as $constantName => $constantValue) {
+            $ignoredSymbols[$constantName] = true;
+        }
+
+        foreach (get_defined_functions() as $functionNames) {
+            foreach ($functionNames as $functionName) {
+                $ignoredSymbols[$functionName] = true;
+            }
+        }
+
+        $classLikes = [
+            get_declared_classes(),
+            get_declared_interfaces(),
+            get_declared_traits(),
+        ];
+
+        foreach ($classLikes as $classLikeNames) {
+            foreach ($classLikeNames as $classLikeName) {
+                if ((new ReflectionClass($classLikeName))->getExtension() !== null) {
+                    $ignoredSymbols[$classLikeName] = true;
+                }
+            }
+        }
+
+        return $ignoredSymbols;
     }
 
 }
