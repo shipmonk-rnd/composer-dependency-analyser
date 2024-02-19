@@ -2,7 +2,6 @@
 
 namespace ShipMonk\ComposerDependencyAnalyser;
 
-use function array_merge;
 use function count;
 use function explode;
 use function is_array;
@@ -44,18 +43,6 @@ class UsedSymbolExtractor
      */
     private $pointer = 0;
 
-    /**
-     * When not null, we are inside class-like and use statements dont need to be parsed
-     *
-     * @var int|null
-     */
-    private $inClassLevel = null;
-
-    /**
-     * @var int
-     */
-    private $level = 0;
-
     public function __construct(string $code)
     {
         $this->tokens = token_get_all($code);
@@ -77,129 +64,111 @@ class UsedSymbolExtractor
         $usedSymbols = [];
         $useStatements = [];
 
-        while ($token = $this->getNextEffectiveToken()) {
-            $tokenLine = is_array($token) ? $token[2] : 0;
+        $level = 0;
+        $inClassLevel = null;
 
-            if ($token[0] === T_USE) {
-                $usedClass = $this->parseUseStatement();
+        $numTokens = $this->numTokens;
+        $tokens = $this->tokens;
 
-                if ($usedClass !== null) {
-                    $useStatements = array_merge($useStatements, $usedClass);
-                }
-            }
+        while ($this->pointer < $numTokens) {
+            $token = $tokens[$this->pointer++];
 
-            if (PHP_VERSION_ID >= 80000) {
-                if ($token[0] === T_NAMESPACE) {
-                    $useStatements = []; // reset use statements on namespace change
-                }
+            if (is_array($token)) {
+                switch ($token[0]) {
+                    case T_CLASS:
+                    case T_INTERFACE:
+                    case T_TRAIT:
+                    case PHP_VERSION_ID >= 80100 ? T_ENUM : -1:
+                        $inClassLevel = $level + 1;
+                        break;
 
-                if ($token[0] === T_NAME_FULLY_QUALIFIED) {
-                    $symbolName = $this->normalizeBackslash($token[1]);
-                    $usedSymbols[$symbolName][] = $tokenLine;
-                }
-
-                if ($token[0] === T_NAME_QUALIFIED) {
-                    [$neededAlias] = explode('\\', $token[1], 2);
-
-                    if (isset($useStatements[$neededAlias])) {
-                        $symbolName = $this->normalizeBackslash($useStatements[$neededAlias] . substr($token[1], strlen($neededAlias)));
-                        $usedSymbols[$symbolName][] = $tokenLine;
-                    }
-                }
-
-                if ($token[0] === T_STRING) {
-                    $name = $token[1];
-
-                    if (isset($useStatements[$name])) {
-                        $symbolName = $this->normalizeBackslash($useStatements[$name]);
-                        $usedSymbols[$symbolName][] = $tokenLine;
-                    }
-                }
-            } else {
-                if ($token[0] === T_NAMESPACE) {
-                    $this->pointer++;
-                    $nextName = $this->parseNameForOldPhp();
-
-                    if (substr($nextName, 0, 1) !== '\\') { // not a namespace-relative name, but a new namespace declaration
-                        $useStatements = []; // reset use statements on namespace change
-                    }
-                }
-
-                if ($token[0] === T_NS_SEPARATOR) { // fully qualified name
-                    $symbolName = $this->normalizeBackslash($this->parseNameForOldPhp());
-
-                    if ($symbolName !== '') { // e.g. \array (NS separator followed by not-a-name)
-                        $usedSymbols[$symbolName][] = $tokenLine;
-                    }
-                }
-
-                if ($token[0] === T_STRING) {
-                    $name = $this->parseNameForOldPhp();
-
-                    if (isset($useStatements[$name])) { // unqualified name
-                        $symbolName = $this->normalizeBackslash($useStatements[$name]);
-                        $usedSymbols[$symbolName][] = $tokenLine;
-
-                    } else {
-                        [$neededAlias] = explode('\\', $name, 2);
-
-                        if (isset($useStatements[$neededAlias])) { // qualified name
-                            $symbolName = $this->normalizeBackslash($useStatements[$neededAlias] . substr($name, strlen($neededAlias)));
-                            $usedSymbols[$symbolName][] = $tokenLine;
+                    case T_USE:
+                        if ($inClassLevel === null) {
+                            foreach ($this->parseUseStatement() as $alias => $class) {
+                                $useStatements[$alias] = $this->normalizeBackslash($class);
+                            }
                         }
-                    }
+
+                        break;
+
+                    case PHP_VERSION_ID >= 80000 ? T_NAMESPACE : -1:
+                        $useStatements = []; // reset use statements on namespace change
+                        break;
+
+                    case PHP_VERSION_ID >= 80000 ? T_NAME_FULLY_QUALIFIED : -1:
+                        $symbolName = $this->normalizeBackslash($token[1]);
+                        $usedSymbols[$symbolName][] = $token[2];
+                        break;
+
+                    case PHP_VERSION_ID >= 80000 ? T_NAME_QUALIFIED : -1:
+                        [$neededAlias] = explode('\\', $token[1], 2);
+
+                        if (isset($useStatements[$neededAlias])) {
+                            $symbolName = $useStatements[$neededAlias] . substr($token[1], strlen($neededAlias));
+                            $usedSymbols[$symbolName][] = $token[2];
+                        }
+
+                        break;
+
+                    case PHP_VERSION_ID >= 80000 ? T_STRING : -1:
+                        $name = $token[1];
+
+                        if (isset($useStatements[$name])) {
+                            $symbolName = $useStatements[$name];
+                            $usedSymbols[$symbolName][] = $token[2];
+                        }
+
+                        break;
+
+                    case PHP_VERSION_ID < 80000 ? T_NAMESPACE : -1:
+                        $this->pointer++;
+                        $nextName = $this->parseNameForOldPhp();
+
+                        if (substr($nextName, 0, 1) !== '\\') { // not a namespace-relative name, but a new namespace declaration
+                            $useStatements = []; // reset use statements on namespace change
+                        }
+
+                        break;
+
+                    case PHP_VERSION_ID < 80000 ? T_NS_SEPARATOR : -1:
+                        $symbolName = $this->normalizeBackslash($this->parseNameForOldPhp());
+
+                        if ($symbolName !== '') { // e.g. \array (NS separator followed by not-a-name)
+                            $usedSymbols[$symbolName][] = $token[2];
+                        }
+
+                        break;
+
+                    case PHP_VERSION_ID < 80000 ? T_STRING : -1:
+                        $name = $this->parseNameForOldPhp();
+
+                        if (isset($useStatements[$name])) { // unqualified name
+                            $symbolName = $useStatements[$name];
+                            $usedSymbols[$symbolName][] = $token[2];
+
+                        } else {
+                            [$neededAlias] = explode('\\', $name, 2);
+
+                            if (isset($useStatements[$neededAlias])) { // qualified name
+                                $symbolName = $useStatements[$neededAlias] . substr($name, strlen($neededAlias));
+                                $usedSymbols[$symbolName][] = $token[2];
+                            }
+                        }
+
+                        break;
                 }
+            } elseif ($token === '{') {
+                $level++;
+            } elseif ($token === '}') {
+                if ($level === $inClassLevel) {
+                    $inClassLevel = null;
+                }
+
+                $level--;
             }
         }
 
         return $usedSymbols;
-    }
-
-    /**
-     * @return array{int, string, int}|string|null The token if exists, null otherwise.
-     */
-    private function getNextEffectiveToken()
-    {
-        for ($i = $this->pointer; $i < $this->numTokens; $i++) {
-            $this->pointer++;
-            $token = $this->tokens[$i];
-
-            if ($this->isNonEffectiveToken($token)) {
-                continue;
-            }
-
-            if ($token[0] === T_CLASS || $token[0] === T_INTERFACE || $token[0] === T_TRAIT || (PHP_VERSION_ID >= 80100 && $token[0] === T_ENUM)) {
-                $this->inClassLevel = $this->level + 1;
-            }
-
-            if ($token === '{') {
-                $this->level++;
-            } elseif ($token === '}') {
-                if ($this->level === $this->inClassLevel) {
-                    $this->inClassLevel = null;
-                }
-
-                $this->level--;
-            }
-
-            return $token;
-        }
-
-        return null;
-    }
-
-    /**
-     * @param array{int, string, int}|string $token
-     */
-    private function isNonEffectiveToken($token): bool
-    {
-        if (!is_array($token)) {
-            return false;
-        }
-
-        return $token[0] === T_WHITESPACE ||
-            $token[0] === T_COMMENT ||
-            $token[0] === T_DOC_COMMENT;
     }
 
     /**
@@ -208,59 +177,71 @@ class UsedSymbolExtractor
     private function parseNameForOldPhp(): string
     {
         $this->pointer--; // we already detected start token above
-
         $name = '';
 
-        do {
-            $token = $this->getNextEffectiveToken();
-            $isNamePart = is_array($token) && ($token[0] === T_STRING || $token[0] === T_NS_SEPARATOR);
+        while ($this->pointer < $this->numTokens) {
+            $token = $this->tokens[$this->pointer++];
 
-            if (!$isNamePart) {
+            if (!is_array($token) || ($token[0] !== T_STRING && $token[0] !== T_NS_SEPARATOR)) {
                 break;
             }
 
             $name .= $token[1];
-
-        } while (true);
+        }
 
         return $name;
     }
 
     /**
-     * @return array<string, string>|null
+     * @return array<string, string>
      */
-    public function parseUseStatement(): ?array
+    public function parseUseStatement(): array
     {
-        if ($this->inClassLevel !== null) {
-            return null;
-        }
-
         $groupRoot = '';
         $class = '';
         $alias = '';
         $statements = [];
         $explicitAlias = false;
 
-        while (($token = $this->getNextEffectiveToken())) {
-            if (!$explicitAlias && $token[0] === T_STRING) {
-                $class .= $token[1];
-                $alias = $token[1];
-            } elseif ($explicitAlias && $token[0] === T_STRING) {
-                $alias = $token[1];
-            } elseif (
-                PHP_VERSION_ID >= 80000
-                && ($token[0] === T_NAME_QUALIFIED || $token[0] === T_NAME_FULLY_QUALIFIED)
-            ) {
-                $class .= $token[1];
+        while ($this->pointer < $this->numTokens) {
+            $token = $this->tokens[$this->pointer++];
 
-                $classSplit = explode('\\', $token[1]);
-                $alias = $classSplit[count($classSplit) - 1];
-            } elseif ($token[0] === T_NS_SEPARATOR) {
-                $class .= '\\';
-                $alias = '';
-            } elseif ($token[0] === T_AS) {
-                $explicitAlias = true;
-                $alias = '';
+            if (is_array($token)) {
+                switch ($token[0]) {
+                    case T_STRING:
+                        $alias = $token[1];
+
+                        if (!$explicitAlias) {
+                            $class .= $alias;
+                        }
+
+                        break;
+
+                    case PHP_VERSION_ID >= 80000 ? T_NAME_QUALIFIED : -1:
+                    case PHP_VERSION_ID >= 80000 ? T_NAME_FULLY_QUALIFIED : -1:
+                        $class .= $token[1];
+                        $classSplit = explode('\\', $token[1]);
+                        $alias = $classSplit[count($classSplit) - 1];
+                        break;
+
+                    case T_NS_SEPARATOR:
+                        $class .= '\\';
+                        $alias = '';
+                        break;
+
+                    case T_AS:
+                        $explicitAlias = true;
+                        $alias = '';
+                        break;
+
+                    case T_WHITESPACE:
+                    case T_COMMENT:
+                    case T_DOC_COMMENT:
+                        break;
+
+                    default:
+                        break 2;
+                }
             } elseif ($token === ',') {
                 $statements[$alias] = $groupRoot . $class;
                 $class = '';
@@ -279,7 +260,7 @@ class UsedSymbolExtractor
             }
         }
 
-        return $statements === [] ? null : $statements;
+        return $statements;
     }
 
     private function normalizeBackslash(string $class): string
