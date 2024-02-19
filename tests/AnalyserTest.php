@@ -526,6 +526,30 @@ class AnalyserTest extends TestCase
         self::assertEquals($this->createAnalysisResult(2, []), $result);
     }
 
+    public function testPharSupport(): void
+    {
+        require_once __DIR__ . '/data/not-autoloaded/phar/org/package/inner.phar';
+
+        $path = realpath(__DIR__ . '/data/not-autoloaded/phar/phar-usage.php');
+        self::assertNotFalse($path);
+
+        $config = new Configuration();
+        $config->addPathToScan($path, false);
+
+        $detector = new Analyser(
+            $this->getStopwatchMock(),
+            $this->getClassLoaderMock(),
+            $config,
+            __DIR__ . '/data/not-autoloaded/phar',
+            [
+                'org/package' => false,
+            ]
+        );
+        $result = $detector->run();
+
+        self::assertEquals($this->createAnalysisResult(1, []), $result);
+    }
+
     public function testExplicitFileWithoutExtension(): void
     {
         $path = realpath(__DIR__ . '/data/not-autoloaded/file-without-extension/script');

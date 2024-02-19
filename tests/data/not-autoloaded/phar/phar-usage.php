@@ -1,0 +1,3 @@
+<?php
+
+\Phar\Inner::class;
