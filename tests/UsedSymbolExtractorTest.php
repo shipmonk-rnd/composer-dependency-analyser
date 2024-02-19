@@ -19,7 +19,7 @@ class UsedSymbolExtractorTest extends TestCase
 
         $extractor = new UsedSymbolExtractor($code);
 
-        self::assertSame($expectedUsages, $extractor->parseUsedClasses());
+        self::assertSame($expectedUsages, $extractor->parseUsedSymbols());
     }
 
     /**
@@ -63,8 +63,10 @@ class UsedSymbolExtractorTest extends TestCase
         yield 'other symbols' => [
             __DIR__ . '/data/not-autoloaded/used-symbols/other-symbols.php',
             [
-                'DIRECTORY_SEPARATOR' => [9],
-                'strlen' => [11],
+                'DIRECTORY_SEPARATOR' => [10],
+                'strlen' => [12],
+                'strpos' => [13],
+                'PHPUnit\Framework\assertArrayHasKey' => [14],
             ]
         ];
 

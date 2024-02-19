@@ -17,6 +17,7 @@ use const T_CURLY_OPEN;
 use const T_DOC_COMMENT;
 use const T_DOLLAR_OPEN_CURLY_BRACES;
 use const T_ENUM;
+use const T_FUNCTION;
 use const T_INTERFACE;
 use const T_NAME_FULLY_QUALIFIED;
 use const T_NAME_QUALIFIED;
@@ -52,16 +53,13 @@ class UsedSymbolExtractor
     }
 
     /**
-     * As we do not verify if the resulting name are classes, it can return even used functions or constants (due to FQNs).
-     * - elimination of those is solved in ComposerDependencyAnalyser::isConstOrFunction
-     *
      * It does not produce any local names in current namespace
      * - this results in very limited functionality in files without namespace
      *
      * @return array<string, list<int>>
      * @license Inspired by https://github.com/doctrine/annotations/blob/2.0.0/lib/Doctrine/Common/Annotations/TokenParser.php
      */
-    public function parseUsedClasses(): array
+    public function parseUsedSymbols(): array
     {
         $usedSymbols = [];
         $useStatements = [];
@@ -202,7 +200,7 @@ class UsedSymbolExtractor
     /**
      * @return array<string, string>
      */
-    public function parseUseStatement(): array
+    private function parseUseStatement(): array
     {
         $groupRoot = '';
         $class = '';
@@ -229,6 +227,9 @@ class UsedSymbolExtractor
                         $class .= $token[1];
                         $classSplit = explode('\\', $token[1]);
                         $alias = $classSplit[count($classSplit) - 1];
+                        break;
+
+                    case T_FUNCTION:
                         break;
 
                     case T_NS_SEPARATOR:
