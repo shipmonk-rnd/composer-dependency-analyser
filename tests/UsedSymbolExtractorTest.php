@@ -81,6 +81,11 @@ class UsedSymbolExtractorTest extends TestCase
                 'DateTimeImmutable' => [3],
             ]
         ];
+
+        yield 'curly braces' => [
+            __DIR__ . '/data/not-autoloaded/used-symbols/curly-braces.php',
+            []
+        ];
     }
 
 }

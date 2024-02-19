@@ -13,7 +13,9 @@ use const PHP_VERSION_ID;
 use const T_AS;
 use const T_CLASS;
 use const T_COMMENT;
+use const T_CURLY_OPEN;
 use const T_DOC_COMMENT;
+use const T_DOLLAR_OPEN_CURLY_BRACES;
 use const T_ENUM;
 use const T_INTERFACE;
 use const T_NAME_FULLY_QUALIFIED;
@@ -155,6 +157,11 @@ class UsedSymbolExtractor
                             }
                         }
 
+                        break;
+
+                    case T_CURLY_OPEN:
+                    case T_DOLLAR_OPEN_CURLY_BRACES:
+                        $level++;
                         break;
                 }
             } elseif ($token === '{') {
