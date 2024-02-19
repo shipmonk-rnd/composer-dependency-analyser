@@ -36,6 +36,7 @@ use function str_replace;
 use function strlen;
 use function strpos;
 use function strtolower;
+use function strtr;
 use function substr;
 use function trim;
 use const DIRECTORY_SEPARATOR;
@@ -462,7 +463,7 @@ class Analyser
             return false;
         }
 
-        $this->classmap[$usedSymbol] = $this->trimPharPrefix($filePath);
+        $this->classmap[$usedSymbol] = $filePath;
         return true;
     }
 
@@ -498,7 +499,7 @@ class Analyser
             return null; // should probably never happen as internal classes are handled earlier
         }
 
-        return $filePath;
+        return strtr($this->trimPharPrefix($filePath), '/', DIRECTORY_SEPARATOR);
     }
 
     private function trimPharPrefix(string $filePath): string
