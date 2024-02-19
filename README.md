@@ -8,7 +8,7 @@ It detects **shadowed composer dependencies** and **unused composer dependencies
 |-------------------------------------------|---------------------|------------------------|--------------------------|-------------------------------|------------|
 | maglnet/composer-require-checker          | ❌                   | ✅                     | ❌                         |  ❌                             | 124 secs   |
 | icanhazstring/composer-unused             | ✅                   | ❌                     | ❌                         |  ❌                             | 72 secs    |
-| **shipmonk/composer-dependency-analyser** | ✅                   | ✅                     | ✅                         |  ✅                             | **3 secs** |
+| **shipmonk/composer-dependency-analyser** | ✅                   | ✅                     | ✅                         |  ✅                             | **2 secs** |
 
 <sup><sub>\*Time measured on codebase with ~13 000 files</sub></sup>
 
