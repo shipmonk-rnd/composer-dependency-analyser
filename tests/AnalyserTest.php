@@ -4,6 +4,7 @@ namespace ShipMonk\ComposerDependencyAnalyser;
 
 use Composer\Autoload\ClassLoader;
 use LogicException;
+use Phar;
 use PHPUnit\Framework\TestCase;
 use ShipMonk\ComposerDependencyAnalyser\Config\Configuration;
 use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
@@ -13,7 +14,10 @@ use ShipMonk\ComposerDependencyAnalyser\Result\AnalysisResult;
 use ShipMonk\ComposerDependencyAnalyser\Result\SymbolUsage;
 use function array_filter;
 use function dirname;
+use function file_exists;
+use function ini_set;
 use function realpath;
+use function unlink;
 
 class AnalyserTest extends TestCase
 {
@@ -528,7 +532,19 @@ class AnalyserTest extends TestCase
 
     public function testPharSupport(): void
     {
-        require_once __DIR__ . '/data/not-autoloaded/phar/org/package/inner.phar';
+        $canCreatePhar = ini_set('phar.readonly', '0');
+        self::assertNotFalse($canCreatePhar, 'Your php runtime is not configured to allow phar creation. Use `php -dphar.readonly=0`');
+
+        $pharPath = __DIR__ . '/data/not-autoloaded/phar/org/package/inner.phar';
+
+        if (file_exists($pharPath)) {
+            unlink($pharPath);
+        }
+
+        $phar = new Phar($pharPath);
+        $phar->addFromString('index.php', '<?php namespace Phar { class Inner {} }');
+
+        require_once $pharPath;
 
         $path = realpath(__DIR__ . '/data/not-autoloaded/phar/phar-usage.php');
         self::assertNotFalse($path);

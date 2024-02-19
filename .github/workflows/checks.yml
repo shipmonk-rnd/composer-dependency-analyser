@@ -44,6 +44,7 @@ jobs:
                 uses: shivammathur/setup-php@v2
                 with:
                     php-version: ${{ matrix.php-version }}
+                    ini-values: phar.readonly=0
             -
                 name: Update dependencies
                 run: composer update --no-progress --${{ matrix.dependency-version }} --prefer-dist --no-interaction
