@@ -2,7 +2,7 @@
 
 namespace My\App;
 
-use PHPUnit\Framework\Exception;
+use \PHPUnit\Framework\Exception;
 use PHPUnit\Framework;
 use PHPUnit\Framework\Constraint as ConstraintAlias;
 use PHPUnit\Framework\ { Warning as WarningAlias, Error };
