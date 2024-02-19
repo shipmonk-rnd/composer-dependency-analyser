@@ -2,6 +2,8 @@
 
 namespace ShipMonk\ComposerDependencyAnalyser\Result;
 
+use ShipMonk\ComposerDependencyAnalyser\SymbolKind;
+
 class SymbolUsage
 {
 
@@ -15,10 +17,19 @@ class SymbolUsage
      */
     private $lineNumber;
 
-    public function __construct(string $filepath, int $lineNumber)
+    /**
+     * @var SymbolKind::*
+     */
+    private $kind;
+
+    /**
+     * @param SymbolKind::* $kind
+     */
+    public function __construct(string $filepath, int $lineNumber, int $kind)
     {
         $this->filepath = $filepath;
         $this->lineNumber = $lineNumber;
+        $this->kind = $kind;
     }
 
     public function getFilepath(): string
@@ -29,6 +40,14 @@ class SymbolUsage
     public function getLineNumber(): int
     {
         return $this->lineNumber;
+    }
+
+    /**
+     * @return SymbolKind::*
+     */
+    public function getKind(): int
+    {
+        return $this->kind;
     }
 
 }

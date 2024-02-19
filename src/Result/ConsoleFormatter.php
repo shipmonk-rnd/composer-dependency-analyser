@@ -4,9 +4,10 @@ namespace ShipMonk\ComposerDependencyAnalyser\Result;
 
 use ShipMonk\ComposerDependencyAnalyser\CliOptions;
 use ShipMonk\ComposerDependencyAnalyser\Config\Configuration;
-use ShipMonk\ComposerDependencyAnalyser\Config\Ignore\UnusedClassIgnore;
 use ShipMonk\ComposerDependencyAnalyser\Config\Ignore\UnusedErrorIgnore;
+use ShipMonk\ComposerDependencyAnalyser\Config\Ignore\UnusedSymbolIgnore;
 use ShipMonk\ComposerDependencyAnalyser\Printer;
+use ShipMonk\ComposerDependencyAnalyser\SymbolKind;
 use function array_fill_keys;
 use function array_reduce;
 use function count;
@@ -72,13 +73,13 @@ class ConsoleFormatter implements ResultFormatter
         $usagesToDump = $this->filterUsagesToDump($result->getUsages(), $package);
         $maxShownUsages = $showAllUsages ? PHP_INT_MAX : self::VERBOSE_SHOWN_USAGES;
         $totalUsages = $this->countAllUsages($usagesToDump);
-        $classesWithUsage = $this->countClassUsages($usagesToDump);
+        $symbolsWithUsage = $this->countSymbolUsages($usagesToDump);
 
         $title = $showAllUsages ? "Dumping all usages of $package" : "Dumping sample usages of $package";
 
         $totalPlural = $totalUsages === 1 ? '' : 's';
-        $classesPlural = $classesWithUsage === 1 ? '' : 'es';
-        $subtitle = "{$totalUsages} usage{$totalPlural} of {$classesWithUsage} class{$classesPlural} in total";
+        $symbolsPlural = $symbolsWithUsage === 1 ? '' : 's';
+        $subtitle = "{$totalUsages} usage{$totalPlural} of {$symbolsWithUsage} symbol{$symbolsPlural} in total";
 
         $this->printPackageBasedErrors("<orange>$title</orange>", $subtitle, $usagesToDump, $maxShownUsages);
 
@@ -97,9 +98,9 @@ class ConsoleFormatter implements ResultFormatter
     {
         $result = [];
 
-        foreach ($usages as $package => $usagesPerClassname) {
+        foreach ($usages as $package => $usagesPerSymbol) {
             if (fnmatch($filter, $package)) {
-                $result[$package] = $usagesPerClassname;
+                $result[$package] = $usagesPerSymbol;
             }
         }
 
@@ -115,18 +116,29 @@ class ConsoleFormatter implements ResultFormatter
         $hasError = false;
         $unusedIgnores = $result->getUnusedIgnores();
 
-        $classmapErrors = $result->getClassmapErrors();
+        $unknownClassErrors = $result->getUnknownClassErrors();
+        $unknownFunctionErrors = $result->getUnknownFunctionErrors();
         $shadowDependencyErrors = $result->getShadowDependencyErrors();
         $devDependencyInProductionErrors = $result->getDevDependencyInProductionErrors();
         $prodDependencyOnlyInDevErrors = $result->getProdDependencyOnlyInDevErrors();
         $unusedDependencyErrors = $result->getUnusedDependencyErrors();
 
-        if (count($classmapErrors) > 0) {
+        if (count($unknownClassErrors) > 0) {
             $hasError = true;
-            $this->printClassBasedErrors(
+            $this->printSymbolBasedErrors(
                 'Unknown classes!',
                 'unable to autoload those, so we cannot check them',
-                $classmapErrors,
+                $unknownClassErrors,
+                $maxShownUsages
+            );
+        }
+
+        if (count($unknownFunctionErrors) > 0) {
+            $hasError = true;
+            $this->printSymbolBasedErrors(
+                'Unknown functions!',
+                'those are not declared, so we cannot check them',
+                $unknownFunctionErrors,
                 $maxShownUsages
             );
         }
@@ -191,12 +203,12 @@ class ConsoleFormatter implements ResultFormatter
     /**
      * @param array<string, list<SymbolUsage>> $errors
      */
-    private function printClassBasedErrors(string $title, string $subtitle, array $errors, int $maxShownUsages): void
+    private function printSymbolBasedErrors(string $title, string $subtitle, array $errors, int $maxShownUsages): void
     {
         $this->printHeader($title, $subtitle);
 
-        foreach ($errors as $classname => $usages) {
-            $this->printLine("  • <orange>{$classname}</orange>");
+        foreach ($errors as $symbol => $usages) {
+            $this->printLine("  • <orange>{$symbol}</orange>");
 
             if ($maxShownUsages > 1) {
                 foreach ($usages as $index => $usage) {
@@ -232,42 +244,42 @@ class ConsoleFormatter implements ResultFormatter
     {
         $this->printHeader($title, $subtitle);
 
-        foreach ($errors as $packageName => $usagesPerClassname) {
+        foreach ($errors as $packageName => $usagesPerSymbol) {
             $this->printLine("  • <orange>{$packageName}</orange>");
 
-            $this->printUsages($usagesPerClassname, $maxShownUsages);
+            $this->printUsages($usagesPerSymbol, $maxShownUsages);
         }
 
         $this->printLine('');
     }
 
     /**
-     * @param array<string, list<SymbolUsage>> $usagesPerClassname
+     * @param array<string, list<SymbolUsage>> $usagesPerSymbol
      */
-    private function printUsages(array $usagesPerClassname, int $maxShownUsages): void
+    private function printUsages(array $usagesPerSymbol, int $maxShownUsages): void
     {
         if ($maxShownUsages === 1) {
             $countOfAllUsages = array_reduce(
-                $usagesPerClassname,
+                $usagesPerSymbol,
                 static function (int $carry, array $usages): int {
                     return $carry + count($usages);
                 },
                 0
             );
 
-            foreach ($usagesPerClassname as $classname => $usages) {
+            foreach ($usagesPerSymbol as $symbol => $usages) {
                 $firstUsage = $usages[0];
                 $restUsagesCount = $countOfAllUsages - 1;
                 $rest = $countOfAllUsages > 1 ? " (+ {$restUsagesCount} more)" : '';
-                $this->printLine("      <gray>e.g. </gray>{$classname}<gray> in {$this->relativizeUsage($firstUsage)}</gray>$rest" . PHP_EOL);
+                $this->printLine("      <gray>e.g. </gray>{$symbol}<gray> in {$this->relativizeUsage($firstUsage)}</gray>$rest" . PHP_EOL);
                 break;
             }
         } else {
-            $classnamesPrinted = 0;
+            $symbolsPrinted = 0;
 
-            foreach ($usagesPerClassname as $classname => $usages) {
-                $classnamesPrinted++;
-                $this->printLine("      {$classname}");
+            foreach ($usagesPerSymbol as $symbol => $usages) {
+                $symbolsPrinted++;
+                $this->printLine("      {$symbol}");
 
                 foreach ($usages as $index => $usage) {
                     $this->printLine("       <gray> {$this->relativizeUsage($usage)}</gray>");
@@ -282,11 +294,11 @@ class ConsoleFormatter implements ResultFormatter
                     }
                 }
 
-                if ($classnamesPrinted === $maxShownUsages) {
-                    $restClassnamesCount = count($usagesPerClassname) - $classnamesPrinted;
+                if ($symbolsPrinted === $maxShownUsages) {
+                    $restSymbolsCount = count($usagesPerSymbol) - $symbolsPrinted;
 
-                    if ($restClassnamesCount > 0) {
-                        $this->printLine("      + {$restClassnamesCount} more class" . ($restClassnamesCount > 1 ? 'es' : ''));
+                    if ($restSymbolsCount > 0) {
+                        $this->printLine("      + {$restSymbolsCount} more symbol" . ($restSymbolsCount > 1 ? 's' : ''));
                         break;
                     }
                 }
@@ -321,13 +333,13 @@ class ConsoleFormatter implements ResultFormatter
     }
 
     /**
-     * @param list<UnusedClassIgnore|UnusedErrorIgnore> $unusedIgnores
+     * @param list<UnusedSymbolIgnore|UnusedErrorIgnore> $unusedIgnores
      */
     private function printUnusedIgnores(array $unusedIgnores): void
     {
         foreach ($unusedIgnores as $unusedIgnore) {
-            if ($unusedIgnore instanceof UnusedClassIgnore) {
-                $this->printClassBasedUnusedIgnore($unusedIgnore);
+            if ($unusedIgnore instanceof UnusedSymbolIgnore) {
+                $this->printSymbolBasedUnusedIgnore($unusedIgnore);
             } else {
                 $this->printErrorBasedUnusedIgnore($unusedIgnore);
             }
@@ -336,10 +348,11 @@ class ConsoleFormatter implements ResultFormatter
         $this->printLine('');
     }
 
-    private function printClassBasedUnusedIgnore(UnusedClassIgnore $unusedIgnore): void
+    private function printSymbolBasedUnusedIgnore(UnusedSymbolIgnore $unusedIgnore): void
     {
+        $kind = $unusedIgnore->getSymbolKind() === SymbolKind::CLASSLIKE ? 'class' : 'function';
         $regex = $unusedIgnore->isRegex() ? ' regex' : '';
-        $this->printLine(" • <gray>Unknown class{$regex}</gray> '{$unusedIgnore->getUnknownClass()}' <gray>was ignored, but it was never applied.</gray>");
+        $this->printLine(" • <gray>Unknown {$kind}{$regex}</gray> '{$unusedIgnore->getUnknownSymbol()}' <gray>was ignored, but it was never applied.</gray>");
     }
 
     private function printErrorBasedUnusedIgnore(UnusedErrorIgnore $unusedIgnore): void
@@ -377,9 +390,9 @@ class ConsoleFormatter implements ResultFormatter
     {
         $total = 0;
 
-        foreach ($usages as $usagesPerClassname) {
-            foreach ($usagesPerClassname as $classUsages) {
-                $total += count($classUsages);
+        foreach ($usages as $usagesPerSymbol) {
+            foreach ($usagesPerSymbol as $symbolUsages) {
+                $total += count($symbolUsages);
             }
         }
 
@@ -389,12 +402,12 @@ class ConsoleFormatter implements ResultFormatter
     /**
      * @param array<string, array<string, list<SymbolUsage>>> $usages
      */
-    private function countClassUsages(array $usages): int
+    private function countSymbolUsages(array $usages): int
     {
         $total = 0;
 
-        foreach ($usages as $usagesPerClassname) {
-            $total += count($usagesPerClassname);
+        foreach ($usages as $usagesPerSymbol) {
+            $total += count($usagesPerSymbol);
         }
 
         return $total;
@@ -405,13 +418,13 @@ class ConsoleFormatter implements ResultFormatter
      */
     private function willLimitUsages(array $usages, int $limit): bool
     {
-        foreach ($usages as $usagesPerClassname) {
-            if (count($usagesPerClassname) > $limit) {
+        foreach ($usages as $usagesPerSymbol) {
+            if (count($usagesPerSymbol) > $limit) {
                 return true;
             }
 
-            foreach ($usagesPerClassname as $classUsages) {
-                if (count($classUsages) > $limit) {
+            foreach ($usagesPerSymbol as $symbolUsages) {
+                if (count($symbolUsages) > $limit) {
                     return true;
                 }
             }

@@ -5,8 +5,8 @@ namespace ShipMonk\ComposerDependencyAnalyser;
 use PHPUnit\Framework\TestCase;
 use ShipMonk\ComposerDependencyAnalyser\Config\Configuration;
 use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
-use ShipMonk\ComposerDependencyAnalyser\Config\Ignore\UnusedClassIgnore;
 use ShipMonk\ComposerDependencyAnalyser\Config\Ignore\UnusedErrorIgnore;
+use ShipMonk\ComposerDependencyAnalyser\Config\Ignore\UnusedSymbolIgnore;
 use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidConfigException;
 use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidPathException;
 use function realpath;
@@ -112,8 +112,8 @@ class ConfigurationTest extends TestCase
             self::assertEquals([
                 new UnusedErrorIgnore(ErrorType::UNKNOWN_CLASS, null, null),
                 new UnusedErrorIgnore(ErrorType::UNKNOWN_CLASS, __DIR__, null),
-                new UnusedClassIgnore('Unknown\Clazz', false),
-                new UnusedClassIgnore('~^Unknown~', true),
+                new UnusedSymbolIgnore('Unknown\Clazz', false, SymbolKind::CLASSLIKE),
+                new UnusedSymbolIgnore('~^Unknown~', true, SymbolKind::CLASSLIKE),
             ], $ignoreList->getUnusedIgnores());
         }
 
@@ -128,8 +128,8 @@ class ConfigurationTest extends TestCase
         self::assertTrue($ignoreList3->shouldIgnoreUnknownClass('Another\Clazz', $parentDir));
         self::assertEquals([
             new UnusedErrorIgnore(ErrorType::UNKNOWN_CLASS, __DIR__, null),
-            new UnusedClassIgnore('Unknown\Clazz', false),
-            new UnusedClassIgnore('~^Unknown~', true),
+            new UnusedSymbolIgnore('Unknown\Clazz', false, SymbolKind::CLASSLIKE),
+            new UnusedSymbolIgnore('~^Unknown~', true, SymbolKind::CLASSLIKE),
         ], $ignoreList3->getUnusedIgnores());
     }
 

@@ -41,6 +41,11 @@ class CliOptions
     public $ignoreUnknownClasses = null;
 
     /**
+     * @var true|null
+     */
+    public $ignoreUnknownFunctions = null;
+
+    /**
      * @var string|null
      */
     public $composerJson = null;

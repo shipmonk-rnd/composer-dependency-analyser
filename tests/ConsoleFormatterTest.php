@@ -24,10 +24,10 @@ class ConsoleFormatterTest extends TestCase
         $formatter = new ConsoleFormatter('/app', new Printer());
 
         $noIssuesOutput = $this->captureAndNormalizeOutput(static function () use ($formatter): void {
-            $formatter->format(new AnalysisResult(2, 0.123, [], [], [], [], [], [], []), new CliOptions(), new Configuration());
+            $formatter->format(new AnalysisResult(2, 0.123, [], [], [], [], [], [], [], []), new CliOptions(), new Configuration());
         });
         $noIssuesButUnusedIgnores = $this->captureAndNormalizeOutput(static function () use ($formatter): void {
-            $formatter->format(new AnalysisResult(2, 0.123, [], [], [], [], [], [], [new UnusedErrorIgnore(ErrorType::SHADOW_DEPENDENCY, null, null)]), new CliOptions(), new Configuration());
+            $formatter->format(new AnalysisResult(2, 0.123, [], [], [], [], [], [], [], [new UnusedErrorIgnore(ErrorType::SHADOW_DEPENDENCY, null, null)]), new CliOptions(), new Configuration());
         });
 
         $expectedNoIssuesOutput = <<<'OUT'
@@ -55,24 +55,25 @@ OUT;
             10,
             0.123,
             [],
-            ['Unknown\\Thing' => [new SymbolUsage('/app/app/init.php', 1093)]],
+            ['Unknown\\Thing' => [new SymbolUsage('/app/app/init.php', 1093, SymbolKind::CLASSLIKE)]],
+            ['Unknown\\function' => [new SymbolUsage('/app/app/foo.php', 51, SymbolKind::FUNCTION)]],
             [
                 'shadow/package' => [
                     'Shadow\Utils' => [
-                        new SymbolUsage('/app/src/Utils.php', 19),
-                        new SymbolUsage('/app/src/Utils.php', 22),
-                        new SymbolUsage('/app/src/Application.php', 128),
-                        new SymbolUsage('/app/src/Controller.php', 229),
+                        new SymbolUsage('/app/src/Utils.php', 19, SymbolKind::CLASSLIKE),
+                        new SymbolUsage('/app/src/Utils.php', 22, SymbolKind::CLASSLIKE),
+                        new SymbolUsage('/app/src/Application.php', 128, SymbolKind::CLASSLIKE),
+                        new SymbolUsage('/app/src/Controller.php', 229, SymbolKind::CLASSLIKE),
                     ],
-                    'Shadow\Comparator' => [new SymbolUsage('/app/src/Printer.php', 25)],
-                    'Third\Parser' => [new SymbolUsage('/app/src/bootstrap.php', 317)],
-                    'Forth\Provider' => [new SymbolUsage('/app/src/bootstrap.php', 873)],
+                    'Shadow\Comparator' => [new SymbolUsage('/app/src/Printer.php', 25, SymbolKind::CLASSLIKE)],
+                    'Third\Parser' => [new SymbolUsage('/app/src/bootstrap.php', 317, SymbolKind::CLASSLIKE)],
+                    'Forth\Provider' => [new SymbolUsage('/app/src/bootstrap.php', 873, SymbolKind::CLASSLIKE)],
                 ],
                 'shadow/another' => [
-                    'Another\Controller' => [new SymbolUsage('/app/src/bootstrap.php', 173)],
+                    'Another\Controller' => [new SymbolUsage('/app/src/bootstrap.php', 173, SymbolKind::CLASSLIKE)],
                 ],
             ],
-            ['some/package' => ['Another\Command' => [new SymbolUsage('/app/src/ProductGenerator.php', 28)]]],
+            ['some/package' => ['Another\Command' => [new SymbolUsage('/app/src/ProductGenerator.php', 28, SymbolKind::CLASSLIKE)]]],
             ['misplaced/package'],
             ['dead/package'],
             []
@@ -94,6 +95,14 @@ Unknown classes!
 
   • Unknown\Thing
     in app/init.php:1093
+
+
+
+Unknown functions!
+(those are not declared, so we cannot check them)
+
+  • Unknown\function
+    in app/foo.php:51
 
 
 
@@ -141,6 +150,14 @@ Unknown classes!
 
 
 
+Unknown functions!
+(those are not declared, so we cannot check them)
+
+  • Unknown\function
+      app/foo.php:51
+
+
+
 Found shadow dependencies!
 (those are used, but not listed as dependency in composer.json)
 
@@ -157,7 +174,7 @@ Found shadow dependencies!
         src/Utils.php:22
         src/Application.php:128
         + 1 more
-      + 1 more class
+      + 1 more symbol
 
 
 Found dev dependencies in production code!

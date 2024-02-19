@@ -6,6 +6,7 @@ final class ErrorType
 {
 
     public const UNKNOWN_CLASS = 'unknown-class';
+    public const UNKNOWN_FUNCTION = 'unknown-function';
     public const SHADOW_DEPENDENCY = 'shadow-dependency';
     public const UNUSED_DEPENDENCY = 'unused-dependency';
     public const DEV_DEPENDENCY_IN_PROD = 'dev-dependency-in-prod';
