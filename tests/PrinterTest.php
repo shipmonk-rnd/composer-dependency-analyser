@@ -97,7 +97,7 @@ OUT;
         $expectedRegularOutput = <<<'OUT'
 
 Unknown classes!
-(those are not present in composer classmap, so we cannot check them)
+(unable to autoload those, so we cannot check them)
 
   • Unknown\Thing
     in app/init.php:1093
@@ -141,7 +141,7 @@ OUT;
         $expectedVerboseOutput = <<<'OUT'
 
 Unknown classes!
-(those are not present in composer classmap, so we cannot check them)
+(unable to autoload those, so we cannot check them)
 
   • Unknown\Thing
       app/init.php:1093

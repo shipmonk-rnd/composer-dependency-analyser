@@ -63,7 +63,7 @@ class Printer
             $hasError = true;
             $this->printClassBasedErrors(
                 'Unknown classes!',
-                'those are not present in composer classmap, so we cannot check them',
+                'unable to autoload those, so we cannot check them',
                 $classmapErrors,
                 $verbose
             );
