@@ -566,6 +566,31 @@ class AnalyserTest extends TestCase
         self::assertEquals($this->createAnalysisResult(1, []), $result);
     }
 
+    public function testFunctions(): void
+    {
+        $path = __DIR__ . '/data/not-autoloaded/functions/org/package/fn-def.php';
+        require_once $path;
+
+        $path = realpath(__DIR__ . '/data/not-autoloaded/functions/fn-usage.php');
+        self::assertNotFalse($path);
+
+        $config = new Configuration();
+        $config->addPathToScan($path, false);
+
+        $detector = new Analyser(
+            $this->getStopwatchMock(),
+            $this->getClassLoaderMock(),
+            $config,
+            __DIR__ . '/data/not-autoloaded/functions',
+            [
+                'org/package' => false,
+            ]
+        );
+        $result = $detector->run();
+
+        self::assertEquals($this->createAnalysisResult(1, []), $result);
+    }
+
     public function testExplicitFileWithoutExtension(): void
     {
         $path = realpath(__DIR__ . '/data/not-autoloaded/file-without-extension/script');

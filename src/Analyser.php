@@ -9,6 +9,7 @@ use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use ReflectionClass;
 use ReflectionException;
+use ReflectionFunction;
 use ShipMonk\ComposerDependencyAnalyser\Config\Configuration;
 use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
 use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidPathException;
@@ -28,12 +29,14 @@ use function get_defined_constants;
 use function get_defined_functions;
 use function in_array;
 use function is_file;
+use function is_string;
 use function ksort;
 use function realpath;
 use function sort;
 use function str_replace;
 use function strlen;
 use function strpos;
+use function strtolower;
 use function strtr;
 use function substr;
 use function trim;
@@ -84,6 +87,11 @@ class Analyser
     private $ignoredSymbols;
 
     /**
+     * @var array<string, string>
+     */
+    private $definedFunctions = [];
+
+    /**
      * @param array<string, bool> $composerJsonDependencies package name => is dev dependency
      * @throws InvalidPathException
      */
@@ -100,7 +108,8 @@ class Analyser
         $this->config = $config;
         $this->vendorDir = $this->realPath($vendorDir);
         $this->composerJsonDependencies = $composerJsonDependencies;
-        $this->ignoredSymbols = $this->getIgnoredSymbols();
+
+        $this->initExistingSymbols();
     }
 
     /**
@@ -303,7 +312,7 @@ class Analyser
             throw new InvalidPathException("Unable to get contents of '$filePath'");
         }
 
-        return (new UsedSymbolExtractor($code))->parseUsedClasses();
+        return (new UsedSymbolExtractor($code))->parseUsedSymbols();
     }
 
     /**
@@ -340,6 +349,10 @@ class Analyser
 
     private function getSymbolPath(string $symbol): ?string
     {
+        if (isset($this->definedFunctions[strtolower($symbol)])) {
+            return $this->definedFunctions[strtolower($symbol)];
+        }
+
         if (!array_key_exists($symbol, $this->classmap)) {
             $this->classmap[$symbol] = $this->detectFileByClassLoader($symbol) ?? $this->detectFileByReflection($symbol);
         }
@@ -407,12 +420,9 @@ class Analyser
         return $filePath;
     }
 
-    /**
-     * @return array<string, true>
-     */
-    private function getIgnoredSymbols(): array
+    private function initExistingSymbols(): void
     {
-        $ignoredSymbols = [
+        $this->ignoredSymbols = [
             // built-in types
             'bool' => true,
             'int' => true,
@@ -447,12 +457,19 @@ class Analyser
 
         /** @var string $constantName */
         foreach (get_defined_constants() as $constantName => $constantValue) {
-            $ignoredSymbols[$constantName] = true;
+            $this->ignoredSymbols[$constantName] = true;
         }
 
         foreach (get_defined_functions() as $functionNames) {
             foreach ($functionNames as $functionName) {
-                $ignoredSymbols[$functionName] = true;
+                $reflectionFunction = new ReflectionFunction($functionName);
+                $functionFilePath = $reflectionFunction->getFileName();
+
+                if ($reflectionFunction->getExtension() === null && is_string($functionFilePath)) { // @phpstan-ignore-line https://github.com/phpstan/phpstan/issues/10604
+                    $this->definedFunctions[$functionName] = $this->realPath($functionFilePath);
+                } else {
+                    $this->ignoredSymbols[$functionName] = true;
+                }
             }
         }
 
@@ -465,12 +482,10 @@ class Analyser
         foreach ($classLikes as $classLikeNames) {
             foreach ($classLikeNames as $classLikeName) {
                 if ((new ReflectionClass($classLikeName))->getExtension() !== null) {
-                    $ignoredSymbols[$classLikeName] = true;
+                    $this->ignoredSymbols[$classLikeName] = true;
                 }
             }
         }
-
-        return $ignoredSymbols;
     }
 
 }
