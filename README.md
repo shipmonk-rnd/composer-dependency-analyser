@@ -190,4 +190,5 @@ Despite those limitations, our experience is that this composer-dependency-analy
 - All functionality must be tested
 
 ## Supported PHP versions
-- PHP 7.2 - 8.3
+- Runtime requires PHP 7.2 - 8.3
+- Scanned codebase should use PHP >= 5.3
