@@ -2720,19 +2720,20 @@
         },
         {
             "name": "shipmonk/name-collision-detector",
-            "version": "2.1.0",
+            "version": "2.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/shipmonk-rnd/name-collision-detector.git",
-                "reference": "322993a0b057457ab363929c3ca37bce6eb4affb"
+                "reference": "e8c8267a9a3774450b64f4cbf0bb035108e78f07"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/shipmonk-rnd/name-collision-detector/zipball/322993a0b057457ab363929c3ca37bce6eb4affb",
-                "reference": "322993a0b057457ab363929c3ca37bce6eb4affb",
+                "url": "https://api.github.com/repos/shipmonk-rnd/name-collision-detector/zipball/e8c8267a9a3774450b64f4cbf0bb035108e78f07",
+                "reference": "e8c8267a9a3774450b64f4cbf0bb035108e78f07",
                 "shasum": ""
             },
             "require": {
+                "ext-json": "*",
                 "ext-tokenizer": "*",
                 "nette/schema": "^1.1.0",
                 "php": "^7.2 || ^8.0"
@@ -2744,6 +2745,7 @@
                 "phpstan/phpstan-phpunit": "^1.1.1",
                 "phpstan/phpstan-strict-rules": "^1.2.3",
                 "phpunit/phpunit": "^8.5.28 || ^9.5.20",
+                "shipmonk/composer-dependency-analyser": "^1.0.0",
                 "slevomat/coding-standard": "^8.0.1"
             },
             "bin": [
@@ -2770,9 +2772,9 @@
             ],
             "support": {
                 "issues": "https://github.com/shipmonk-rnd/name-collision-detector/issues",
-                "source": "https://github.com/shipmonk-rnd/name-collision-detector/tree/2.1.0"
+                "source": "https://github.com/shipmonk-rnd/name-collision-detector/tree/2.1.1"
             },
-            "time": "2023-10-09T12:15:58+00:00"
+            "time": "2024-03-01T13:26:32+00:00"
         },
         {
             "name": "slevomat/coding-standard",
