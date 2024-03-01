@@ -157,16 +157,16 @@
         },
         {
             "name": "editorconfig-checker/editorconfig-checker",
-            "version": "10.4.0",
+            "version": "10.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/editorconfig-checker/editorconfig-checker.php.git",
-                "reference": "f81b62b934064c665cb412f828efff20a59b2eda"
+                "reference": "249369c7a2760fb22f1da64a2529e107508c4721"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/editorconfig-checker/editorconfig-checker.php/zipball/f81b62b934064c665cb412f828efff20a59b2eda",
-                "reference": "f81b62b934064c665cb412f828efff20a59b2eda",
+                "url": "https://api.github.com/repos/editorconfig-checker/editorconfig-checker.php/zipball/249369c7a2760fb22f1da64a2529e107508c4721",
+                "reference": "249369c7a2760fb22f1da64a2529e107508c4721",
                 "shasum": ""
             },
             "require": {
@@ -205,7 +205,7 @@
                 "issues": "https://github.com/editorconfig-checker/editorconfig-checker.php/issues",
                 "source": "https://github.com/editorconfig-checker/editorconfig-checker.php"
             },
-            "time": "2023-05-26T06:20:54+00:00"
+            "time": "2024-02-19T11:56:12+00:00"
         },
         {
             "name": "ergebnis/composer-normalize",
