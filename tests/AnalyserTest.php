@@ -19,6 +19,7 @@ use function dirname;
 use function file_exists;
 use function ini_set;
 use function realpath;
+use function strtr;
 use function unlink;
 
 class AnalyserTest extends TestCase
@@ -587,7 +588,7 @@ class AnalyserTest extends TestCase
 
         $classLoaders = ClassLoader::getRegisteredLoaders();
         self::assertSame([
-            'phar://' . $vendorDir . '/phpstan/phpstan/phpstan.phar/vendor',
+            strtr('phar://' . $vendorDir . '/phpstan/phpstan/phpstan.phar/vendor', '\\', '/'), // no backslashes even on Windows
             $vendorDir,
         ], array_keys($classLoaders));
 
