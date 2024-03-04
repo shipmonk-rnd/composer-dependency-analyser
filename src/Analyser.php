@@ -20,6 +20,8 @@ use function array_diff;
 use function array_filter;
 use function array_key_exists;
 use function array_keys;
+use function array_pop;
+use function end;
 use function explode;
 use function file_get_contents;
 use function get_declared_classes;
@@ -27,15 +29,15 @@ use function get_declared_interfaces;
 use function get_declared_traits;
 use function get_defined_constants;
 use function get_defined_functions;
+use function implode;
 use function in_array;
 use function is_file;
 use function ksort;
-use function realpath;
+use function preg_split;
 use function sort;
 use function str_replace;
 use function strlen;
 use function strpos;
-use function strtr;
 use function substr;
 use function trim;
 use const DIRECTORY_SEPARATOR;
@@ -61,7 +63,7 @@ class Analyser
     private $config;
 
     /**
-     * className => realPath
+     * className => path
      *
      * @var array<string, ?string>
      */
@@ -352,24 +354,13 @@ class Analyser
     private function getSymbolPath(string $symbol): ?string
     {
         if (!array_key_exists($symbol, $this->classmap)) {
-            $this->classmap[$symbol] = $this->detectFileByClassLoader($symbol) ?? $this->detectFileByReflection($symbol);
+            $path = $this->detectFileByClassLoader($symbol) ?? $this->detectFileByReflection($symbol);
+            $this->classmap[$symbol] = $path === null
+                ? null
+                : $this->normalizePath($path); // composer ClassLoader::findFile() returns e.g. /opt/project/vendor/composer/../../src/Config/Configuration.php (which is not vendor path)
         }
 
         return $this->classmap[$symbol];
-    }
-
-    /**
-     * @throws InvalidPathException
-     */
-    private function realPath(string $filePath): string
-    {
-        $realPath = realpath($filePath);
-
-        if ($realPath === false) {
-            throw new InvalidPathException("'$filePath' is not a file nor directory");
-        }
-
-        return $realPath;
     }
 
     /**
@@ -381,11 +372,7 @@ class Analyser
             $filePath = $classLoader->findFile($usedSymbol);
 
             if ($filePath !== false) {
-                try {
-                    return $this->realPath($filePath);
-                } catch (InvalidPathException $e) {
-                    return null;
-                }
+                return $filePath;
             }
         }
 
@@ -406,18 +393,45 @@ class Analyser
             return null; // should probably never happen as internal classes are handled earlier
         }
 
-        return strtr($this->trimPharPrefix($filePath), '/', DIRECTORY_SEPARATOR);
+        return $filePath;
     }
 
-    private function trimPharPrefix(string $filePath): string
+    private function normalizePath(string $filePath): string
     {
         $pharPrefix = 'phar://';
 
         if (strpos($filePath, $pharPrefix) === 0) {
-            return substr($filePath, strlen($pharPrefix)); // @phpstan-ignore-line substr cannot return false here
+            /** @var string $filePath Cannot resolve to false */
+            $filePath = substr($filePath, strlen($pharPrefix));
         }
 
-        return $filePath;
+        return $this->doNormalizePath($filePath);
+    }
+
+    /**
+     * Based on Nette\Utils\FileSystem::normalizePath
+     *
+     * @license https://github.com/nette/utils/blob/v4.0.4/license.md
+     */
+    private function doNormalizePath(string $path): string
+    {
+        /** @var list<string> $parts */
+        $parts = $path === ''
+            ? []
+            : preg_split('~[/\\\\]+~', $path);
+        $result = [];
+
+        foreach ($parts as $part) {
+            if ($part === '..' && $result !== [] && end($result) !== '..' && end($result) !== '') {
+                array_pop($result);
+            } elseif ($part !== '.') {
+                $result[] = $part;
+            }
+        }
+
+        return $result === ['']
+            ? DIRECTORY_SEPARATOR
+            : implode(DIRECTORY_SEPARATOR, $result);
     }
 
     /**
