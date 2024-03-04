@@ -28,7 +28,8 @@ class AnalyserTest extends TestCase
      */
     public function test(callable $editConfig, AnalysisResult $expectedResult): void
     {
-        $vendorDir = __DIR__ . '/data/autoloaded/vendor';
+        $vendorDir = realpath(__DIR__ . '/data/autoloaded/vendor');
+        self::assertNotFalse($vendorDir);
         $dependencies = [
             'regular/package' => false,
             'dev/package' => true,
@@ -503,8 +504,10 @@ class AnalyserTest extends TestCase
 
     public function testDevPathInsideProdPath(): void
     {
+        $vendorDir = realpath(__DIR__ . '/data/autoloaded/vendor');
         $prodPath = realpath(__DIR__ . '/data/not-autoloaded/dev-in-subdirectory');
         $devPath = realpath(__DIR__ . '/data/not-autoloaded/dev-in-subdirectory/dev');
+        self::assertNotFalse($vendorDir);
         self::assertNotFalse($prodPath);
         self::assertNotFalse($devPath);
 
@@ -514,7 +517,7 @@ class AnalyserTest extends TestCase
 
         $detector = new Analyser(
             $this->getStopwatchMock(),
-            [__DIR__ . '/data/autoloaded/vendor' => $this->getClassLoaderMock()],
+            [$vendorDir => $this->getClassLoaderMock()],
             $config,
             [
                 'regular/package' => false,
@@ -543,14 +546,16 @@ class AnalyserTest extends TestCase
         require_once $pharPath;
 
         $path = realpath(__DIR__ . '/data/not-autoloaded/phar/phar-usage.php');
+        $vendorDir = realpath(__DIR__ . '/data/not-autoloaded/phar');
         self::assertNotFalse($path);
+        self::assertNotFalse($vendorDir);
 
         $config = new Configuration();
         $config->addPathToScan($path, false);
 
         $detector = new Analyser(
             $this->getStopwatchMock(),
-            [__DIR__ . '/data/not-autoloaded/phar' => $this->getClassLoaderMock()],
+            [$vendorDir => $this->getClassLoaderMock()],
             $config,
             [
                 'org/package' => false,
@@ -564,14 +569,16 @@ class AnalyserTest extends TestCase
     public function testExplicitFileWithoutExtension(): void
     {
         $path = realpath(__DIR__ . '/data/not-autoloaded/file-without-extension/script');
+        $vendorDir = realpath(__DIR__ . '/data/autoloaded/vendor');
         self::assertNotFalse($path);
+        self::assertNotFalse($vendorDir);
 
         $config = new Configuration();
         $config->addPathToScan($path, true);
 
         $detector = new Analyser(
             $this->getStopwatchMock(),
-            [__DIR__ . '/data/autoloaded/vendor' => $this->getClassLoaderMock()],
+            [$vendorDir => $this->getClassLoaderMock()],
             $config,
             [
                 'dev/package' => true,
