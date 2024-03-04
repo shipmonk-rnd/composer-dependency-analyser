@@ -144,7 +144,7 @@ $loaders = ClassLoader::getRegisteredLoaders();
 if (count($loaders) > 1) {
     $printer->printLine("\nDetected multiple class loaders:");
     foreach ($loaders as $vendorDir => $_) {
-        $printer->printLine("  <gray>$vendorDir</gray>");
+        $printer->printLine(" • <gray>$vendorDir</gray>");
     }
     $printer->printLine('');
 }
