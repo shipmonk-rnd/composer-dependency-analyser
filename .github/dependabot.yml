@@ -6,3 +6,6 @@ updates:
         schedule:
             interval: monthly
         versioning-strategy: lockfile-only
+        groups:
+            dev-dependencies:
+                dependency-type: "development"
