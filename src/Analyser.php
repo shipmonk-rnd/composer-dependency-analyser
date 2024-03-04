@@ -5,6 +5,7 @@ namespace ShipMonk\ComposerDependencyAnalyser;
 use Composer\Autoload\ClassLoader;
 use DirectoryIterator;
 use Generator;
+use LogicException;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use ReflectionClass;
@@ -19,6 +20,8 @@ use function array_diff;
 use function array_filter;
 use function array_key_exists;
 use function array_keys;
+use function array_pop;
+use function end;
 use function explode;
 use function file_get_contents;
 use function get_declared_classes;
@@ -26,15 +29,15 @@ use function get_declared_interfaces;
 use function get_declared_traits;
 use function get_defined_constants;
 use function get_defined_functions;
+use function implode;
 use function in_array;
 use function is_file;
 use function ksort;
-use function realpath;
+use function preg_split;
 use function sort;
 use function str_replace;
 use function strlen;
 use function strpos;
-use function strtr;
 use function substr;
 use function trim;
 use const DIRECTORY_SEPARATOR;
@@ -48,9 +51,11 @@ class Analyser
     private $stopwatch;
 
     /**
-     * @var ClassLoader
+     * vendorDir => ClassLoader
+     *
+     * @var array<string, ClassLoader>
      */
-    private $classLoader;
+    private $classLoaders;
 
     /**
      * @var Configuration
@@ -58,12 +63,7 @@ class Analyser
     private $config;
 
     /**
-     * @var string
-     */
-    private $vendorDir;
-
-    /**
-     * className => realPath
+     * className => path
      *
      * @var array<string, ?string>
      */
@@ -84,23 +84,24 @@ class Analyser
     private $ignoredSymbols;
 
     /**
+     * @param array<string, ClassLoader> $classLoaders vendorDir => ClassLoader (e.g. result of \Composer\Autoload\ClassLoader::getRegisteredLoaders())
      * @param array<string, bool> $composerJsonDependencies package name => is dev dependency
-     * @throws InvalidPathException
      */
     public function __construct(
         Stopwatch $stopwatch,
-        ClassLoader $classLoader,
+        array $classLoaders,
         Configuration $config,
-        string $vendorDir,
         array $composerJsonDependencies
     )
     {
         $this->stopwatch = $stopwatch;
-        $this->classLoader = $classLoader;
         $this->config = $config;
-        $this->vendorDir = $this->realPath($vendorDir);
         $this->composerJsonDependencies = $composerJsonDependencies;
         $this->ignoredSymbols = $this->getIgnoredSymbols();
+
+        foreach ($classLoaders as $vendorDir => $classLoader) {
+            $this->classLoaders[$vendorDir] = $classLoader;
+        }
     }
 
     /**
@@ -286,9 +287,15 @@ class Analyser
 
     private function getPackageNameFromVendorPath(string $realPath): string
     {
-        $filePathInVendor = trim(str_replace($this->vendorDir, '', $realPath), DIRECTORY_SEPARATOR);
-        [$vendor, $package] = explode(DIRECTORY_SEPARATOR, $filePathInVendor, 3);
-        return "$vendor/$package";
+        foreach ($this->classLoaders as $vendorDir => $_) {
+            if (strpos($realPath, $vendorDir) === 0) {
+                $filePathInVendor = trim(str_replace($vendorDir, '', $realPath), DIRECTORY_SEPARATOR);
+                [$vendor, $package] = explode(DIRECTORY_SEPARATOR, $filePathInVendor, 3);
+                return "$vendor/$package";
+            }
+        }
+
+        throw new LogicException("Path '$realPath' not found in vendor. This method can be called only when isVendorPath(\$realPath) returns true");
     }
 
     /**
@@ -335,30 +342,25 @@ class Analyser
 
     private function isVendorPath(string $realPath): bool
     {
-        return substr($realPath, 0, strlen($this->vendorDir)) === $this->vendorDir;
+        foreach ($this->classLoaders as $vendorDir => $_) {
+            if (strpos($realPath, $vendorDir) === 0) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function getSymbolPath(string $symbol): ?string
     {
         if (!array_key_exists($symbol, $this->classmap)) {
-            $this->classmap[$symbol] = $this->detectFileByClassLoader($symbol) ?? $this->detectFileByReflection($symbol);
+            $path = $this->detectFileByClassLoader($symbol) ?? $this->detectFileByReflection($symbol);
+            $this->classmap[$symbol] = $path === null
+                ? null
+                : $this->normalizePath($path); // composer ClassLoader::findFile() returns e.g. /opt/project/vendor/composer/../../src/Config/Configuration.php (which is not vendor path)
         }
 
         return $this->classmap[$symbol];
-    }
-
-    /**
-     * @throws InvalidPathException
-     */
-    private function realPath(string $filePath): string
-    {
-        $realPath = realpath($filePath);
-
-        if ($realPath === false) {
-            throw new InvalidPathException("'$filePath' is not a file nor directory");
-        }
-
-        return $realPath;
     }
 
     /**
@@ -366,17 +368,15 @@ class Analyser
      */
     private function detectFileByClassLoader(string $usedSymbol): ?string
     {
-        $filePath = $this->classLoader->findFile($usedSymbol);
+        foreach ($this->classLoaders as $classLoader) {
+            $filePath = $classLoader->findFile($usedSymbol);
 
-        if ($filePath === false) {
-            return null;
+            if ($filePath !== false) {
+                return $filePath;
+            }
         }
 
-        try {
-            return $this->realPath($filePath);
-        } catch (InvalidPathException $e) {
-            return null;
-        }
+        return null;
     }
 
     private function detectFileByReflection(string $usedSymbol): ?string
@@ -393,18 +393,45 @@ class Analyser
             return null; // should probably never happen as internal classes are handled earlier
         }
 
-        return strtr($this->trimPharPrefix($filePath), '/', DIRECTORY_SEPARATOR);
+        return $filePath;
     }
 
-    private function trimPharPrefix(string $filePath): string
+    private function normalizePath(string $filePath): string
     {
         $pharPrefix = 'phar://';
 
         if (strpos($filePath, $pharPrefix) === 0) {
-            return substr($filePath, strlen($pharPrefix)); // @phpstan-ignore-line substr cannot return false here
+            /** @var string $filePath Cannot resolve to false */
+            $filePath = substr($filePath, strlen($pharPrefix));
         }
 
-        return $filePath;
+        return $this->doNormalizePath($filePath);
+    }
+
+    /**
+     * Based on Nette\Utils\FileSystem::normalizePath
+     *
+     * @license https://github.com/nette/utils/blob/v4.0.4/license.md
+     */
+    private function doNormalizePath(string $path): string
+    {
+        /** @var list<string> $parts */
+        $parts = $path === ''
+            ? []
+            : preg_split('~[/\\\\]+~', $path);
+        $result = [];
+
+        foreach ($parts as $part) {
+            if ($part === '..' && $result !== [] && end($result) !== '..' && end($result) !== '') {
+                array_pop($result);
+            } elseif ($part !== '.') {
+                $result[] = $part;
+            }
+        }
+
+        return $result === ['']
+            ? DIRECTORY_SEPARATOR
+            : implode(DIRECTORY_SEPARATOR, $result);
     }
 
     /**

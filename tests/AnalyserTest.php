@@ -5,6 +5,7 @@ namespace ShipMonk\ComposerDependencyAnalyser;
 use Composer\Autoload\ClassLoader;
 use LogicException;
 use Phar;
+use PHPStan\PharAutoloader;
 use PHPUnit\Framework\TestCase;
 use ShipMonk\ComposerDependencyAnalyser\Config\Configuration;
 use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
@@ -13,10 +14,12 @@ use ShipMonk\ComposerDependencyAnalyser\Config\Ignore\UnusedErrorIgnore;
 use ShipMonk\ComposerDependencyAnalyser\Result\AnalysisResult;
 use ShipMonk\ComposerDependencyAnalyser\Result\SymbolUsage;
 use function array_filter;
+use function array_keys;
 use function dirname;
 use function file_exists;
 use function ini_set;
 use function realpath;
+use function strtr;
 use function unlink;
 
 class AnalyserTest extends TestCase
@@ -28,7 +31,8 @@ class AnalyserTest extends TestCase
      */
     public function test(callable $editConfig, AnalysisResult $expectedResult): void
     {
-        $vendorDir = __DIR__ . '/data/autoloaded/vendor';
+        $vendorDir = realpath(__DIR__ . '/data/autoloaded/vendor');
+        self::assertNotFalse($vendorDir);
         $dependencies = [
             'regular/package' => false,
             'dev/package' => true,
@@ -41,9 +45,8 @@ class AnalyserTest extends TestCase
 
         $detector = new Analyser(
             $this->getStopwatchMock(),
-            $this->getClassLoaderMock(),
+            [$vendorDir => $this->getClassLoaderMock()],
             $config,
-            $vendorDir,
             $dependencies
         );
         $result = $detector->run();
@@ -461,9 +464,8 @@ class AnalyserTest extends TestCase
 
         $detector = new Analyser(
             $this->getStopwatchMock(),
-            $this->getClassLoaderMock(),
+            [__DIR__ => $this->getClassLoaderMock()],
             $config,
-            __DIR__,
             []
         );
         $result = $detector->run();
@@ -489,9 +491,8 @@ class AnalyserTest extends TestCase
 
         $detector = new Analyser(
             $this->getStopwatchMock(),
-            $this->getClassLoaderMock(),
+            [__DIR__ . '/data/autoloaded/vendor' => $this->getClassLoaderMock()],
             $config,
-            __DIR__ . '/data/autoloaded/vendor',
             []
         );
         $result = $detector->run();
@@ -506,8 +507,10 @@ class AnalyserTest extends TestCase
 
     public function testDevPathInsideProdPath(): void
     {
+        $vendorDir = realpath(__DIR__ . '/data/autoloaded/vendor');
         $prodPath = realpath(__DIR__ . '/data/not-autoloaded/dev-in-subdirectory');
         $devPath = realpath(__DIR__ . '/data/not-autoloaded/dev-in-subdirectory/dev');
+        self::assertNotFalse($vendorDir);
         self::assertNotFalse($prodPath);
         self::assertNotFalse($devPath);
 
@@ -517,9 +520,8 @@ class AnalyserTest extends TestCase
 
         $detector = new Analyser(
             $this->getStopwatchMock(),
-            $this->getClassLoaderMock(),
+            [$vendorDir => $this->getClassLoaderMock()],
             $config,
-            __DIR__ . '/data/autoloaded/vendor',
             [
                 'regular/package' => false,
                 'dev/package' => true
@@ -547,16 +549,17 @@ class AnalyserTest extends TestCase
         require_once $pharPath;
 
         $path = realpath(__DIR__ . '/data/not-autoloaded/phar/phar-usage.php');
+        $vendorDir = realpath(__DIR__ . '/data/not-autoloaded/phar');
         self::assertNotFalse($path);
+        self::assertNotFalse($vendorDir);
 
         $config = new Configuration();
         $config->addPathToScan($path, false);
 
         $detector = new Analyser(
             $this->getStopwatchMock(),
-            $this->getClassLoaderMock(),
+            [$vendorDir => $this->getClassLoaderMock()],
             $config,
-            __DIR__ . '/data/not-autoloaded/phar',
             [
                 'org/package' => false,
             ]
@@ -566,19 +569,60 @@ class AnalyserTest extends TestCase
         self::assertEquals($this->createAnalysisResult(1, []), $result);
     }
 
-    public function testExplicitFileWithoutExtension(): void
+    /**
+     * @runInSeparateProcess It alters composer's autoloader, lets not affect others
+     */
+    public function testMultipleClassloaders(): void
     {
-        $path = realpath(__DIR__ . '/data/not-autoloaded/file-without-extension/script');
+        $path = realpath(__DIR__ . '/data/not-autoloaded/multiple-classloaders/phpstan-rule.php');
         self::assertNotFalse($path);
+
+        $vendorDir = realpath(__DIR__ . '/../vendor');
+        self::assertNotFalse($vendorDir);
+
+        $classLoaders = ClassLoader::getRegisteredLoaders();
+        self::assertSame([$vendorDir], array_keys($classLoaders));
+
+        // @phpstan-ignore-next-line Ignore BC promise
+        PharAutoloader::loadClass('_PHPStan_'); // causes PHPStan's autoloader to be registered
+
+        $classLoaders = ClassLoader::getRegisteredLoaders();
+        self::assertSame([
+            strtr('phar://' . $vendorDir . '/phpstan/phpstan/phpstan.phar/vendor', '\\', '/'), // no backslashes even on Windows
+            $vendorDir,
+        ], array_keys($classLoaders));
 
         $config = new Configuration();
         $config->addPathToScan($path, true);
 
         $detector = new Analyser(
             $this->getStopwatchMock(),
-            $this->getClassLoaderMock(),
+            $classLoaders,
             $config,
-            __DIR__ . '/data/autoloaded/vendor',
+            [
+                'phpstan/phpstan' => true,
+            ]
+        );
+        $result = $detector->run();
+
+        // nikic/php-parser not reported as shadow dependency as it exists in the PHPStan's vendor
+        self::assertEquals($this->createAnalysisResult(1, []), $result);
+    }
+
+    public function testExplicitFileWithoutExtension(): void
+    {
+        $path = realpath(__DIR__ . '/data/not-autoloaded/file-without-extension/script');
+        $vendorDir = realpath(__DIR__ . '/data/autoloaded/vendor');
+        self::assertNotFalse($path);
+        self::assertNotFalse($vendorDir);
+
+        $config = new Configuration();
+        $config->addPathToScan($path, true);
+
+        $detector = new Analyser(
+            $this->getStopwatchMock(),
+            [$vendorDir => $this->getClassLoaderMock()],
+            $config,
             [
                 'dev/package' => true,
             ]
