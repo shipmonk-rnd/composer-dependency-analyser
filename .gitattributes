@@ -1,6 +1,8 @@
 * text=auto
 
 /tests export-ignore
+/cache export-ignore
+/.ecrc export-ignore
 /.editorconfig export-ignore
 /.gitattributes export-ignore
 /.github export-ignore
@@ -9,3 +11,5 @@
 /phpstan.neon.dist export-ignore
 /phpunit.xml.dist export-ignore
 /composer.lock export-ignore
+/composer-dependency-analyser.php export-ignore
+/collision-detector.json export-ignore
