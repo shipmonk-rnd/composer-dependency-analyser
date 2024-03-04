@@ -41,9 +41,8 @@ class AnalyserTest extends TestCase
 
         $detector = new Analyser(
             $this->getStopwatchMock(),
-            $this->getClassLoaderMock(),
+            [$vendorDir => $this->getClassLoaderMock()],
             $config,
-            $vendorDir,
             $dependencies
         );
         $result = $detector->run();
@@ -461,9 +460,8 @@ class AnalyserTest extends TestCase
 
         $detector = new Analyser(
             $this->getStopwatchMock(),
-            $this->getClassLoaderMock(),
+            [__DIR__ => $this->getClassLoaderMock()],
             $config,
-            __DIR__,
             []
         );
         $result = $detector->run();
@@ -489,9 +487,8 @@ class AnalyserTest extends TestCase
 
         $detector = new Analyser(
             $this->getStopwatchMock(),
-            $this->getClassLoaderMock(),
+            [__DIR__ . '/data/autoloaded/vendor' => $this->getClassLoaderMock()],
             $config,
-            __DIR__ . '/data/autoloaded/vendor',
             []
         );
         $result = $detector->run();
@@ -517,9 +514,8 @@ class AnalyserTest extends TestCase
 
         $detector = new Analyser(
             $this->getStopwatchMock(),
-            $this->getClassLoaderMock(),
+            [__DIR__ . '/data/autoloaded/vendor' => $this->getClassLoaderMock()],
             $config,
-            __DIR__ . '/data/autoloaded/vendor',
             [
                 'regular/package' => false,
                 'dev/package' => true
@@ -554,9 +550,8 @@ class AnalyserTest extends TestCase
 
         $detector = new Analyser(
             $this->getStopwatchMock(),
-            $this->getClassLoaderMock(),
+            [__DIR__ . '/data/not-autoloaded/phar' => $this->getClassLoaderMock()],
             $config,
-            __DIR__ . '/data/not-autoloaded/phar',
             [
                 'org/package' => false,
             ]
@@ -576,9 +571,8 @@ class AnalyserTest extends TestCase
 
         $detector = new Analyser(
             $this->getStopwatchMock(),
-            $this->getClassLoaderMock(),
+            [__DIR__ . '/data/autoloaded/vendor' => $this->getClassLoaderMock()],
             $config,
-            __DIR__ . '/data/autoloaded/vendor',
             [
                 'dev/package' => true,
             ]

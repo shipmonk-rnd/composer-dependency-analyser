@@ -5,6 +5,7 @@ namespace ShipMonk\ComposerDependencyAnalyser;
 use Composer\Autoload\ClassLoader;
 use DirectoryIterator;
 use Generator;
+use LogicException;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use ReflectionClass;
@@ -48,19 +49,16 @@ class Analyser
     private $stopwatch;
 
     /**
-     * @var ClassLoader
+     * vendorDir => ClassLoader
+     *
+     * @var array<string, ClassLoader>
      */
-    private $classLoader;
+    private $classLoaders;
 
     /**
      * @var Configuration
      */
     private $config;
-
-    /**
-     * @var string
-     */
-    private $vendorDir;
 
     /**
      * className => realPath
@@ -84,23 +82,24 @@ class Analyser
     private $ignoredSymbols;
 
     /**
+     * @param array<string, ClassLoader> $classLoaders vendorDir => ClassLoader
      * @param array<string, bool> $composerJsonDependencies package name => is dev dependency
-     * @throws InvalidPathException
      */
     public function __construct(
         Stopwatch $stopwatch,
-        ClassLoader $classLoader,
+        array $classLoaders,
         Configuration $config,
-        string $vendorDir,
         array $composerJsonDependencies
     )
     {
         $this->stopwatch = $stopwatch;
-        $this->classLoader = $classLoader;
         $this->config = $config;
-        $this->vendorDir = $this->realPath($vendorDir);
         $this->composerJsonDependencies = $composerJsonDependencies;
         $this->ignoredSymbols = $this->getIgnoredSymbols();
+
+        foreach ($classLoaders as $vendorDir => $classLoader) {
+            $this->classLoaders[$vendorDir] = $classLoader;
+        }
     }
 
     /**
@@ -286,9 +285,15 @@ class Analyser
 
     private function getPackageNameFromVendorPath(string $realPath): string
     {
-        $filePathInVendor = trim(str_replace($this->vendorDir, '', $realPath), DIRECTORY_SEPARATOR);
-        [$vendor, $package] = explode(DIRECTORY_SEPARATOR, $filePathInVendor, 3);
-        return "$vendor/$package";
+        foreach ($this->classLoaders as $vendorDir => $_) {
+            if (strpos($realPath, $vendorDir) === 0) {
+                $filePathInVendor = trim(str_replace($vendorDir, '', $realPath), DIRECTORY_SEPARATOR);
+                [$vendor, $package] = explode(DIRECTORY_SEPARATOR, $filePathInVendor, 3);
+                return "$vendor/$package";
+            }
+        }
+
+        throw new LogicException("Path '$realPath' not found in vendor. This method can be called only when isVendorPath(\$realPath) returns true");
     }
 
     /**
@@ -335,7 +340,13 @@ class Analyser
 
     private function isVendorPath(string $realPath): bool
     {
-        return substr($realPath, 0, strlen($this->vendorDir)) === $this->vendorDir;
+        foreach ($this->classLoaders as $vendorDir => $_) {
+            if (strpos($realPath, $vendorDir) === 0) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function getSymbolPath(string $symbol): ?string
@@ -366,17 +377,19 @@ class Analyser
      */
     private function detectFileByClassLoader(string $usedSymbol): ?string
     {
-        $filePath = $this->classLoader->findFile($usedSymbol);
+        foreach ($this->classLoaders as $classLoader) {
+            $filePath = $classLoader->findFile($usedSymbol);
 
-        if ($filePath === false) {
-            return null;
+            if ($filePath !== false) {
+                try {
+                    return $this->realPath($filePath);
+                } catch (InvalidPathException $e) {
+                    return null;
+                }
+            }
         }
 
-        try {
-            return $this->realPath($filePath);
-        } catch (InvalidPathException $e) {
-            return null;
-        }
+        return null;
     }
 
     private function detectFileByReflection(string $usedSymbol): ?string

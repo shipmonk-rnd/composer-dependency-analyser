@@ -141,10 +141,17 @@ try {
 }
 
 $loaders = ClassLoader::getRegisteredLoaders();
-if (count($loaders) !== 1) {
-    $exit('This tool works only with single composer autoloader');
+if (count($loaders) > 1) {
+    $printer->printLine("\nDetected multiple class loaders:");
+    foreach ($loaders as $vendorDir => $_) {
+        $printer->printLine("  <gray>$vendorDir</gray>");
+    }
+    $printer->printLine('');
 }
-$vendorDir = key($loaders);
+
+if (count($loaders) === 1) {
+    $printer->printLine("\nNo composer class loader detected!\n");
+}
 
 try {
     if ($config->shouldScanComposerAutoloadPaths()) {
@@ -162,7 +169,7 @@ try {
     }
 
     $stopwatch = new Stopwatch();
-    $analyser = new Analyser($stopwatch, $loaders[$vendorDir], $config, $vendorDir, $composerJson->dependencies);
+    $analyser = new Analyser($stopwatch, $loaders, $config, $composerJson->dependencies);
     $result = $analyser->run();
 } catch (OurRuntimeException $e) {
     $exit($e->getMessage());
