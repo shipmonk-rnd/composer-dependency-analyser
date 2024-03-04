@@ -82,7 +82,7 @@ class Analyser
     private $ignoredSymbols;
 
     /**
-     * @param array<string, ClassLoader> $classLoaders vendorDir => ClassLoader
+     * @param array<string, ClassLoader> $classLoaders vendorDir => ClassLoader (e.g. result of \Composer\Autoload\ClassLoader::getRegisteredLoaders())
      * @param array<string, bool> $composerJsonDependencies package name => is dev dependency
      */
     public function __construct(

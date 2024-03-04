@@ -149,7 +149,7 @@ if (count($loaders) > 1) {
     $printer->printLine('');
 }
 
-if (count($loaders) === 1) {
+if (count($loaders) === 0) {
     $printer->printLine("\nNo composer class loader detected!\n");
 }
 

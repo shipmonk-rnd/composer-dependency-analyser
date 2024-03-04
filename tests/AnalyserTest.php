@@ -5,6 +5,7 @@ namespace ShipMonk\ComposerDependencyAnalyser;
 use Composer\Autoload\ClassLoader;
 use LogicException;
 use Phar;
+use PHPStan\PharAutoloader;
 use PHPUnit\Framework\TestCase;
 use ShipMonk\ComposerDependencyAnalyser\Config\Configuration;
 use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
@@ -13,6 +14,7 @@ use ShipMonk\ComposerDependencyAnalyser\Config\Ignore\UnusedErrorIgnore;
 use ShipMonk\ComposerDependencyAnalyser\Result\AnalysisResult;
 use ShipMonk\ComposerDependencyAnalyser\Result\SymbolUsage;
 use function array_filter;
+use function array_keys;
 use function dirname;
 use function file_exists;
 use function ini_set;
@@ -563,6 +565,46 @@ class AnalyserTest extends TestCase
         );
         $result = $detector->run();
 
+        self::assertEquals($this->createAnalysisResult(1, []), $result);
+    }
+
+    /**
+     * @runInSeparateProcess It alters composer's autoloader, lets not affect others
+     */
+    public function testMultipleClassloaders(): void
+    {
+        $path = realpath(__DIR__ . '/data/not-autoloaded/multiple-classloaders/phpstan-rule.php');
+        self::assertNotFalse($path);
+
+        $vendorDir = realpath(__DIR__ . '/../vendor');
+        self::assertNotFalse($vendorDir);
+
+        $classLoaders = ClassLoader::getRegisteredLoaders();
+        self::assertSame([$vendorDir], array_keys($classLoaders));
+
+        // @phpstan-ignore-next-line Ignore BC promise
+        PharAutoloader::loadClass('_PHPStan_'); // causes PHPStan's autoloader to be registered
+
+        $classLoaders = ClassLoader::getRegisteredLoaders();
+        self::assertSame([
+            'phar://' . $vendorDir . '/phpstan/phpstan/phpstan.phar/vendor',
+            $vendorDir,
+        ], array_keys($classLoaders));
+
+        $config = new Configuration();
+        $config->addPathToScan($path, true);
+
+        $detector = new Analyser(
+            $this->getStopwatchMock(),
+            $classLoaders,
+            $config,
+            [
+                'phpstan/phpstan' => true,
+            ]
+        );
+        $result = $detector->run();
+
+        // nikic/php-parser not reported as shadow dependency as it exists in the PHPStan's vendor
         self::assertEquals($this->createAnalysisResult(1, []), $result);
     }
 
