@@ -534,8 +534,10 @@ class AnalyserTest extends TestCase
 
     public function testOtherSymbols(): void
     {
+        require_once __DIR__ . '/data/not-autoloaded/other-symbols/symbol-declaration.php';
+
         $vendorDir = realpath(__DIR__ . '/../vendor');
-        $path = realpath(__DIR__ . '/data/not-autoloaded/other-symbol-usages');
+        $path = realpath(__DIR__ . '/data/not-autoloaded/other-symbols/symbol-usages.php');
         self::assertNotFalse($vendorDir);
         self::assertNotFalse($path);
 
