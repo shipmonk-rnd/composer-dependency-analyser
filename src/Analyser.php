@@ -246,6 +246,7 @@ class Analyser
         ksort($devInProdErrors);
         sort($prodOnlyInDevErrors);
         sort($unusedErrors);
+        sort($usages);
 
         return new AnalysisResult(
             $scannedFilesCount,
