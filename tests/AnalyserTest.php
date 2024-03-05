@@ -532,6 +532,29 @@ class AnalyserTest extends TestCase
         self::assertEquals($this->createAnalysisResult(2, []), $result);
     }
 
+    public function testOtherSymbols(): void
+    {
+        require_once __DIR__ . '/data/not-autoloaded/other-symbols/symbol-declaration.php';
+
+        $vendorDir = realpath(__DIR__ . '/../vendor');
+        $path = realpath(__DIR__ . '/data/not-autoloaded/other-symbols/symbol-usages.php');
+        self::assertNotFalse($vendorDir);
+        self::assertNotFalse($path);
+
+        $config = new Configuration();
+        $config->addPathToScan($path, false);
+
+        $detector = new Analyser(
+            $this->getStopwatchMock(),
+            [$vendorDir => $this->getClassLoaderMock()],
+            $config,
+            []
+        );
+        $result = $detector->run();
+
+        self::assertEquals($this->createAnalysisResult(1, []), $result);
+    }
+
     public function testPharSupport(): void
     {
         $canCreatePhar = ini_set('phar.readonly', '0');

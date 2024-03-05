@@ -16,6 +16,7 @@ use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidPathException;
 use ShipMonk\ComposerDependencyAnalyser\Result\AnalysisResult;
 use ShipMonk\ComposerDependencyAnalyser\Result\SymbolUsage;
 use UnexpectedValueException;
+use function array_change_key_case;
 use function array_diff;
 use function array_filter;
 use function array_key_exists;
@@ -38,8 +39,10 @@ use function sort;
 use function str_replace;
 use function strlen;
 use function strpos;
+use function strtolower;
 use function substr;
 use function trim;
+use const CASE_LOWER;
 use const DIRECTORY_SEPARATOR;
 
 class Analyser
@@ -127,7 +130,7 @@ class Analyser
             $scannedFilesCount++;
 
             foreach ($this->getUsedSymbolsInFile($filePath) as $usedSymbol => $lineNumbers) {
-                if (isset($this->ignoredSymbols[$usedSymbol])) {
+                if (isset($this->ignoredSymbols[strtolower($usedSymbol)])) {
                     continue;
                 }
 
@@ -497,7 +500,7 @@ class Analyser
             }
         }
 
-        return $ignoredSymbols;
+        return array_change_key_case($ignoredSymbols, CASE_LOWER); // get_defined_functions returns lowercase functions
     }
 
 }

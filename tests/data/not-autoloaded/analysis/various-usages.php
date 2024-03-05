@@ -16,9 +16,9 @@ new Clazz();
 new DevClazz(); // reported as dev
 new DateTimeImmutable();
 
-echo \DIRECTORY_SEPARATOR;
-echo \strlen('');
-
 \Composer\InstalledVersions::getInstalledPackages();
+
+
+
 
 ShadowClazz::class;
