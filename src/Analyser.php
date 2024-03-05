@@ -124,6 +124,8 @@ class Analyser
         $usedPackages = [];
         $prodPackagesUsedInProdPath = [];
 
+        $usages = [];
+
         $ignoreList = $this->config->getIgnoreList();
 
         foreach ($this->getUniqueFilePathsToScan() as $filePath => $isDevFilePath) {
@@ -179,6 +181,10 @@ class Analyser
                 }
 
                 $usedPackages[$packageName] = true;
+
+                foreach ($lineNumbers as $lineNumber) {
+                    $usages[$packageName][$usedSymbol][] = new SymbolUsage($filePath, $lineNumber);
+                }
             }
         }
 
@@ -244,6 +250,7 @@ class Analyser
         return new AnalysisResult(
             $scannedFilesCount,
             $this->stopwatch->stop(),
+            $usages,
             $classmapErrors,
             $shadowErrors,
             $devInProdErrors,

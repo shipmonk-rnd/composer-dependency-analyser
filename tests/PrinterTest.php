@@ -34,10 +34,10 @@ class PrinterTest extends TestCase
         $printer = new Printer('/app');
 
         $noIssuesOutput = $this->captureAndNormalizeOutput(static function () use ($printer): void {
-            $printer->printResult(new AnalysisResult(2, 0.123, [], [], [], [], [], []), false, true);
+            $printer->printResultErrors(new AnalysisResult(2, 0.123, [], [], [], [], [], [], []), 1, true);
         });
         $noIssuesButUnusedIgnores = $this->captureAndNormalizeOutput(static function () use ($printer): void {
-            $printer->printResult(new AnalysisResult(2, 0.123, [], [], [], [], [], [new UnusedErrorIgnore(ErrorType::SHADOW_DEPENDENCY, null, null)]), false, true);
+            $printer->printResultErrors(new AnalysisResult(2, 0.123, [], [], [], [], [], [], [new UnusedErrorIgnore(ErrorType::SHADOW_DEPENDENCY, null, null)]), 3, true);
         });
 
         $expectedNoIssuesOutput = <<<'OUT'
@@ -64,6 +64,7 @@ OUT;
         $analysisResult = new AnalysisResult(
             10,
             0.123,
+            [],
             ['Unknown\\Thing' => [new SymbolUsage('/app/app/init.php', 1093)]],
             [
                 'shadow/package' => [
@@ -88,10 +89,10 @@ OUT;
         );
 
         $regularOutput = $this->captureAndNormalizeOutput(static function () use ($printer, $analysisResult): void {
-            $printer->printResult($analysisResult, false, true);
+            $printer->printResultErrors($analysisResult, 1, true);
         });
         $verboseOutput = $this->captureAndNormalizeOutput(static function () use ($printer, $analysisResult): void {
-            $printer->printResult($analysisResult, true, true);
+            $printer->printResultErrors($analysisResult, 3, true);
         });
 
         $expectedRegularOutput = <<<'OUT'

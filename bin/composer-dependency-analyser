@@ -4,6 +4,7 @@
 use Composer\Autoload\ClassLoader;
 use ShipMonk\ComposerDependencyAnalyser\Cli;
 use ShipMonk\ComposerDependencyAnalyser\Analyser;
+use ShipMonk\ComposerDependencyAnalyser\Command;
 use ShipMonk\ComposerDependencyAnalyser\ComposerJson;
 use ShipMonk\ComposerDependencyAnalyser\Config\Configuration;
 use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
@@ -23,9 +24,11 @@ Usage:
 Options:
     --help                      Print this help text and exit.
     --verbose                   Print more usage examples
+    --show-all-usages           Removes the limit of showing only few usages
+    --dump-usages <package>     Dump usages of given package, * placeholder can be used
     --composer-json <path>      Provide custom path to composer.json
     --config <path>             Provide path to php configuration file
-                                (must return ShipMonk\ComposerDependencyAnalyser\Config\Configuration instance)
+                                (must return \ShipMonk\ComposerDependencyAnalyser\Config\Configuration instance)
 
 Ignore options:
     (or use --config for better granularity)
@@ -70,8 +73,7 @@ if (!isset($argv)) {
 }
 
 try {
-    $cli = new Cli();
-    $cli->validateArgv($cwd, $argv);
+    $cli = new Cli($cwd, $argv);
     $providedOptions = $cli->getProvidedOptions();
 } catch (InvalidCliException $e) {
     $exit($e->getMessage());
@@ -185,7 +187,20 @@ try {
     $exit($e->getMessage());
 }
 
-$exitCode = $printer->printResult($result, isset($providedOptions['verbose']), $config->shouldReportUnmatchedIgnoredErrors());
+if (isset($providedOptions['dump-usages'])) {
+    $exitCode = $printer->printResultUsages($result, $providedOptions['dump-usages'], isset($providedOptions['show-all-usages']));
+} else {
+    $maxUsagesShown = 1;
+    if (isset($providedOptions['verbose'])) {
+        $maxUsagesShown = Printer::DEFAULT_MAX_SHOWN_USAGES;
+    }
+    if (isset($providedOptions['show-all-usages'])) {
+        $maxUsagesShown = PHP_INT_MAX;
+    }
+    $exitCode = $printer->printResultErrors($result, $maxUsagesShown, $config->shouldReportUnmatchedIgnoredErrors());
+}
+
+
 exit($exitCode);
 
 

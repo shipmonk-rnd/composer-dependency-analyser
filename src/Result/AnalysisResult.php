@@ -19,6 +19,11 @@ class AnalysisResult
     private $elapsedTime;
 
     /**
+     * @var array<string, array<string, list<SymbolUsage>>>
+     */
+    private $usages;
+
+    /**
      * @var array<string, list<SymbolUsage>>
      */
     private $classmapErrors;
@@ -49,7 +54,8 @@ class AnalysisResult
     private $unusedIgnores;
 
     /**
-     * @param array<string, list<SymbolUsage>> $classmapErrors package => [ usage[] ]
+     * @param array<string, array<string, list<SymbolUsage>>> $usages package => [ classname => usage[] ]
+     * @param array<string, list<SymbolUsage>> $classmapErrors package => usages
      * @param array<string, array<string, list<SymbolUsage>>> $shadowDependencyErrors package => [ classname => usage[] ]
      * @param array<string, array<string, list<SymbolUsage>>> $devDependencyInProductionErrors package => [ classname => usage[] ]
      * @param list<string> $prodDependencyOnlyInDevErrors package[]
@@ -59,6 +65,7 @@ class AnalysisResult
     public function __construct(
         int $scannedFilesCount,
         float $elapsedTime,
+        array $usages,
         array $classmapErrors,
         array $shadowDependencyErrors,
         array $devDependencyInProductionErrors,
@@ -69,6 +76,7 @@ class AnalysisResult
     {
         $this->scannedFilesCount = $scannedFilesCount;
         $this->elapsedTime = $elapsedTime;
+        $this->usages = $usages;
         $this->classmapErrors = $classmapErrors;
         $this->shadowDependencyErrors = $shadowDependencyErrors;
         $this->devDependencyInProductionErrors = $devDependencyInProductionErrors;
@@ -85,6 +93,14 @@ class AnalysisResult
     public function getElapsedTime(): float
     {
         return $this->elapsedTime;
+    }
+
+    /**
+     * @return array<string, array<string, list<SymbolUsage>>>
+     */
+    public function getUsages(): array
+    {
+        return $this->usages;
     }
 
     /**

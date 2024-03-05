@@ -10,9 +10,9 @@ class CliTest extends TestCase
 
     /**
      * @param list<string> $argv
-     * @dataProvider validateArgvDataProvider
+     * @dataProvider validationDataProvider
      */
-    public function testValidateArgv(?string $expectedExceptionMessage, array $argv): void
+    public function testValidation(?string $expectedExceptionMessage, array $argv): void
     {
         if ($expectedExceptionMessage === null) {
             $this->expectNotToPerformAssertions();
@@ -21,14 +21,13 @@ class CliTest extends TestCase
             $this->expectExceptionMessage($expectedExceptionMessage);
         }
 
-        $cli = new Cli();
-        $cli->validateArgv(__DIR__, $argv);
+        new Cli(__DIR__, $argv);
     }
 
     /**
      * @return iterable<string, array{string|null, list<string>}>
      */
-    public function validateArgvDataProvider(): iterable
+    public function validationDataProvider(): iterable
     {
         yield 'unknown long option' => [
             'Unknown option --unknown, see --help',
