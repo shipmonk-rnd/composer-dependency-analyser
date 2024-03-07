@@ -1,19 +1,21 @@
 # Composer dependency analyser
 
-This package aims to detect composer dependency issues in your project.
+- 💪 **Powerful:** Detects unused, shadow and misplaced composer dependencies
+- ⚡ **Performant:** Scans 15 000 files in 2s!
+- ⚙️ **Configurable:** Fine-grained ignores via PHP config
+- 🕸️ **Lightweight:** No composer dependencies
+- 🍰 **Easy-to-use:** No config needed for first try
+- ✨ **Compatible:** PHP 7.2 - 8.3 
 
-It detects **shadowed composer dependencies** and **unused composer dependencies** similar to other tools, but **MUCH faster**:
+## Comparison:
 
 | Project                                   | Dead<br/>dependency | Shadow<br/>dependency  | Misplaced<br/>in `require` | Misplaced<br/> in `require-dev` | Time*      |
 |-------------------------------------------|---------------------|------------------------|--------------------------|-------------------------------|------------|
-| maglnet/composer-require-checker          | ❌                   | ✅                     | ❌                         |  ❌                             | 124 secs   |
-| icanhazstring/composer-unused             | ✅                   | ❌                     | ❌                         |  ❌                             | 72 secs    |
-| **shipmonk/composer-dependency-analyser** | ✅                   | ✅                     | ✅                         |  ✅                             | **2 secs** |
+| maglnet/<br/>**composer-require-checker**          | ❌                   | ✅                     | ❌                         |  ❌                             | 124 secs   |
+| icanhazstring/<br/>**composer-unused**             | ✅                   | ❌                     | ❌                         |  ❌                             | 72 secs    |
+| shipmonk/<br/>**composer-dependency-analyser** | ✅                   | ✅                     | ✅                         |  ✅                             | **2 secs** |
 
-<sup><sub>\*Time measured on codebase with ~13 000 files</sub></sup>
-
-
-This means you can safely add this tool to CI without wasting resources.
+<sup><sub>\*Time measured on codebase with ~15 000 files</sub></sup>
 
 ## Installation:
 
