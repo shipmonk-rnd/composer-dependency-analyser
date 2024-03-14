@@ -70,6 +70,7 @@ jobs:
                 with:
                     path: rules
                     repository: shipmonk/phpstan-rules
+                    ref: master
 
             -
                 name: Setup PHP
