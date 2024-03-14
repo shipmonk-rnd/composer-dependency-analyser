@@ -65,11 +65,11 @@ jobs:
                     path: analyser
 
             -
-                name: Clone deptrac
+                name: Clone shipmonk/phpstan-rules
                 uses: actions/checkout@v4
                 with:
-                    path: deptrac
-                    repository: qossmic/deptrac
+                    path: rules
+                    repository: shipmonk/phpstan-rules
 
             -
                 name: Setup PHP
@@ -83,11 +83,11 @@ jobs:
                 run: composer install --no-progress --prefer-dist --no-interaction
 
             -
-                name: Install deptrac dependencies
-                working-directory: deptrac
+                name: Install rules dependencies
+                working-directory: rules
                 run: composer install --no-progress --prefer-dist --no-interaction
 
             -
                 name: Run analyser
-                working-directory: deptrac
+                working-directory: rules
                 run: php ../analyser/bin/composer-dependency-analyser
