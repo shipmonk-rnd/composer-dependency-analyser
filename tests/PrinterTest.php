@@ -108,11 +108,11 @@ Unknown classes!
 Found shadow dependencies!
 (those are used, but not listed as dependency in composer.json)
 
-  • shadow/package
-      e.g. Shadow\Utils in src/Utils.php:19 (+ 6 more)
-
   • shadow/another
       e.g. Another\Controller in src/bootstrap.php:173
+
+  • shadow/package
+      e.g. Forth\Provider in src/bootstrap.php:873 (+ 6 more)
 
 
 
@@ -152,20 +152,20 @@ Unknown classes!
 Found shadow dependencies!
 (those are used, but not listed as dependency in composer.json)
 
+  • shadow/another
+      Another\Controller
+        src/bootstrap.php:173
   • shadow/package
+      Forth\Provider
+        src/bootstrap.php:873
+      Shadow\Comparator
+        src/Printer.php:25
       Shadow\Utils
         src/Utils.php:19
         src/Utils.php:22
         src/Application.php:128
         + 1 more
-      Shadow\Comparator
-        src/Printer.php:25
-      Third\Parser
-        src/bootstrap.php:317
       + 1 more class
-  • shadow/another
-      Another\Controller
-        src/bootstrap.php:173
 
 
 Found dev dependencies in production code!

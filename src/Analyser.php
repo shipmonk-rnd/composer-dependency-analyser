@@ -33,9 +33,7 @@ use function get_defined_functions;
 use function implode;
 use function in_array;
 use function is_file;
-use function ksort;
 use function preg_split;
-use function sort;
 use function str_replace;
 use function strlen;
 use function strpos;
@@ -240,13 +238,6 @@ class Analyser
                 $prodOnlyInDevErrors[] = $prodPackageUsedOnlyInDev;
             }
         }
-
-        ksort($classmapErrors);
-        ksort($shadowErrors);
-        ksort($devInProdErrors);
-        sort($prodOnlyInDevErrors);
-        sort($unusedErrors);
-        sort($usages);
 
         return new AnalysisResult(
             $scannedFilesCount,

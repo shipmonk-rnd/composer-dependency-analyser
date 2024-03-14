@@ -4,6 +4,8 @@ namespace ShipMonk\ComposerDependencyAnalyser\Result;
 
 use ShipMonk\ComposerDependencyAnalyser\Config\Ignore\UnusedClassIgnore;
 use ShipMonk\ComposerDependencyAnalyser\Config\Ignore\UnusedErrorIgnore;
+use function ksort;
+use function sort;
 
 class AnalysisResult
 {
@@ -26,17 +28,17 @@ class AnalysisResult
     /**
      * @var array<string, list<SymbolUsage>>
      */
-    private $classmapErrors;
+    private $classmapErrors = [];
 
     /**
      * @var array<string, array<string, list<SymbolUsage>>>
      */
-    private $shadowDependencyErrors;
+    private $shadowDependencyErrors = [];
 
     /**
      * @var array<string, array<string, list<SymbolUsage>>>
      */
-    private $devDependencyInProductionErrors;
+    private $devDependencyInProductionErrors = [];
 
     /**
      * @var list<string>
@@ -74,12 +76,32 @@ class AnalysisResult
         array $unusedIgnores
     )
     {
+        ksort($usages);
+        ksort($classmapErrors);
+        ksort($shadowDependencyErrors);
+        ksort($devDependencyInProductionErrors);
+        sort($prodDependencyOnlyInDevErrors);
+        sort($unusedDependencyErrors);
+
         $this->scannedFilesCount = $scannedFilesCount;
         $this->elapsedTime = $elapsedTime;
-        $this->usages = $usages;
         $this->classmapErrors = $classmapErrors;
-        $this->shadowDependencyErrors = $shadowDependencyErrors;
-        $this->devDependencyInProductionErrors = $devDependencyInProductionErrors;
+
+        foreach ($usages as $package => $classes) {
+            ksort($classes);
+            $this->usages[$package] = $classes;
+        }
+
+        foreach ($shadowDependencyErrors as $package => $classes) {
+            ksort($classes);
+            $this->shadowDependencyErrors[$package] = $classes;
+        }
+
+        foreach ($devDependencyInProductionErrors as $package => $classes) {
+            ksort($classes);
+            $this->devDependencyInProductionErrors[$package] = $classes;
+        }
+
         $this->prodDependencyOnlyInDevErrors = $prodDependencyOnlyInDevErrors;
         $this->unusedDependencyErrors = $unusedDependencyErrors;
         $this->unusedIgnores = $unusedIgnores;
