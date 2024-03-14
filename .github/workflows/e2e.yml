@@ -9,12 +9,12 @@ jobs:
             matrix:
                 include:
                     -
-                        name: phpstan
                         repo: phpstan/phpstan-src
+                        name: phpstan
                         args: --config=build/composer-dependency-analyser.php
                     -
-                        name: shipmonk-rules
                         repo: shipmonk-rnd/phpstan-rules
+                        name: shipmonk-rules
                         args: ''
             fail-fast: false
         steps:
