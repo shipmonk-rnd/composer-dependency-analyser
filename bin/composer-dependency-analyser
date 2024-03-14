@@ -93,7 +93,7 @@ try {
 }
 
 // load vendor that belongs to given composer.json
-$autoloadFile = dirname($composerJsonPath) . '/' . $composerJson->vendorDir . '/autoload.php';
+$autoloadFile = $composerJson->composerAutoloadPath;
 if (is_file($autoloadFile)) {
     require_once $autoloadFile;
 } else {

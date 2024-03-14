@@ -13,5 +13,8 @@
         "files": [
             "dir2/file1.php"
         ]
+    },
+    "config": {
+        "vendor-dir": "custom-vendor/"
     }
 }
