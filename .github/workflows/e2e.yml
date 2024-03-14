@@ -3,9 +3,19 @@ on:
     pull_request:
 
 jobs:
-    phpstan-src:
+    e2e:
         runs-on: ubuntu-latest
         strategy:
+            matrix:
+                include:
+                    -
+                        repo: phpstan/phpstan-src
+                        name: phpstan
+                        args: --config=build/composer-dependency-analyser.php
+                    -
+                        repo: shipmonk-rnd/phpstan-rules
+                        name: shipmonk-rules
+                        args: ''
             fail-fast: false
         steps:
             -
@@ -15,11 +25,11 @@ jobs:
                     path: analyser
 
             -
-                name: Clone phpstan/phpstan-src
+                name: Clone ${{ matrix.repo }}
                 uses: actions/checkout@v4
                 with:
-                    path: phpstan
-                    repository: phpstan/phpstan-src
+                    path: ${{ matrix.name }}
+                    repository: ${{ matrix.repo }}
 
             -
                 name: Setup PHP
@@ -33,50 +43,11 @@ jobs:
                 run: composer install --no-progress --prefer-dist --no-interaction
 
             -
-                name: Install phpstan dependencies
-                working-directory: phpstan
+                name: Install ${{ matrix.name }} dependencies
+                working-directory: ${{ matrix.name }}
                 run: composer install --no-progress --prefer-dist --no-interaction
 
             -
                 name: Run analyser
-                working-directory: phpstan
-                run: php ../analyser/bin/composer-dependency-analyser --config=build/composer-dependency-analyser.php
-
-    shipmonk-rules:
-        runs-on: ubuntu-latest
-        strategy:
-            fail-fast: false
-        steps:
-            -
-                name: Checkout code
-                uses: actions/checkout@v4
-                with:
-                    path: analyser
-
-            -
-                name: Clone shipmonk/phpstan-rules
-                uses: actions/checkout@v4
-                with:
-                    path: rules
-                    repository: shipmonk-rnd/phpstan-rules
-
-            -
-                name: Setup PHP
-                uses: shivammathur/setup-php@v2
-                with:
-                    php-version: 8.3
-
-            -
-                name: Install analyser dependencies
-                working-directory: analyser
-                run: composer install --no-progress --prefer-dist --no-interaction
-
-            -
-                name: Install rules dependencies
-                working-directory: rules
-                run: composer install --no-progress --prefer-dist --no-interaction
-
-            -
-                name: Run analyser
-                working-directory: rules
-                run: php ../analyser/bin/composer-dependency-analyser
+                working-directory: ${{ matrix.name }}
+                run: php ../analyser/bin/composer-dependency-analyser ${{ matrix.args }}
