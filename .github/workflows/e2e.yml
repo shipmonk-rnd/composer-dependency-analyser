@@ -40,7 +40,7 @@ jobs:
             -
                 name: Run analyser
                 working-directory: phpstan
-                run: php ../analyser/bin/composer-dependency-analyser
+                run: php ../analyser/bin/composer-dependency-analyser --config=build/composer-dependency-analyser.php
 
     shipmonk-rules:
         runs-on: ubuntu-latest
