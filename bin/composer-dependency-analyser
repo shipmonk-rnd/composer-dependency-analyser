@@ -39,15 +39,11 @@ Ignore options:
 
 EOD;
 
-$autoloadFiles = [
-    __DIR__ . '/../vendor/autoload.php',
-    __DIR__ . '/../../../autoload.php',
-];
-
-foreach ($autoloadFiles as $autoloadFile) {
-    if (file_exists($autoloadFile)) {
-        require_once $autoloadFile;
-        break;
+// preload own classes (do not rely on presence in composer's autoloader)
+foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator(__DIR__ . '/../src')) as $entry) {
+    /** @var DirectoryIterator $entry */
+    if ($entry->isFile() && $entry->getExtension() === 'php') {
+        require_once $entry->getPathname();
     }
 }
 
@@ -80,6 +76,24 @@ try {
 if (isset($providedOptions['help'])) {
     echo $usage;
     exit;
+}
+
+$composerJsonPath = isset($providedOptions['composer-json'])
+    ? ($cwd . "/" . $providedOptions['composer-json'])
+    : ($cwd . "/composer.json");
+
+try {
+    $composerJson = new ComposerJson($composerJsonPath);
+} catch (OurRuntimeException $e) {
+    $exit($e->getMessage());
+}
+
+// load vendor that belongs to given composer.json
+$autoloadFile = dirname($composerJsonPath) . '/' . $composerJson->vendorDir . '/autoload.php';
+if (is_file($autoloadFile)) {
+    require_once $autoloadFile;
+} else {
+    $exit("Cannot find composer's autoload file, expected at '$autoloadFile'");
 }
 
 if (isset($providedOptions['config'])) {
@@ -128,16 +142,6 @@ if ($ignoreDevInProd) {
 }
 if ($ignoreProdOnlyInDev) {
     $config->ignoreErrors([ErrorType::PROD_DEPENDENCY_ONLY_IN_DEV]);
-}
-
-$composerJsonPath = isset($providedOptions['composer-json'])
-    ? ($cwd . "/" . $providedOptions['composer-json'])
-    : ($cwd . "/composer.json");
-
-try {
-    $composerJson = new ComposerJson($composerJsonPath);
-} catch (OurRuntimeException $e) {
-    $exit($e->getMessage());
 }
 
 $loaders = ClassLoader::getRegisteredLoaders();

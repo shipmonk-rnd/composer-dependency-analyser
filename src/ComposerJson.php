@@ -27,6 +27,12 @@ class ComposerJson
 {
 
     /**
+     * @readonly
+     * @var string
+     */
+    public $vendorDir;
+
+    /**
      * Package => isDev
      *
      * @readonly
@@ -51,6 +57,7 @@ class ComposerJson
         $basePath = dirname($composerJsonPath);
 
         $composerJsonData = $this->parseComposerJson($composerJsonPath);
+        $this->vendorDir = $composerJsonData['vendor-dir'] ?? 'vendor';
 
         $requiredPackages = $composerJsonData['require'] ?? [];
         $requiredDevPackages = $composerJsonData['require-dev'] ?? [];
@@ -140,6 +147,7 @@ class ComposerJson
      * @return array{
      *     require?: array<string, string>,
      *     require-dev?: array<string, string>,
+     *     vendor-dir?: string,
      *     autoload?: array{
      *          psr-0?: array<string, string|string[]>,
      *          psr-4?: array<string, string|string[]>,
