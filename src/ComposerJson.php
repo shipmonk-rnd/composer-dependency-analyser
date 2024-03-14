@@ -19,12 +19,19 @@ use function json_decode;
 use function json_last_error;
 use function json_last_error_msg;
 use function realpath;
+use function rtrim;
 use function strpos;
 use const ARRAY_FILTER_USE_KEY;
 use const JSON_ERROR_NONE;
 
 class ComposerJson
 {
+
+    /**
+     * @readonly
+     * @var string
+     */
+    public $composerAutoloadPath;
 
     /**
      * Package => isDev
@@ -51,6 +58,7 @@ class ComposerJson
         $basePath = dirname($composerJsonPath);
 
         $composerJsonData = $this->parseComposerJson($composerJsonPath);
+        $this->composerAutoloadPath = $this->resolveComposerAutoloadPath($basePath, $composerJsonData['config']['vendor-dir'] ?? 'vendor');
 
         $requiredPackages = $composerJsonData['require'] ?? [];
         $requiredDevPackages = $composerJsonData['require-dev'] ?? [];
@@ -140,6 +148,9 @@ class ComposerJson
      * @return array{
      *     require?: array<string, string>,
      *     require-dev?: array<string, string>,
+     *     config?: array{
+     *         vendor-dir?: string,
+     *     },
      *     autoload?: array{
      *          psr-0?: array<string, string|string[]>,
      *          psr-4?: array<string, string|string[]>,
@@ -176,6 +187,17 @@ class ComposerJson
         }
 
         return $composerJsonData; // @phpstan-ignore-line ignore mixed returned
+    }
+
+    private function resolveComposerAutoloadPath(string $basePath, string $vendorDir): string
+    {
+        $vendorDir = rtrim($vendorDir, '/');
+
+        if (is_dir($vendorDir)) {
+            return $vendorDir . '/autoload.php';
+        }
+
+        return $basePath . '/' . $vendorDir . '/autoload.php';
     }
 
 }
