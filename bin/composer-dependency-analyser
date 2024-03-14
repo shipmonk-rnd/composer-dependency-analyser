@@ -39,13 +39,17 @@ Ignore options:
 
 EOD;
 
-// preload own classes (do not rely on presence in composer's autoloader)
-foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator(__DIR__ . '/../src')) as $entry) {
-    /** @var DirectoryIterator $entry */
-    if ($entry->isFile() && $entry->getExtension() === 'php') {
-        require_once $entry->getPathname();
+$psr4Prefix = 'ShipMonk\\ComposerDependencyAnalyser\\';
+
+// autoloader for own classes (do not rely on presence in composer's autoloader)
+spl_autoload_register(static function (string $class) use ($psr4Prefix): void {
+    if (strpos($class, $psr4Prefix) === 0) {
+        /** @var string $classWithoutPrefix */
+        $classWithoutPrefix = substr($class, strlen($psr4Prefix));
+        $file = __DIR__ . '/../src/' . str_replace('\\', '/', $classWithoutPrefix) . '.php';
+        require $file;
     }
-}
+});
 
 $cwd = getcwd();
 $printer = new Printer($cwd === false ? '' : $cwd);
