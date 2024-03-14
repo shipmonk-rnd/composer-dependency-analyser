@@ -4,9 +4,11 @@ namespace ShipMonk\ComposerDependencyAnalyser;
 
 use Closure;
 use PHPUnit\Framework\TestCase;
+use ShipMonk\ComposerDependencyAnalyser\Config\Configuration;
 use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
 use ShipMonk\ComposerDependencyAnalyser\Config\Ignore\UnusedErrorIgnore;
 use ShipMonk\ComposerDependencyAnalyser\Result\AnalysisResult;
+use ShipMonk\ComposerDependencyAnalyser\Result\ResultFormatter;
 use ShipMonk\ComposerDependencyAnalyser\Result\SymbolUsage;
 use function ob_get_clean;
 use function ob_start;
@@ -18,7 +20,7 @@ class PrinterTest extends TestCase
 
     public function testPrintLine(): void
     {
-        $printer = new Printer('');
+        $printer = new Printer();
 
         $output = $this->captureAndNormalizeOutput(static function () use ($printer): void {
             $printer->printLine('Hello, <red>world</red>!');
@@ -31,13 +33,13 @@ class PrinterTest extends TestCase
     public function testPrintResult(): void
     {
         // editorconfig-checker-disable
-        $printer = new Printer('/app');
+        $formatter = new ResultFormatter('/app', new Printer());
 
-        $noIssuesOutput = $this->captureAndNormalizeOutput(static function () use ($printer): void {
-            $printer->printResultErrors(new AnalysisResult(2, 0.123, [], [], [], [], [], [], []), 1, true);
+        $noIssuesOutput = $this->captureAndNormalizeOutput(static function () use ($formatter): void {
+            $formatter->format(new AnalysisResult(2, 0.123, [], [], [], [], [], [], []), new CliOptions(), new Configuration());
         });
-        $noIssuesButUnusedIgnores = $this->captureAndNormalizeOutput(static function () use ($printer): void {
-            $printer->printResultErrors(new AnalysisResult(2, 0.123, [], [], [], [], [], [], [new UnusedErrorIgnore(ErrorType::SHADOW_DEPENDENCY, null, null)]), 3, true);
+        $noIssuesButUnusedIgnores = $this->captureAndNormalizeOutput(static function () use ($formatter): void {
+            $formatter->format(new AnalysisResult(2, 0.123, [], [], [], [], [], [], [new UnusedErrorIgnore(ErrorType::SHADOW_DEPENDENCY, null, null)]), new CliOptions(), new Configuration());
         });
 
         $expectedNoIssuesOutput = <<<'OUT'
@@ -88,11 +90,13 @@ OUT;
             []
         );
 
-        $regularOutput = $this->captureAndNormalizeOutput(static function () use ($printer, $analysisResult): void {
-            $printer->printResultErrors($analysisResult, 1, true);
+        $regularOutput = $this->captureAndNormalizeOutput(static function () use ($formatter, $analysisResult): void {
+            $formatter->format($analysisResult, new CliOptions(), new Configuration());
         });
-        $verboseOutput = $this->captureAndNormalizeOutput(static function () use ($printer, $analysisResult): void {
-            $printer->printResultErrors($analysisResult, 3, true);
+        $verboseOutput = $this->captureAndNormalizeOutput(static function () use ($formatter, $analysisResult): void {
+            $options = new CliOptions();
+            $options->verbose = true;
+            $formatter->format($analysisResult, $options, new Configuration());
         });
 
         $expectedRegularOutput = <<<'OUT'

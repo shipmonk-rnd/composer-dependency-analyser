@@ -26,8 +26,8 @@ class BinTest extends TestCase
         $this->runCommand('php bin/composer-dependency-analyser', $rootDir, 0, $okOutput);
         $this->runCommand('php bin/composer-dependency-analyser --verbose', $rootDir, 0, $okOutput);
         $this->runCommand('php ../bin/composer-dependency-analyser', $testsDir, 255, $noComposerJsonError);
-        $this->runCommand('php bin/composer-dependency-analyser --help', $rootDir, 0, $helpOutput);
-        $this->runCommand('php ../bin/composer-dependency-analyser --help', $testsDir, 0, $helpOutput);
+        $this->runCommand('php bin/composer-dependency-analyser --help', $rootDir, 255, $helpOutput);
+        $this->runCommand('php ../bin/composer-dependency-analyser --help', $testsDir, 255, $helpOutput);
         $this->runCommand('php bin/composer-dependency-analyser --composer-json=composer.json', $rootDir, 0, $okOutput);
         $this->runCommand('php bin/composer-dependency-analyser --composer-json=composer.lock', $rootDir, 255, $noPackagesError);
         $this->runCommand('php bin/composer-dependency-analyser --composer-json=README.md', $rootDir, 255, $parseError);

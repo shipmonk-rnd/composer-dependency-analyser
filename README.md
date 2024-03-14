@@ -5,7 +5,7 @@
 - ⚙️ **Configurable:** Fine-grained ignores via PHP config
 - 🕸️ **Lightweight:** No composer dependencies
 - 🍰 **Easy-to-use:** No config needed for first try
-- ✨ **Compatible:** PHP 7.2 - 8.3 
+- ✨ **Compatible:** PHP 7.2 - 8.3
 
 ## Comparison:
 
@@ -88,7 +88,7 @@ This tool reads your `composer.json` and scans all paths listed in `autoload` & 
 
 
 ## Configuration:
-When a file named `composer-dependency-analyser.php` is located in cwd, it is loaded and returned from there.
+When a file named `composer-dependency-analyser.php` is located in cwd, it gets loaded automatically.
 The config file must return `ShipMonk\ComposerDependencyAnalyser\Config\Configuration` object.
 Here is example of what you can do:
 

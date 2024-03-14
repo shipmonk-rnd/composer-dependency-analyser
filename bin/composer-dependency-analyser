@@ -1,46 +1,17 @@
 #!/usr/bin/env php
 <?php declare(strict_types=1);
 
-use Composer\Autoload\ClassLoader;
-use ShipMonk\ComposerDependencyAnalyser\Cli;
 use ShipMonk\ComposerDependencyAnalyser\Analyser;
-use ShipMonk\ComposerDependencyAnalyser\Command;
-use ShipMonk\ComposerDependencyAnalyser\ComposerJson;
-use ShipMonk\ComposerDependencyAnalyser\Config\Configuration;
-use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
 use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidCliException;
-use ShipMonk\ComposerDependencyAnalyser\Exception\RuntimeException as OurRuntimeException;
+use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidConfigException;
+use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidPathException;
+use ShipMonk\ComposerDependencyAnalyser\Initializer;
 use ShipMonk\ComposerDependencyAnalyser\Printer;
+use ShipMonk\ComposerDependencyAnalyser\Result\ResultFormatter;
 use ShipMonk\ComposerDependencyAnalyser\Stopwatch;
 
 error_reporting(E_ALL);
 ini_set('display_errors', 'stderr');
-
-$usage = <<<EOD
-
-Usage:
-    vendor/bin/composer-analyser
-
-Options:
-    --help                      Print this help text and exit.
-    --verbose                   Print more usage examples
-    --show-all-usages           Removes the limit of showing only few usages
-    --dump-usages <package>     Dump usages of given package, * placeholder can be used
-    --composer-json <path>      Provide custom path to composer.json
-    --config <path>             Provide path to php configuration file
-                                (must return \ShipMonk\ComposerDependencyAnalyser\Config\Configuration instance)
-
-Ignore options:
-    (or use --config for better granularity)
-
-    --ignore-unknown-classes            Ignore when class is not found in classmap
-    --ignore-unused-deps                Ignore all unused dependency issues
-    --ignore-shadow-deps                Ignore all shadow dependency issues
-    --ignore-dev-in-prod-deps           Ignore all dev dependency in production code issues
-    --ignore-prod-only-in-dev-deps      Ignore all prod dependency used only in dev paths issues
-
-
-EOD;
 
 $psr4Prefix = 'ShipMonk\\ComposerDependencyAnalyser\\';
 
@@ -54,152 +25,34 @@ spl_autoload_register(static function (string $class) use ($psr4Prefix): void {
     }
 });
 
+/** @var non-empty-string $cwd */
 $cwd = getcwd();
-$printer = new Printer($cwd === false ? '' : $cwd);
 
-/**
- * @return never
- */
-$exit = static function (string $message) use ($printer): void {
-    $printer->printLine("\n<red>$message</red>" . PHP_EOL);
-    exit(255);
-};
-
-if ($cwd === false) {
-    $exit('Cannot get current working directory');
-}
-if (!isset($argv)) {
-    $exit('No $argv available, possibly disabled register_argc_argv?');
-}
+$printer = new Printer();
+$initializer = new Initializer($cwd, $printer);
+$stopwatch = new Stopwatch();
 
 try {
-    $cli = new Cli($cwd, $argv);
-    $providedOptions = $cli->getProvidedOptions();
-} catch (InvalidCliException $e) {
-    $exit($e->getMessage());
-}
+    $options = $initializer->initCliOptions($cwd, $argv);
+    $composerJson = $initializer->initComposerJson($cwd, $options);
+    $initializer->initComposerAutoloader($composerJson);
+    $configuration = $initializer->initConfiguration($options, $composerJson);
+    $classLoaders = $initializer->initComposerClassLoaders();
 
-if (isset($providedOptions['help'])) {
-    echo $usage;
-    exit;
-}
-
-$composerJsonPath = isset($providedOptions['composer-json'])
-    ? ($cwd . "/" . $providedOptions['composer-json'])
-    : ($cwd . "/composer.json");
-
-try {
-    $composerJson = new ComposerJson($composerJsonPath);
-} catch (OurRuntimeException $e) {
-    $exit($e->getMessage());
-}
-
-// load vendor that belongs to given composer.json
-$autoloadFile = $composerJson->composerAutoloadPath;
-if (is_file($autoloadFile)) {
-    require_once $autoloadFile;
-} else {
-    $exit("Cannot find composer's autoload file, expected at '$autoloadFile'");
-}
-
-if (isset($providedOptions['config'])) {
-    $configPath = $cwd . "/" . $providedOptions['config'];
-
-    if (!is_file($configPath)) {
-        $exit("Invalid config path given, {$configPath} is not a file.");
-    }
-} else {
-    $configPath = $cwd . "/composer-dependency-analyser.php";
-}
-
-if (is_file($configPath)) {
-    $printer->printLine('<gray>Using config</gray> ' . $configPath);
-
-    try {
-        $config = require $configPath;
-    } catch (OurRuntimeException $e) {
-        $exit($e->getMessage());
-    } catch (Throwable $e) {
-        $exit(get_class($e) . " in {$e->getFile()}:{$e->getLine()}\n > " . $e->getMessage());
-    }
-
-    if (!$config instanceof Configuration) {
-        $exit("Invalid config file, it must return instance of " . Configuration::class);
-    }
-} else {
-    $config = new Configuration();
-}
-
-$ignoreUnknown = isset($providedOptions['ignore-unknown-classes']);
-$ignoreUnused = isset($providedOptions['ignore-unused-deps']);
-$ignoreShadow = isset($providedOptions['ignore-shadow-deps']);
-$ignoreDevInProd = isset($providedOptions['ignore-dev-in-prod-deps']);
-$ignoreProdOnlyInDev = isset($providedOptions['ignore-prod-only-in-dev-deps']);
-
-if ($ignoreUnknown) {
-    $config->ignoreErrors([ErrorType::UNKNOWN_CLASS]);
-}
-if ($ignoreUnused) {
-    $config->ignoreErrors([ErrorType::UNUSED_DEPENDENCY]);
-}
-if ($ignoreShadow) {
-    $config->ignoreErrors([ErrorType::SHADOW_DEPENDENCY]);
-}
-if ($ignoreDevInProd) {
-    $config->ignoreErrors([ErrorType::DEV_DEPENDENCY_IN_PROD]);
-}
-if ($ignoreProdOnlyInDev) {
-    $config->ignoreErrors([ErrorType::PROD_DEPENDENCY_ONLY_IN_DEV]);
-}
-
-$loaders = ClassLoader::getRegisteredLoaders();
-if (count($loaders) > 1) {
-    $printer->printLine("\nDetected multiple class loaders:");
-    foreach ($loaders as $vendorDir => $_) {
-        $printer->printLine(" • <gray>$vendorDir</gray>");
-    }
-    $printer->printLine('');
-}
-
-if (count($loaders) === 0) {
-    $printer->printLine("\nNo composer class loader detected!\n");
-}
-
-try {
-    if ($config->shouldScanComposerAutoloadPaths()) {
-        foreach ($composerJson->autoloadPaths as $absolutePath => $isDevPath) {
-            $config->addPathToScan($absolutePath, $isDevPath);
-        }
-
-        if ($config->getPathsToScan() === []) {
-            $exit('No paths to scan! There is no composer autoload section and no extra path to scan configured.');
-        }
-    } else {
-        if ($config->getPathsToScan() === []) {
-            $exit('No paths to scan! Scanning composer\'s \'autoload\' sections is disabled and no extra path to scan was configured.');
-        }
-    }
-
-    $stopwatch = new Stopwatch();
-    $analyser = new Analyser($stopwatch, $loaders, $config, $composerJson->dependencies);
+    $analyser = new Analyser($stopwatch, $classLoaders, $configuration, $composerJson->dependencies);
     $result = $analyser->run();
-} catch (OurRuntimeException $e) {
-    $exit($e->getMessage());
-}
 
-if (isset($providedOptions['dump-usages'])) {
-    $exitCode = $printer->printResultUsages($result, $providedOptions['dump-usages'], isset($providedOptions['show-all-usages']));
-} else {
-    $maxUsagesShown = 1;
-    if (isset($providedOptions['verbose'])) {
-        $maxUsagesShown = Printer::DEFAULT_MAX_SHOWN_USAGES;
-    }
-    if (isset($providedOptions['show-all-usages'])) {
-        $maxUsagesShown = PHP_INT_MAX;
-    }
-    $exitCode = $printer->printResultErrors($result, $maxUsagesShown, $config->shouldReportUnmatchedIgnoredErrors());
-}
+    $formatter = new ResultFormatter($cwd, $printer);
+    $exitCode = $formatter->format($result, $options, $configuration);
 
+} catch (
+    InvalidPathException |
+    InvalidConfigException |
+    InvalidCliException $e
+) {
+    $printer->printLine("\n<red>{$e->getMessage()}</red>" . PHP_EOL);
+    exit(255);
+}
 
 exit($exitCode);
 

@@ -6,7 +6,6 @@ use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidCliException;
 use function array_slice;
 use function is_dir;
 use function is_file;
-use function rtrim;
 use function strpos;
 use function substr;
 
@@ -112,9 +111,7 @@ class Cli
     private function getKnownOptionName(string $option): ?string
     {
         foreach (self::OPTIONS as $knownOption => $needsArgument) {
-            $knownOptionNoColon = rtrim($knownOption, ':');
-
-            if (strpos($option, $knownOptionNoColon) === 0) {
+            if (strpos($option, $knownOption) === 0) {
                 return $knownOption;
             }
         }
@@ -122,24 +119,55 @@ class Cli
         return null;
     }
 
-    /**
-     * @return array{
-     *     help?: bool,
-     *     verbose?: bool,
-     *     ignore-shadow-deps?: bool,
-     *     ignore-unused-deps?: bool,
-     *     ignore-dev-in-prod-deps?: bool,
-     *     ignore-prod-only-in-dev-deps?: bool,
-     *     ignore-unknown-classes?: bool,
-     *     composer-json?: string,
-     *     config?: string,
-     *     dump-usages?: string,
-     *     show-all-usages?: bool
-     * }
-     */
-    public function getProvidedOptions(): array
+    public function getProvidedOptions(): CliOptions
     {
-        return $this->providedOptions; // @phpstan-ignore-line
+        $options = new CliOptions();
+
+        if (isset($this->providedOptions['help'])) {
+            $options->help = true;
+        }
+
+        if (isset($this->providedOptions['verbose'])) {
+            $options->verbose = true;
+        }
+
+        if (isset($this->providedOptions['ignore-shadow-deps'])) {
+            $options->ignoreShadowDeps = true;
+        }
+
+        if (isset($this->providedOptions['ignore-unused-deps'])) {
+            $options->ignoreUnusedDeps = true;
+        }
+
+        if (isset($this->providedOptions['ignore-dev-in-prod-deps'])) {
+            $options->ignoreDevInProdDeps = true;
+        }
+
+        if (isset($this->providedOptions['ignore-prod-only-in-dev-deps'])) {
+            $options->ignoreProdOnlyInDevDeps = true;
+        }
+
+        if (isset($this->providedOptions['ignore-unknown-classes'])) {
+            $options->ignoreUnknownClasses = true;
+        }
+
+        if (isset($this->providedOptions['composer-json'])) {
+            $options->composerJson = $this->providedOptions['composer-json']; // @phpstan-ignore-line type is ensured
+        }
+
+        if (isset($this->providedOptions['config'])) {
+            $options->config = $this->providedOptions['config']; // @phpstan-ignore-line type is ensured
+        }
+
+        if (isset($this->providedOptions['dump-usages'])) {
+            $options->dumpUsages = $this->providedOptions['dump-usages'];  // @phpstan-ignore-line type is ensured
+        }
+
+        if (isset($this->providedOptions['show-all-usages'])) {
+            $options->showAllUsages = true;
+        }
+
+        return $options;
     }
 
 }
