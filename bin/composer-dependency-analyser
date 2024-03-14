@@ -58,7 +58,7 @@ $printer = new Printer($cwd === false ? '' : $cwd);
  * @return never
  */
 $exit = static function (string $message) use ($printer): void {
-    $printer->printLine("<red>$message</red>" . PHP_EOL);
+    $printer->printLine("\n<red>$message</red>" . PHP_EOL);
     exit(255);
 };
 
@@ -117,6 +117,8 @@ if (is_file($configPath)) {
         $config = require $configPath;
     } catch (OurRuntimeException $e) {
         $exit($e->getMessage());
+    } catch (Throwable $e) {
+        $exit(get_class($e) . " in {$e->getFile()}:{$e->getLine()}\n > " . $e->getMessage());
     }
 
     if (!$config instanceof Configuration) {
