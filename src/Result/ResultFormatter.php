@@ -82,7 +82,7 @@ class ResultFormatter
         $classesPlural = $classesWithUsage === 1 ? '' : 'es';
         $subtitle = "{$totalUsages} usage{$totalPlural} of {$classesWithUsage} class{$classesPlural} in total";
 
-        $this->printPackageBasedErrors($title, $subtitle, $usagesToDump, $maxShownUsages);
+        $this->printPackageBasedErrors("<orange>$title</orange>", $subtitle, $usagesToDump, $maxShownUsages);
 
         if ($this->willLimitUsages($usagesToDump, $maxShownUsages)) {
             $this->printLine("<gray>Use --show-all-usages to show all of them</gray>\n");
