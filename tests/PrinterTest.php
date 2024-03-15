@@ -3,6 +3,7 @@
 namespace ShipMonk\ComposerDependencyAnalyser;
 
 use PHPUnit\Framework\TestCase;
+use const PHP_EOL;
 
 class PrinterTest extends TestCase
 {
@@ -11,7 +12,7 @@ class PrinterTest extends TestCase
     {
         $printer = new Printer();
 
-        $this->expectOutputString("Hello, \033[31mworld\033[0m!\n");
+        $this->expectOutputString("Hello, \033[31mworld\033[0m!" . PHP_EOL);
         $printer->printLine('Hello, <red>world</red>!');
     }
 
