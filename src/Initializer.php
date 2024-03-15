@@ -72,7 +72,7 @@ EOD;
     ): Configuration
     {
         if ($options->config !== null) {
-            $configPath = $this->cwd . '/' . $options->config;
+            $configPath = Path::resolve($this->cwd, $options->config);
 
             if (!is_file($configPath)) {
                 throw new InvalidConfigException("Invalid config path given, {$configPath} is not a file.");
@@ -144,11 +144,11 @@ EOD;
      * @throws InvalidPathException
      * @throws InvalidConfigException
      */
-    public function initComposerJson(string $cwd, CliOptions $options): ComposerJson
+    public function initComposerJson(CliOptions $options): ComposerJson
     {
         $composerJsonPath = $options->composerJson !== null
-            ? ($cwd . '/' . $options->composerJson)
-            : ($cwd . '/composer.json');
+            ? Path::resolve($this->cwd, $options->composerJson)
+            : Path::normalize($this->cwd . '/composer.json');
 
         return new ComposerJson($composerJsonPath);
     }

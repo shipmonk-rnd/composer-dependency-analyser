@@ -9,7 +9,9 @@ use function file_put_contents;
 use function json_encode;
 use function mkdir;
 use function realpath;
+use function strtr;
 use function sys_get_temp_dir;
+use const DIRECTORY_SEPARATOR;
 
 class ComposerJsonTest extends TestCase
 {
@@ -20,7 +22,7 @@ class ComposerJsonTest extends TestCase
         $composerJson = new ComposerJson($composerJsonPath);
 
         self::assertSame(
-            dirname($composerJsonPath) . '/custom-vendor/autoload.php',
+            strtr(dirname($composerJsonPath) . '/custom-vendor/autoload.php', '/', DIRECTORY_SEPARATOR),
             $composerJson->composerAutoloadPath
         );
 
@@ -57,7 +59,7 @@ class ComposerJsonTest extends TestCase
         $composerJson = new ComposerJson($generatedComposerJson);
 
         self::assertSame(
-            sys_get_temp_dir() . '/autoload.php',
+            strtr(sys_get_temp_dir() . '/autoload.php', '/', DIRECTORY_SEPARATOR),
             $composerJson->composerAutoloadPath
         );
     }
@@ -85,7 +87,7 @@ class ComposerJsonTest extends TestCase
         $composerJson = new ComposerJson($generatedComposerJson);
 
         self::assertSame(
-            sys_get_temp_dir() . '/vendor-beside/data/autoload.php',
+            strtr(sys_get_temp_dir() . '/vendor-beside/data/autoload.php', '/', DIRECTORY_SEPARATOR),
             $composerJson->composerAutoloadPath
         );
     }

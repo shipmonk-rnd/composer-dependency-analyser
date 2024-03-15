@@ -34,7 +34,7 @@ $stopwatch = new Stopwatch();
 
 try {
     $options = $initializer->initCliOptions($cwd, $argv);
-    $composerJson = $initializer->initComposerJson($cwd, $options);
+    $composerJson = $initializer->initComposerJson($options);
     $initializer->initComposerAutoloader($composerJson);
     $configuration = $initializer->initConfiguration($options, $composerJson);
     $classLoaders = $initializer->initComposerClassLoaders();
