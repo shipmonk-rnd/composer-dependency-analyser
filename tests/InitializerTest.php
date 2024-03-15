@@ -45,7 +45,7 @@ class InitializerTest extends TestCase
         $composerJson = $initializer->initComposerJson($options);
 
         self::assertSame(
-            $cwd . strtr('/custom-vendor/autoload.php', '/', DIRECTORY_SEPARATOR),
+            strtr($cwd . '/custom-vendor/autoload.php', '/', DIRECTORY_SEPARATOR),
             $composerJson->composerAutoloadPath
         );
         self::assertSame(
@@ -71,7 +71,7 @@ class InitializerTest extends TestCase
         $composerJson = $initializer->initComposerJson($options);
 
         self::assertSame(
-            dirname($composerJsonPath) . strtr('/custom-vendor/autoload.php', '/', DIRECTORY_SEPARATOR),
+            strtr(dirname($composerJsonPath) . '/custom-vendor/autoload.php', '/', DIRECTORY_SEPARATOR),
             $composerJson->composerAutoloadPath
         );
         self::assertSame(
