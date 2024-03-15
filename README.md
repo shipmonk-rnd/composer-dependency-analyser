@@ -79,7 +79,7 @@ This tool reads your `composer.json` and scans all paths listed in `autoload` & 
 - `--config path/to/config.php` for custom path to config file
 - `--help` display usage & cli options
 - `--verbose` to see more example classes & usages
-- `--show-all-usage` to see all usages
+- `--show-all-usages` to see all usages
 - `--ignore-unknown-classes` to globally ignore unknown classes
 - `--ignore-shadow-deps` to globally ignore shadow dependencies
 - `--ignore-unused-deps` to globally ignore unused dependencies
