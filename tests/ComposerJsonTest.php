@@ -3,9 +3,11 @@
 namespace ShipMonk\ComposerDependencyAnalyser;
 
 use PHPUnit\Framework\TestCase;
+use function chdir;
 use function dirname;
 use function file_put_contents;
 use function json_encode;
+use function mkdir;
 use function realpath;
 use function sys_get_temp_dir;
 
@@ -56,6 +58,34 @@ class ComposerJsonTest extends TestCase
 
         self::assertSame(
             sys_get_temp_dir() . '/autoload.php',
+            $composerJson->composerAutoloadPath
+        );
+    }
+
+    /**
+     * @runInSeparateProcess Do not spread chdir changes
+     */
+    public function testUseVendorBesideGivenComposerJsonNotCwdOne(): void
+    {
+        self::assertDirectoryExists(__DIR__ . '/data'); // precondition
+
+        chdir(__DIR__);
+
+        $generatedComposerJson = sys_get_temp_dir() . '/vendor-beside/composer.json';
+        mkdir(dirname($generatedComposerJson), 0777, true);
+        file_put_contents($generatedComposerJson, json_encode([
+            'require' => [
+                'nette/utils' => '^3.0',
+            ],
+            'config' => [
+                'vendor-dir' => 'data',
+            ],
+        ]));
+
+        $composerJson = new ComposerJson($generatedComposerJson);
+
+        self::assertSame(
+            sys_get_temp_dir() . '/vendor-beside/data/autoload.php',
             $composerJson->composerAutoloadPath
         );
     }

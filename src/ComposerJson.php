@@ -18,6 +18,7 @@ use function is_file;
 use function json_decode;
 use function json_last_error;
 use function json_last_error_msg;
+use function preg_match;
 use function realpath;
 use function rtrim;
 use function strpos;
@@ -193,11 +194,21 @@ class ComposerJson
     {
         $vendorDir = rtrim($vendorDir, '/');
 
-        if (is_dir($vendorDir)) {
+        if ($this->isAbsolutePath($vendorDir)) {
             return $vendorDir . '/autoload.php';
         }
 
         return $basePath . '/' . $vendorDir . '/autoload.php';
+    }
+
+    /**
+     * Based on Nette\Utils\FileSystem::isAbsolute
+     *
+     * @license https://github.com/nette/utils/blob/v4.0.4/license.md
+     */
+    private function isAbsolutePath(string $vendorDir): bool
+    {
+        return (bool) preg_match('#([a-z]:)?[/\\\\]|[a-z][a-z0-9+.-]*://#Ai', $vendorDir);
     }
 
 }
