@@ -13,13 +13,10 @@ use function dirname;
 use function file_get_contents;
 use function glob;
 use function is_array;
-use function is_dir;
 use function is_file;
 use function json_decode;
 use function json_last_error;
 use function json_last_error_msg;
-use function preg_match;
-use function realpath;
 use function rtrim;
 use function strpos;
 use const ARRAY_FILTER_USE_KEY;
@@ -54,7 +51,9 @@ class ComposerJson
      * @throws InvalidPathException
      * @throws InvalidConfigException
      */
-    public function __construct(string $composerJsonPath)
+    public function __construct(
+        string $composerJsonPath
+    )
     {
         $basePath = dirname($composerJsonPath);
 
@@ -132,17 +131,7 @@ class ComposerJson
      */
     private function realpath(string $path): string
     {
-        if (!is_file($path) && !is_dir($path)) {
-            throw new InvalidPathException("Path from composer.json '$path' is not a file not a directory.");
-        }
-
-        $realPath = realpath($path);
-
-        if ($realPath === false) {
-            throw new InvalidPathException("Path from composer.json '$path' is invalid: unable to realpath");
-        }
-
-        return $realPath;
+        return Path::realpath($path);
     }
 
     /**
@@ -194,21 +183,11 @@ class ComposerJson
     {
         $vendorDir = rtrim($vendorDir, '/');
 
-        if ($this->isAbsolutePath($vendorDir)) {
+        if (Path::isAbsolute($vendorDir)) {
             return $vendorDir . '/autoload.php';
         }
 
         return $basePath . '/' . $vendorDir . '/autoload.php';
-    }
-
-    /**
-     * Based on Nette\Utils\FileSystem::isAbsolute
-     *
-     * @license https://github.com/nette/utils/blob/v4.0.4/license.md
-     */
-    private function isAbsolutePath(string $vendorDir): bool
-    {
-        return (bool) preg_match('#([a-z]:)?[/\\\\]|[a-z][a-z0-9+.-]*://#Ai', $vendorDir);
     }
 
 }

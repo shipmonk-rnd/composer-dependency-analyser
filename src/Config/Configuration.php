@@ -5,12 +5,10 @@ namespace ShipMonk\ComposerDependencyAnalyser\Config;
 use ShipMonk\ComposerDependencyAnalyser\Config\Ignore\IgnoreList;
 use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidConfigException;
 use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidPathException;
+use ShipMonk\ComposerDependencyAnalyser\Path;
 use function array_merge;
 use function in_array;
-use function is_dir;
-use function is_file;
 use function preg_match;
-use function realpath;
 use function strpos;
 
 class Configuration
@@ -153,7 +151,7 @@ class Configuration
      */
     public function addPathToScan(string $path, bool $isDev): self
     {
-        $this->pathsToScan[] = new PathToScan($this->realpath($path), $isDev);
+        $this->pathsToScan[] = new PathToScan(Path::realpath($path), $isDev);
         return $this;
     }
 
@@ -172,16 +170,6 @@ class Configuration
     }
 
     /**
-     * @return $this
-     * @throws InvalidPathException
-     */
-    public function addPathToExclude(string $path): self
-    {
-        $this->pathsToExclude[] = $this->realpath($path);
-        return $this;
-    }
-
-    /**
      * @param list<string> $paths
      * @return $this
      * @throws InvalidPathException
@@ -196,6 +184,16 @@ class Configuration
     }
 
     /**
+     * @return $this
+     * @throws InvalidPathException
+     */
+    public function addPathToExclude(string $path): self
+    {
+        $this->pathsToExclude[] = Path::realpath($path);
+        return $this;
+    }
+
+    /**
      * @param list<ErrorType::*> $errorTypes
      * @return $this
      * @throws InvalidPathException
@@ -205,7 +203,7 @@ class Configuration
     {
         $this->checkAllowedErrorTypeForPathIgnore($errorTypes);
 
-        $realpath = $this->realpath($path);
+        $realpath = Path::realpath($path);
 
         $previousErrorTypes = $this->ignoredErrorsOnPath[$realpath] ?? [];
         $this->ignoredErrorsOnPath[$realpath] = array_merge($previousErrorTypes, $errorTypes);
@@ -270,7 +268,7 @@ class Configuration
         $this->checkAllowedErrorTypeForPathIgnore($errorTypes);
         $this->checkAllowedErrorTypeForPackageIgnore($errorTypes);
 
-        $realpath = $this->realpath($path);
+        $realpath = Path::realpath($path);
 
         $previousErrorTypes = $this->ignoredErrorsOnPackageAndPath[$packageName][$realpath] ?? [];
         $this->ignoredErrorsOnPackageAndPath[$packageName][$realpath] = array_merge($previousErrorTypes, $errorTypes);
@@ -400,24 +398,6 @@ class Configuration
     private function isFilepathWithinPath(string $filePath, string $path): bool
     {
         return strpos($filePath, $path) === 0;
-    }
-
-    /**
-     * @throws InvalidPathException
-     */
-    private function realpath(string $filePath): string
-    {
-        if (!is_file($filePath) && !is_dir($filePath)) {
-            throw new InvalidPathException("'$filePath' is not a file nor directory");
-        }
-
-        $realPath = realpath($filePath);
-
-        if ($realPath === false) {
-            throw new InvalidPathException("Unable to realpath '$filePath'");
-        }
-
-        return $realPath;
     }
 
     /**

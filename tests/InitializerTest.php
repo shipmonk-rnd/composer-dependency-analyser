@@ -34,12 +34,39 @@ class InitializerTest extends TestCase
         $printer = $this->createMock(Printer::class);
 
         $composerJsonPath = __DIR__ . '/data/not-autoloaded/composer/sample.json';
+        $cwd = dirname($composerJsonPath);
 
         $options = new CliOptions();
         $options->composerJson = 'sample.json';
 
-        $initializer = new Initializer(__DIR__, $printer);
-        $composerJson = $initializer->initComposerJson(dirname($composerJsonPath), $options);
+        $initializer = new Initializer($cwd, $printer);
+        $composerJson = $initializer->initComposerJson($options);
+
+        self::assertSame(
+            $cwd . '/custom-vendor/autoload.php',
+            $composerJson->composerAutoloadPath
+        );
+        self::assertSame(
+            [
+                'nette/utils' => false,
+                'phpstan/phpstan' => true,
+            ],
+            $composerJson->dependencies
+        );
+    }
+
+    public function testInitComposerJsonWithAbsolutePath(): void
+    {
+        $printer = $this->createMock(Printer::class);
+
+        $cwd = __DIR__;
+        $composerJsonPath = __DIR__ . '/data/not-autoloaded/composer/sample.json';
+
+        $options = new CliOptions();
+        $options->composerJson = $composerJsonPath;
+
+        $initializer = new Initializer($cwd, $printer);
+        $composerJson = $initializer->initComposerJson($options);
 
         self::assertSame(
             dirname($composerJsonPath) . '/custom-vendor/autoload.php',
