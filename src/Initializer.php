@@ -22,7 +22,7 @@ class Initializer
     private static $help = <<<'EOD'
 
 Usage:
-    vendor/bin/composer-analyser
+    vendor/bin/composer-dependency-analyser
 
 Options:
     --help                      Print this help text and exit.
@@ -36,13 +36,11 @@ Options:
 Ignore options:
     (or use --config for better granularity)
 
-    --ignore-unknown-classes            Ignore when class is not found in classmap
+    --ignore-unknown-classes            Ignore all non-autoloadable classes
     --ignore-unused-deps                Ignore all unused dependency issues
     --ignore-shadow-deps                Ignore all shadow dependency issues
     --ignore-dev-in-prod-deps           Ignore all dev dependency in production code issues
     --ignore-prod-only-in-dev-deps      Ignore all prod dependency used only in dev paths issues
-
-
 EOD;
 
     /**

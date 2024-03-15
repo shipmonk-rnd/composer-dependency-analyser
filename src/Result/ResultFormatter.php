@@ -21,7 +21,7 @@ use const PHP_INT_MAX;
 class ResultFormatter
 {
 
-    public const DEFAULT_MAX_SHOWN_USAGES = 3;
+    public const VERBOSE_SHOWN_USAGES = 3;
 
     /**
      * @var string
@@ -49,17 +49,20 @@ class ResultFormatter
             return $this->printResultUsages($result, $options->dumpUsages, $options->showAllUsages === true);
         }
 
-        $maxUsagesShown = 1;
+        return $this->printResultErrors($result, $this->getMaxUsagesShownForErrors($options), $configuration->shouldReportUnmatchedIgnoredErrors());
+    }
 
+    private function getMaxUsagesShownForErrors(CliOptions $options): int
+    {
         if ($options->verbose === true) {
-            $maxUsagesShown = self::DEFAULT_MAX_SHOWN_USAGES;
+            return self::VERBOSE_SHOWN_USAGES;
         }
 
         if ($options->showAllUsages === true) {
-            $maxUsagesShown = PHP_INT_MAX;
+            return PHP_INT_MAX;
         }
 
-        return $this->printResultErrors($result, $maxUsagesShown, $configuration->shouldReportUnmatchedIgnoredErrors());
+        return 1;
     }
 
     private function printResultUsages(
@@ -69,7 +72,7 @@ class ResultFormatter
     ): int
     {
         $usagesToDump = $this->filterUsagesToDump($result->getUsages(), $package);
-        $maxShownUsages = $showAllUsages ? PHP_INT_MAX : self::DEFAULT_MAX_SHOWN_USAGES;
+        $maxShownUsages = $showAllUsages ? PHP_INT_MAX : self::VERBOSE_SHOWN_USAGES;
         $totalUsages = $this->countAllUsages($usagesToDump);
         $classesWithUsage = $this->countClassUsages($usagesToDump);
 
