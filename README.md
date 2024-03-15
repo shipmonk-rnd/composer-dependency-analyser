@@ -200,3 +200,4 @@ Despite those limitations, our experience is that this composer-dependency-analy
 ## Supported PHP versions
 - Runtime requires PHP 7.2 - 8.3
 - Scanned codebase should use PHP >= 5.3
+  - This can be done by pointing `--composer-json` to codebase located elsewhere
