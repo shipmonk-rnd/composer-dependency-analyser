@@ -10,25 +10,26 @@ class CliTest extends TestCase
 
     /**
      * @param list<string> $argv
-     * @dataProvider validateArgvDataProvider
+     * @dataProvider validationDataProvider
      */
-    public function testValidateArgv(?string $expectedExceptionMessage, array $argv): void
+    public function testValidation(?string $expectedExceptionMessage, array $argv, ?CliOptions $options = null): void
     {
-        if ($expectedExceptionMessage === null) {
-            $this->expectNotToPerformAssertions();
-        } else {
+        if ($expectedExceptionMessage !== null) {
             $this->expectException(InvalidCliException::class);
             $this->expectExceptionMessage($expectedExceptionMessage);
         }
 
-        $cli = new Cli();
-        $cli->validateArgv(__DIR__, $argv);
+        $cli = new Cli(__DIR__, $argv);
+
+        if ($options !== null) {
+            self::assertEquals($options, $cli->getProvidedOptions());
+        }
     }
 
     /**
      * @return iterable<string, array{string|null, list<string>}>
      */
-    public function validateArgvDataProvider(): iterable
+    public function validationDataProvider(): iterable
     {
         yield 'unknown long option' => [
             'Unknown option --unknown, see --help',
@@ -52,32 +53,50 @@ class CliTest extends TestCase
 
         yield 'valid bool options' => [
             null,
-            ['bin/script.php', '--help', '--verbose', '--ignore-shadow-deps', '--ignore-unused-deps', '--ignore-dev-in-prod-deps', '--ignore-unknown-classes']
+            ['bin/script.php', '--help', '--verbose', '--ignore-shadow-deps', '--ignore-unused-deps', '--ignore-dev-in-prod-deps', '--ignore-unknown-classes'],
+            (static function (): CliOptions {
+                $options = new CliOptions();
+                $options->help = true;
+                $options->verbose = true;
+                $options->ignoreShadowDeps = true;
+                $options->ignoreUnusedDeps = true;
+                $options->ignoreDevInProdDeps = true;
+                $options->ignoreUnknownClasses = true;
+                return $options;
+            })()
         ];
 
         yield 'valid options with values' => [
             null,
-            ['bin/script.php', '--composer-json', '../composer.json', '--verbose']
+            ['bin/script.php', '--composer-json', '../composer.json', '--verbose'],
+            (static function (): CliOptions {
+                $options = new CliOptions();
+                $options->composerJson = '../composer.json';
+                $options->verbose = true;
+                return $options;
+            })()
         ];
 
         yield 'valid options with values, multiple' => [
             null,
-            ['bin/script.php', '--composer-json', '../composer.json', '--config', '../config.php']
-        ];
-
-        yield 'valid options with values using "' => [
-            null,
-            ['bin/script.php', '--composer-json', '"../composer.json"', '--verbose']
+            ['bin/script.php', '--composer-json', '../composer.json', '--config', '../config.php'],
+            (static function (): CliOptions {
+                $options = new CliOptions();
+                $options->composerJson = '../composer.json';
+                $options->config = '../config.php';
+                return $options;
+            })()
         ];
 
         yield 'valid options with values using =' => [
             null,
-            ['bin/script.php', '--composer-json=../composer.json', '--verbose']
-        ];
-
-        yield 'valid options with values using = and "' => [
-            null,
-            ['bin/script.php', '--composer-json="../composer.json"', '--verbose']
+            ['bin/script.php', '--composer-json=../composer.json', '--verbose'],
+            (static function (): CliOptions {
+                $options = new CliOptions();
+                $options->composerJson = '../composer.json';
+                $options->verbose = true;
+                return $options;
+            })()
         ];
 
         yield 'missing argument for option' => [

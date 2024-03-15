@@ -51,7 +51,7 @@ class AnalyserTest extends TestCase
         );
         $result = $detector->run();
 
-        self::assertEquals($expectedResult, $result);
+        $this->assertResultsWithoutUsages($expectedResult, $result);
     }
 
     /**
@@ -445,6 +445,7 @@ class AnalyserTest extends TestCase
         return new AnalysisResult(
             $scannedFiles,
             0.0,
+            [],
             array_filter($args[ErrorType::UNKNOWN_CLASS] ?? []), // @phpstan-ignore-line ignore mixed
             array_filter($args[ErrorType::SHADOW_DEPENDENCY] ?? []), // @phpstan-ignore-line ignore mixed
             array_filter($args[ErrorType::DEV_DEPENDENCY_IN_PROD] ?? []), // @phpstan-ignore-line ignore mixed
@@ -529,7 +530,7 @@ class AnalyserTest extends TestCase
         );
         $result = $detector->run();
 
-        self::assertEquals($this->createAnalysisResult(2, []), $result);
+        $this->assertResultsWithoutUsages($this->createAnalysisResult(2, []), $result);
     }
 
     public function testOtherSymbols(): void
@@ -589,7 +590,7 @@ class AnalyserTest extends TestCase
         );
         $result = $detector->run();
 
-        self::assertEquals($this->createAnalysisResult(1, []), $result);
+        $this->assertResultsWithoutUsages($this->createAnalysisResult(1, []), $result);
     }
 
     /**
@@ -629,7 +630,7 @@ class AnalyserTest extends TestCase
         $result = $detector->run();
 
         // nikic/php-parser not reported as shadow dependency as it exists in the PHPStan's vendor
-        self::assertEquals($this->createAnalysisResult(1, []), $result);
+        $this->assertResultsWithoutUsages($this->createAnalysisResult(1, []), $result);
     }
 
     public function testExplicitFileWithoutExtension(): void
@@ -652,7 +653,7 @@ class AnalyserTest extends TestCase
         );
         $result = $detector->run();
 
-        self::assertEquals($this->createAnalysisResult(1, []), $result);
+        $this->assertResultsWithoutUsages($this->createAnalysisResult(1, []), $result);
     }
 
     private function getStopwatchMock(): Stopwatch
@@ -673,6 +674,17 @@ class AnalyserTest extends TestCase
             ->willReturn(false);
 
         return $classLoader;
+    }
+
+    private function assertResultsWithoutUsages(AnalysisResult $expectedResult, AnalysisResult $result): void
+    {
+        self::assertSame($expectedResult->getScannedFilesCount(), $result->getScannedFilesCount());
+        self::assertEquals($expectedResult->getUnusedIgnores(), $result->getUnusedIgnores());
+        self::assertEquals($expectedResult->getClassmapErrors(), $result->getClassmapErrors());
+        self::assertEquals($expectedResult->getShadowDependencyErrors(), $result->getShadowDependencyErrors());
+        self::assertEquals($expectedResult->getDevDependencyInProductionErrors(), $result->getDevDependencyInProductionErrors());
+        self::assertEquals($expectedResult->getProdDependencyOnlyInDevErrors(), $result->getProdDependencyOnlyInDevErrors());
+        self::assertEquals($expectedResult->getUnusedDependencyErrors(), $result->getUnusedDependencyErrors());
     }
 
 }

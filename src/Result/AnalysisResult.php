@@ -4,6 +4,8 @@ namespace ShipMonk\ComposerDependencyAnalyser\Result;
 
 use ShipMonk\ComposerDependencyAnalyser\Config\Ignore\UnusedClassIgnore;
 use ShipMonk\ComposerDependencyAnalyser\Config\Ignore\UnusedErrorIgnore;
+use function ksort;
+use function sort;
 
 class AnalysisResult
 {
@@ -19,19 +21,24 @@ class AnalysisResult
     private $elapsedTime;
 
     /**
+     * @var array<string, array<string, list<SymbolUsage>>>
+     */
+    private $usages;
+
+    /**
      * @var array<string, list<SymbolUsage>>
      */
-    private $classmapErrors;
+    private $classmapErrors = [];
 
     /**
      * @var array<string, array<string, list<SymbolUsage>>>
      */
-    private $shadowDependencyErrors;
+    private $shadowDependencyErrors = [];
 
     /**
      * @var array<string, array<string, list<SymbolUsage>>>
      */
-    private $devDependencyInProductionErrors;
+    private $devDependencyInProductionErrors = [];
 
     /**
      * @var list<string>
@@ -49,7 +56,8 @@ class AnalysisResult
     private $unusedIgnores;
 
     /**
-     * @param array<string, list<SymbolUsage>> $classmapErrors package => [ usage[] ]
+     * @param array<string, array<string, list<SymbolUsage>>> $usages package => [ classname => usage[] ]
+     * @param array<string, list<SymbolUsage>> $classmapErrors package => usages
      * @param array<string, array<string, list<SymbolUsage>>> $shadowDependencyErrors package => [ classname => usage[] ]
      * @param array<string, array<string, list<SymbolUsage>>> $devDependencyInProductionErrors package => [ classname => usage[] ]
      * @param list<string> $prodDependencyOnlyInDevErrors package[]
@@ -59,6 +67,7 @@ class AnalysisResult
     public function __construct(
         int $scannedFilesCount,
         float $elapsedTime,
+        array $usages,
         array $classmapErrors,
         array $shadowDependencyErrors,
         array $devDependencyInProductionErrors,
@@ -67,11 +76,32 @@ class AnalysisResult
         array $unusedIgnores
     )
     {
+        ksort($usages);
+        ksort($classmapErrors);
+        ksort($shadowDependencyErrors);
+        ksort($devDependencyInProductionErrors);
+        sort($prodDependencyOnlyInDevErrors);
+        sort($unusedDependencyErrors);
+
         $this->scannedFilesCount = $scannedFilesCount;
         $this->elapsedTime = $elapsedTime;
         $this->classmapErrors = $classmapErrors;
-        $this->shadowDependencyErrors = $shadowDependencyErrors;
-        $this->devDependencyInProductionErrors = $devDependencyInProductionErrors;
+
+        foreach ($usages as $package => $classes) {
+            ksort($classes);
+            $this->usages[$package] = $classes;
+        }
+
+        foreach ($shadowDependencyErrors as $package => $classes) {
+            ksort($classes);
+            $this->shadowDependencyErrors[$package] = $classes;
+        }
+
+        foreach ($devDependencyInProductionErrors as $package => $classes) {
+            ksort($classes);
+            $this->devDependencyInProductionErrors[$package] = $classes;
+        }
+
         $this->prodDependencyOnlyInDevErrors = $prodDependencyOnlyInDevErrors;
         $this->unusedDependencyErrors = $unusedDependencyErrors;
         $this->unusedIgnores = $unusedIgnores;
@@ -85,6 +115,14 @@ class AnalysisResult
     public function getElapsedTime(): float
     {
         return $this->elapsedTime;
+    }
+
+    /**
+     * @return array<string, array<string, list<SymbolUsage>>>
+     */
+    public function getUsages(): array
+    {
+        return $this->usages;
     }
 
     /**

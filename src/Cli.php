@@ -4,11 +4,8 @@ namespace ShipMonk\ComposerDependencyAnalyser;
 
 use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidCliException;
 use function array_slice;
-use function getopt;
 use function is_dir;
 use function is_file;
-use function rtrim;
-use function strlen;
 use function strpos;
 use function substr;
 
@@ -16,22 +13,29 @@ class Cli
 {
 
     private const OPTIONS = [
-        'help',
-        'verbose',
-        'ignore-shadow-deps',
-        'ignore-unused-deps',
-        'ignore-dev-in-prod-deps',
-        'ignore-prod-only-in-dev-deps',
-        'ignore-unknown-classes',
-        'composer-json:',
-        'config:'
+        'help' => false,
+        'verbose' => false,
+        'ignore-shadow-deps' => false,
+        'ignore-unused-deps' => false,
+        'ignore-dev-in-prod-deps' => false,
+        'ignore-prod-only-in-dev-deps' => false,
+        'ignore-unknown-classes' => false,
+        'composer-json' => true,
+        'config' => true,
+        'dump-usages' => true,
+        'show-all-usages' => false,
     ];
+
+    /**
+     * @var array<string, bool|string>
+     */
+    private $providedOptions = [];
 
     /**
      * @param list<string> $argv
      * @throws InvalidCliException
      */
-    public function validateArgv(string $cwd, array $argv): void
+    public function __construct(string $cwd, array $argv)
     {
         $ignoreNextArg = false;
         $argsWithoutScript = array_slice($argv, 1);
@@ -59,13 +63,13 @@ class Cli
 
             /** @var string $noDashesArg this is never false as we know it starts with -- */
             $noDashesArg = substr($arg, 2);
-            $optionIndex = $this->getKnownOptionIndex($noDashesArg);
+            $optionName = $this->getKnownOptionName($noDashesArg);
 
-            if ($optionIndex === null) {
+            if ($optionName === null) {
                 throw new InvalidCliException("Unknown option $arg, see --help");
             }
 
-            if ($this->isOptionWithRequiredValue($optionIndex)) {
+            if ($this->isOptionWithRequiredValue($optionName)) {
                 $optionArgument = $this->getOptionArgumentAfterAssign($arg);
 
                 if ($optionArgument === null) { // next $arg is the argument
@@ -75,9 +79,15 @@ class Cli
                     if ($nextArg === false || strpos($nextArg, '-') === 0) {
                         throw new InvalidCliException("Missing argument for $arg, see --help");
                     }
+
+                    $this->providedOptions[$optionName] = $nextArg;
                 } elseif ($optionArgument === '') {
                     throw new InvalidCliException("Missing argument value in $arg, see --help");
+                } else {
+                    $this->providedOptions[$optionName] = $optionArgument;
                 }
+            } else {
+                $this->providedOptions[$optionName] = true;
             }
         }
     }
@@ -93,40 +103,71 @@ class Cli
         return null;
     }
 
-    private function isOptionWithRequiredValue(int $optionIndex): bool
+    private function isOptionWithRequiredValue(string $optionName): bool
     {
-        return strpos(self::OPTIONS[$optionIndex], ':') === strlen(self::OPTIONS[$optionIndex]) - 1;
+        return self::OPTIONS[$optionName];
     }
 
-    private function getKnownOptionIndex(string $option): ?int
+    private function getKnownOptionName(string $option): ?string
     {
-        foreach (self::OPTIONS as $index => $knownOption) {
-            $knownOptionNoColon = rtrim($knownOption, ':');
-
-            if (strpos($option, $knownOptionNoColon) === 0) {
-                return $index;
+        foreach (self::OPTIONS as $knownOption => $needsArgument) {
+            if (strpos($option, $knownOption) === 0) {
+                return $knownOption;
             }
         }
 
         return null;
     }
 
-    /**
-     * @return array{
-     *     help?: bool,
-     *     verbose?: bool,
-     *     ignore-shadow-deps?: bool,
-     *     ignore-unused-deps?: bool,
-     *     ignore-dev-in-prod-deps?: bool,
-     *     ignore-prod-only-in-dev-deps?: bool,
-     *     ignore-unknown-classes?: bool,
-     *     composer-json?: string,
-     *     config?: string
-     * }
-     */
-    public function getProvidedOptions(): array
+    public function getProvidedOptions(): CliOptions
     {
-        return getopt('', self::OPTIONS); // @phpstan-ignore-line assume validation was performed anc $argv is the real one
+        $options = new CliOptions();
+
+        if (isset($this->providedOptions['help'])) {
+            $options->help = true;
+        }
+
+        if (isset($this->providedOptions['verbose'])) {
+            $options->verbose = true;
+        }
+
+        if (isset($this->providedOptions['ignore-shadow-deps'])) {
+            $options->ignoreShadowDeps = true;
+        }
+
+        if (isset($this->providedOptions['ignore-unused-deps'])) {
+            $options->ignoreUnusedDeps = true;
+        }
+
+        if (isset($this->providedOptions['ignore-dev-in-prod-deps'])) {
+            $options->ignoreDevInProdDeps = true;
+        }
+
+        if (isset($this->providedOptions['ignore-prod-only-in-dev-deps'])) {
+            $options->ignoreProdOnlyInDevDeps = true;
+        }
+
+        if (isset($this->providedOptions['ignore-unknown-classes'])) {
+            $options->ignoreUnknownClasses = true;
+        }
+
+        if (isset($this->providedOptions['composer-json'])) {
+            $options->composerJson = $this->providedOptions['composer-json']; // @phpstan-ignore-line type is ensured
+        }
+
+        if (isset($this->providedOptions['config'])) {
+            $options->config = $this->providedOptions['config']; // @phpstan-ignore-line type is ensured
+        }
+
+        if (isset($this->providedOptions['dump-usages'])) {
+            $options->dumpUsages = $this->providedOptions['dump-usages'];  // @phpstan-ignore-line type is ensured
+        }
+
+        if (isset($this->providedOptions['show-all-usages'])) {
+            $options->showAllUsages = true;
+        }
+
+        return $options;
     }
 
 }

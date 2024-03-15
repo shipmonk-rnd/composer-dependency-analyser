@@ -33,9 +33,7 @@ use function get_defined_functions;
 use function implode;
 use function in_array;
 use function is_file;
-use function ksort;
 use function preg_split;
-use function sort;
 use function str_replace;
 use function strlen;
 use function strpos;
@@ -124,6 +122,8 @@ class Analyser
         $usedPackages = [];
         $prodPackagesUsedInProdPath = [];
 
+        $usages = [];
+
         $ignoreList = $this->config->getIgnoreList();
 
         foreach ($this->getUniqueFilePathsToScan() as $filePath => $isDevFilePath) {
@@ -179,6 +179,10 @@ class Analyser
                 }
 
                 $usedPackages[$packageName] = true;
+
+                foreach ($lineNumbers as $lineNumber) {
+                    $usages[$packageName][$usedSymbol][] = new SymbolUsage($filePath, $lineNumber);
+                }
             }
         }
 
@@ -235,15 +239,10 @@ class Analyser
             }
         }
 
-        ksort($classmapErrors);
-        ksort($shadowErrors);
-        ksort($devInProdErrors);
-        sort($prodOnlyInDevErrors);
-        sort($unusedErrors);
-
         return new AnalysisResult(
             $scannedFilesCount,
             $this->stopwatch->stop(),
+            $usages,
             $classmapErrors,
             $shadowErrors,
             $devInProdErrors,
