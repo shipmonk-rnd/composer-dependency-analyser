@@ -89,7 +89,8 @@ This tool reads your `composer.json` and scans all paths listed in `autoload` & 
 
 ## Configuration:
 When a file named `composer-dependency-analyser.php` is located in cwd, it gets loaded automatically.
-The config file must return `ShipMonk\ComposerDependencyAnalyser\Config\Configuration` object.
+The file must return `ShipMonk\ComposerDependencyAnalyser\Config\Configuration` object.
+You can use custom path and filename via `--config` cli option.
 Here is example of what you can do:
 
 ```php
