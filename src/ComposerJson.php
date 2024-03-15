@@ -112,25 +112,17 @@ class ComposerJson
                     }
 
                     foreach ($globPaths as $globPath) {
-                        $result[$this->realpath($globPath)] = $isDev;
+                        $result[Path::realpath($globPath)] = $isDev;
                     }
 
                     continue;
                 }
 
-                $result[$this->realpath($absolutePath)] = $isDev;
+                $result[Path::realpath($absolutePath)] = $isDev;
             }
         }
 
         return $result;
-    }
-
-    /**
-     * @throws InvalidPathException
-     */
-    private function realpath(string $path): string
-    {
-        return Path::realpath($path);
     }
 
     /**
