@@ -148,7 +148,7 @@ EOD;
     {
         $composerJsonPath = $options->composerJson !== null
             ? Path::resolve($this->cwd, $options->composerJson)
-            : ($this->cwd . '/composer.json');
+            : Path::normalize($this->cwd . '/composer.json');
 
         return new ComposerJson($composerJsonPath);
     }

@@ -17,7 +17,6 @@ use function is_file;
 use function json_decode;
 use function json_last_error;
 use function json_last_error_msg;
-use function rtrim;
 use function strpos;
 use const ARRAY_FILTER_USE_KEY;
 use const JSON_ERROR_NONE;
@@ -181,13 +180,11 @@ class ComposerJson
 
     private function resolveComposerAutoloadPath(string $basePath, string $vendorDir): string
     {
-        $vendorDir = rtrim($vendorDir, '/');
-
         if (Path::isAbsolute($vendorDir)) {
-            return $vendorDir . '/autoload.php';
+            return Path::normalize($vendorDir . '/autoload.php');
         }
 
-        return $basePath . '/' . $vendorDir . '/autoload.php';
+        return Path::normalize($basePath . '/' . $vendorDir . '/autoload.php');
     }
 
 }

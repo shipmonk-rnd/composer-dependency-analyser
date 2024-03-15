@@ -7,6 +7,8 @@ use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
 use ShipMonk\ComposerDependencyAnalyser\Config\PathToScan;
 use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidCliException;
 use function dirname;
+use function strtr;
+use const DIRECTORY_SEPARATOR;
 
 class InitializerTest extends TestCase
 {
@@ -43,7 +45,7 @@ class InitializerTest extends TestCase
         $composerJson = $initializer->initComposerJson($options);
 
         self::assertSame(
-            $cwd . '/custom-vendor/autoload.php',
+            $cwd . strtr('/custom-vendor/autoload.php', '/', DIRECTORY_SEPARATOR),
             $composerJson->composerAutoloadPath
         );
         self::assertSame(
@@ -69,7 +71,7 @@ class InitializerTest extends TestCase
         $composerJson = $initializer->initComposerJson($options);
 
         self::assertSame(
-            dirname($composerJsonPath) . '/custom-vendor/autoload.php',
+            dirname($composerJsonPath) . strtr('/custom-vendor/autoload.php', '/', DIRECTORY_SEPARATOR),
             $composerJson->composerAutoloadPath
         );
         self::assertSame(
