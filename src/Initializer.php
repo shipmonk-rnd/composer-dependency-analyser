@@ -85,7 +85,9 @@ EOD;
             $this->printer->printLine('<gray>Using config</gray> ' . $configPath);
 
             try {
-                $config = require $configPath;
+                $config = (static function () use ($configPath) {
+                    return require $configPath;
+                })();
             } catch (Throwable $e) {
                 throw new InvalidConfigException(get_class($e) . " in {$e->getFile()}:{$e->getLine()}\n > " . $e->getMessage(), 0, $e);
             }
