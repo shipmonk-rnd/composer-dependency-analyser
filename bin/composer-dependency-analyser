@@ -6,7 +6,6 @@ use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidCliException;
 use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidConfigException;
 use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidPathException;
 use ShipMonk\ComposerDependencyAnalyser\Initializer;
-use ShipMonk\ComposerDependencyAnalyser\Path;
 use ShipMonk\ComposerDependencyAnalyser\Printer;
 use ShipMonk\ComposerDependencyAnalyser\Result\ResultFormatter;
 use ShipMonk\ComposerDependencyAnalyser\Stopwatch;
