@@ -20,6 +20,7 @@ jobs:
                 with:
                     php-version: 8.2
                     ini-values: phar.readonly=0
+                    ini-file: development
             -
                 name: Install dependencies
                 run: composer install --no-progress --prefer-dist --no-interaction
@@ -46,6 +47,7 @@ jobs:
                 with:
                     php-version: ${{ matrix.php-version }}
                     ini-values: phar.readonly=0
+                    ini-file: development
             -
                 name: Update dependencies
                 run: composer update --no-progress --${{ matrix.dependency-version }} --prefer-dist --no-interaction
