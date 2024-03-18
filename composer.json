@@ -20,7 +20,8 @@
     ],
     "require": {
         "php": "^7.2 || ^8.0",
-        "ext-json": "*"
+        "ext-json": "*",
+        "ext-tokenizer": "*"
     },
     "require-dev": {
         "editorconfig-checker/editorconfig-checker": "^10.3.0",
