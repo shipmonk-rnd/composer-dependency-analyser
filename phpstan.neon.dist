@@ -15,6 +15,7 @@ parameters:
         analyseAndScan:
             - tests/data/not-autoloaded/*
     tmpDir: cache/phpstan/
+    reportAnyTypeWideningInVarTag: true
     checkMissingCallableSignature: true
     checkUninitializedProperties: true
     checkBenevolentUnionTypes: true
