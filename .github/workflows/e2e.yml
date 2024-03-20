@@ -53,7 +53,7 @@ jobs:
             -
                 name: Install ${{ matrix.name }} dependencies
                 working-directory: ${{ matrix.name }}
-                run: composer install --no-progress --prefer-dist --no-interaction
+                run: composer install --no-progress --prefer-dist --no-interaction --ignore-platform-reqs
 
             -
                 name: Run analyser
