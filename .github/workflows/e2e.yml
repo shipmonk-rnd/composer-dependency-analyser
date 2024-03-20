@@ -16,6 +16,14 @@ jobs:
                         repo: shipmonk-rnd/phpstan-rules
                         name: shipmonk-rules
                         args: ''
+                    -
+                        repo: qossmic/deptrac-src
+                        name: deptrac
+                        args: ''
+                    -
+                        repo: kreait/firebase-php
+                        name: firebase
+                        args: ''
             fail-fast: false
         steps:
             -
