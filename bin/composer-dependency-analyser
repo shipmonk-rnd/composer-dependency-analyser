@@ -42,7 +42,7 @@ try {
     $analyser = new Analyser($stopwatch, $classLoaders, $configuration, $composerJson->dependencies);
     $result = $analyser->run();
 
-    $formatter = new ResultFormatter($cwd, $printer);
+    $formatter = $initializer->initFormatter($options);
     $exitCode = $formatter->format($result, $options, $configuration);
 
 } catch (

@@ -8,6 +8,9 @@ use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
 use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidCliException;
 use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidConfigException;
 use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidPathException;
+use ShipMonk\ComposerDependencyAnalyser\Result\FormatterInterface;
+use ShipMonk\ComposerDependencyAnalyser\Result\JunitFormatter;
+use ShipMonk\ComposerDependencyAnalyser\Result\ResultFormatter;
 use Throwable;
 use function count;
 use function get_class;
@@ -208,6 +211,17 @@ EOD;
         }
 
         return $cliOptions;
+    }
+
+    public function initFormatter(CliOptions $options): FormatterInterface
+    {
+        switch ($options->format) {
+            case 'junit':
+                return new JunitFormatter();
+
+            default:
+                return new ResultFormatter($this->cwd, $this->printer);
+        }
     }
 
 }
