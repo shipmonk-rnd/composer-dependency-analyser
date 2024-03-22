@@ -74,7 +74,7 @@ class ComposerJsonTest extends TestCase
         chdir(__DIR__);
 
         $generatedComposerJson = sys_get_temp_dir() . '/vendor-beside/composer.json';
-        mkdir(dirname($generatedComposerJson), 0777, true);
+        @mkdir(dirname($generatedComposerJson), 0777, true); // @ - directory may already exist
         file_put_contents($generatedComposerJson, json_encode([
             'require' => [
                 'nette/utils' => '^3.0',
