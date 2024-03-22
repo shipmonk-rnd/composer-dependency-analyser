@@ -35,6 +35,7 @@ Options:
     --composer-json <path>      Provide custom path to composer.json
     --config <path>             Provide path to php configuration file
                                 (must return \ShipMonk\ComposerDependencyAnalyser\Config\Configuration instance)
+    --format <format>           i.e. default or junit, can be omitted
 
 Ignore options:
     (or use --config for better granularity)
@@ -217,7 +218,7 @@ EOD;
     {
         switch ($options->format) {
             case 'junit':
-                return new JunitFormatter();
+                return new JunitFormatter($this->cwd, $this->printer);
 
             default:
                 return new ResultFormatter($this->cwd, $this->printer);
