@@ -18,7 +18,7 @@ use function substr;
 use const PHP_EOL;
 use const PHP_INT_MAX;
 
-class ResultFormatter
+class ResultFormatter implements FormatterInterface
 {
 
     public const VERBOSE_SHOWN_USAGES = 3;
@@ -303,7 +303,7 @@ class ResultFormatter
         $this->printLine("<gray>($subtitle)</gray>" . PHP_EOL);
     }
 
-    public function printLine(string $string): void
+    private function printLine(string $string): void
     {
         $this->printer->printLine($string);
     }
