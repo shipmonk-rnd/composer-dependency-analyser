@@ -27,6 +27,10 @@ jobs:
             fail-fast: false
         steps:
             -
+                name: Install jq
+                run: sudo apt install jq
+
+            -
                 name: Checkout code
                 uses: actions/checkout@v4
                 with:
@@ -49,6 +53,12 @@ jobs:
                 name: Install analyser dependencies
                 working-directory: analyser
                 run: composer install --no-progress --prefer-dist --no-interaction
+
+            -
+                name: Disable autoloader prepend
+                working-directory: ${{ matrix.name }}
+                run: |
+                    echo "$(jq --indent 4 '.config += {"prepend-autoloader": false}' composer.json)" > composer.json
 
             -
                 name: Install ${{ matrix.name }} dependencies
