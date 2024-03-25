@@ -20,10 +20,8 @@ use const ENT_COMPAT;
 use const ENT_XML1;
 use const PHP_INT_MAX;
 
-class JunitFormatter implements FormatterInterface
+class JunitFormatter implements ResultFormatter
 {
-
-    public const VERBOSE_SHOWN_USAGES = 3;
 
     /**
      * @var string

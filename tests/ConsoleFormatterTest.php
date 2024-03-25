@@ -8,20 +8,20 @@ use ShipMonk\ComposerDependencyAnalyser\Config\Configuration;
 use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
 use ShipMonk\ComposerDependencyAnalyser\Config\Ignore\UnusedErrorIgnore;
 use ShipMonk\ComposerDependencyAnalyser\Result\AnalysisResult;
-use ShipMonk\ComposerDependencyAnalyser\Result\ResultFormatter;
+use ShipMonk\ComposerDependencyAnalyser\Result\ConsoleFormatter;
 use ShipMonk\ComposerDependencyAnalyser\Result\SymbolUsage;
 use function ob_get_clean;
 use function ob_start;
 use function preg_replace;
 use function str_replace;
 
-class ResultFormatterTest extends TestCase
+class ConsoleFormatterTest extends TestCase
 {
 
     public function testPrintResult(): void
     {
         // editorconfig-checker-disable
-        $formatter = new ResultFormatter('/app', new Printer());
+        $formatter = new ConsoleFormatter('/app', new Printer());
 
         $noIssuesOutput = $this->captureAndNormalizeOutput(static function () use ($formatter): void {
             $formatter->format(new AnalysisResult(2, 0.123, [], [], [], [], [], [], []), new CliOptions(), new Configuration());

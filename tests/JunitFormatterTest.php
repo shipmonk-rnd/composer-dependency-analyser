@@ -19,7 +19,6 @@ class JunitFormatterTest extends TestCase
 
     public function testPrintResult(): void
     {
-        // editorconfig-checker-disable
         $formatter = new JunitFormatter('/app', new Printer());
 
         $noIssuesOutput = $this->captureAndNormalizeOutput(static function () use ($formatter): void {
@@ -85,7 +84,6 @@ OUT;
 
         self::assertSame($this->normalizeEol($expectedRegularOutput), $regularOutput);
         self::assertSame($this->normalizeEol($expectedVerboseOutput), $verboseOutput);
-        // editorconfig-checker-enable
     }
 
     /**
