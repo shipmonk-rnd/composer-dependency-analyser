@@ -80,7 +80,7 @@ This tool reads your `composer.json` and scans all paths listed in `autoload` & 
 - `--help` display usage & cli options
 - `--verbose` to see more example classes & usages
 - `--show-all-usages` to see all usages
-- `--format` to use different output format, i.e. junit (supported is junit/default).
+- `--format` to use different output format, available are: console (default), junit
 - `--ignore-unknown-classes` to globally ignore unknown classes
 - `--ignore-shadow-deps` to globally ignore shadow dependencies
 - `--ignore-unused-deps` to globally ignore unused dependencies

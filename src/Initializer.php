@@ -8,7 +8,7 @@ use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
 use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidCliException;
 use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidConfigException;
 use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidPathException;
-use ShipMonk\ComposerDependencyAnalyser\Result\FormatterInterface;
+use ShipMonk\ComposerDependencyAnalyser\Result\ConsoleFormatter;
 use ShipMonk\ComposerDependencyAnalyser\Result\JunitFormatter;
 use ShipMonk\ComposerDependencyAnalyser\Result\ResultFormatter;
 use Throwable;
@@ -214,14 +214,21 @@ EOD;
         return $cliOptions;
     }
 
-    public function initFormatter(CliOptions $options): FormatterInterface
+    /**
+     * @throws InvalidConfigException
+     */
+    public function initFormatter(CliOptions $options): ResultFormatter
     {
         switch ($options->format) {
             case 'junit':
                 return new JunitFormatter($this->cwd, $this->printer);
 
+            case 'console':
+            case null:
+                return new ConsoleFormatter($this->cwd, $this->printer);
+
             default:
-                return new ResultFormatter($this->cwd, $this->printer);
+                throw new InvalidConfigException("Invalid format option provided, allowed are 'console' or 'junit'.");
         }
     }
 
