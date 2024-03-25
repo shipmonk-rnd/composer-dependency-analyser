@@ -35,7 +35,7 @@ Options:
     --composer-json <path>      Provide custom path to composer.json
     --config <path>             Provide path to php configuration file
                                 (must return \ShipMonk\ComposerDependencyAnalyser\Config\Configuration instance)
-    --format <format>           i.e. default or junit, can be omitted
+    --format <format>           Change output format. Available values: console (default), junit
 
 Ignore options:
     (or use --config for better granularity)
