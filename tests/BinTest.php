@@ -23,6 +23,8 @@ class BinTest extends TestCase
         $okOutput = 'No composer issues found';
         $helpOutput = 'Usage:';
 
+        $junitOutput = '<?xml version="1.0" encoding="UTF-8"?><testsuites></testsuites>';
+
         $this->runCommand('php bin/composer-dependency-analyser', $rootDir, 0, $okOutput);
         $this->runCommand('php bin/composer-dependency-analyser --verbose', $rootDir, 0, $okOutput);
         $this->runCommand('php ../bin/composer-dependency-analyser', $testsDir, 255, $noComposerJsonError);
@@ -33,6 +35,8 @@ class BinTest extends TestCase
         $this->runCommand('php bin/composer-dependency-analyser --composer-json=README.md', $rootDir, 255, $parseError);
         $this->runCommand('php ../bin/composer-dependency-analyser --composer-json=composer.json', $testsDir, 255, $noComposerJsonError);
         $this->runCommand('php ../bin/composer-dependency-analyser --composer-json=../composer.json --config=../composer-dependency-analyser.php', $testsDir, 0, $okOutput);
+        $this->runCommand('php bin/composer-dependency-analyser --composer-json=composer.json --format=console', $rootDir, 0, $okOutput);
+        $this->runCommand('php bin/composer-dependency-analyser --composer-json=composer.json --format=junit', $rootDir, 0, $junitOutput);
     }
 
     private function runCommand(

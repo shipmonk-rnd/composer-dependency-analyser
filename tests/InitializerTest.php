@@ -6,6 +6,9 @@ use PHPUnit\Framework\TestCase;
 use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
 use ShipMonk\ComposerDependencyAnalyser\Config\PathToScan;
 use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidCliException;
+use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidConfigException;
+use ShipMonk\ComposerDependencyAnalyser\Result\ConsoleFormatter;
+use ShipMonk\ComposerDependencyAnalyser\Result\JunitFormatter;
 use function dirname;
 use function strtr;
 use const DIRECTORY_SEPARATOR;
@@ -108,6 +111,29 @@ class InitializerTest extends TestCase
 
         $this->expectException(InvalidCliException::class);
         $initializer->initCliOptions(__DIR__, ['script.php', '--help']);
+    }
+
+    public function testInitFormatter(): void
+    {
+        $printer = $this->createMock(Printer::class);
+
+        $initializer = new Initializer(__DIR__, $printer);
+
+        $optionsNoFormat = new CliOptions();
+        self::assertInstanceOf(ConsoleFormatter::class, $initializer->initFormatter($optionsNoFormat));
+
+        $optionsFormatConsole = new CliOptions();
+        $optionsFormatConsole->format = 'console';
+        self::assertInstanceOf(ConsoleFormatter::class, $initializer->initFormatter($optionsFormatConsole));
+
+        $optionsFormatJunit = new CliOptions();
+        $optionsFormatJunit->format = 'junit';
+        self::assertInstanceOf(JunitFormatter::class, $initializer->initFormatter($optionsFormatJunit));
+
+        self::expectException(InvalidConfigException::class);
+        $optionsFormatUnknown = new CliOptions();
+        $optionsFormatUnknown->format = 'unknown';
+        $initializer->initFormatter($optionsFormatUnknown);
     }
 
 }

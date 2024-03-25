@@ -26,6 +26,11 @@ class Printer
         echo $this->colorize($string) . PHP_EOL;
     }
 
+    public function print(string $string): void
+    {
+        echo $this->colorize($string);
+    }
+
     private function colorize(string $string): string
     {
         return str_replace(array_keys(self::COLORS), array_values(self::COLORS), $string);

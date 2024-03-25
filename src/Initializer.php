@@ -8,6 +8,9 @@ use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
 use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidCliException;
 use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidConfigException;
 use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidPathException;
+use ShipMonk\ComposerDependencyAnalyser\Result\ConsoleFormatter;
+use ShipMonk\ComposerDependencyAnalyser\Result\JunitFormatter;
+use ShipMonk\ComposerDependencyAnalyser\Result\ResultFormatter;
 use Throwable;
 use function count;
 use function get_class;
@@ -32,6 +35,7 @@ Options:
     --composer-json <path>      Provide custom path to composer.json
     --config <path>             Provide path to php configuration file
                                 (must return \ShipMonk\ComposerDependencyAnalyser\Config\Configuration instance)
+    --format <format>           Change output format. Available values: console (default), junit
 
 Ignore options:
     (or use --config for better granularity)
@@ -208,6 +212,24 @@ EOD;
         }
 
         return $cliOptions;
+    }
+
+    /**
+     * @throws InvalidConfigException
+     */
+    public function initFormatter(CliOptions $options): ResultFormatter
+    {
+        switch ($options->format) {
+            case 'junit':
+                return new JunitFormatter($this->cwd, $this->printer);
+
+            case 'console':
+            case null:
+                return new ConsoleFormatter($this->cwd, $this->printer);
+
+            default:
+                throw new InvalidConfigException("Invalid format option provided, allowed are 'console' or 'junit'.");
+        }
     }
 
 }

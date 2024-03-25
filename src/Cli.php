@@ -24,6 +24,7 @@ class Cli
         'config' => true,
         'dump-usages' => true,
         'show-all-usages' => false,
+        'format' => true,
     ];
 
     /**
@@ -165,6 +166,10 @@ class Cli
 
         if (isset($this->providedOptions['show-all-usages'])) {
             $options->showAllUsages = true;
+        }
+
+        if (isset($this->providedOptions['format'])) {
+            $options->format = $this->providedOptions['format']; // @phpstan-ignore-line type is ensured
         }
 
         return $options;
