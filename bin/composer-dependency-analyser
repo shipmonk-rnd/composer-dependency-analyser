@@ -1,11 +1,13 @@
 #!/usr/bin/env php
 <?php declare(strict_types=1);
 
+use Composer\InstalledVersions;
 use ShipMonk\ComposerDependencyAnalyser\Analyser;
 use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidCliException;
 use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidConfigException;
 use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidPathException;
 use ShipMonk\ComposerDependencyAnalyser\Initializer;
+use ShipMonk\ComposerDependencyAnalyser\InstallPathDetector;
 use ShipMonk\ComposerDependencyAnalyser\Printer;
 use ShipMonk\ComposerDependencyAnalyser\Result\ResultFormatter;
 use ShipMonk\ComposerDependencyAnalyser\Stopwatch;
@@ -29,6 +31,7 @@ spl_autoload_register(static function (string $class) use ($psr4Prefix): void {
 $cwd = getcwd();
 
 $printer = new Printer();
+$installPathDetector = new InstallPathDetector();
 $initializer = new Initializer($cwd, $printer);
 $stopwatch = new Stopwatch();
 
@@ -39,7 +42,7 @@ try {
     $configuration = $initializer->initConfiguration($options, $composerJson);
     $classLoaders = $initializer->initComposerClassLoaders();
 
-    $analyser = new Analyser($stopwatch, $classLoaders, $configuration, $composerJson->dependencies);
+    $analyser = new Analyser($stopwatch, $installPathDetector, $classLoaders, $configuration, $composerJson->dependencies);
     $result = $analyser->run();
 
     $formatter = new ResultFormatter($cwd, $printer);

@@ -67,6 +67,13 @@ class Analyser
     private $classmap = [];
 
     /**
+     * package => realpath
+     *
+     * @var array<string, string>
+     */
+    private $packageRealInstallPaths = [];
+
+    /**
      * package name => is dev dependency
      *
      * @var array<string, bool>
@@ -86,6 +93,7 @@ class Analyser
      */
     public function __construct(
         Stopwatch $stopwatch,
+        InstallPathDetector $installPathDetector,
         array $classLoaders,
         Configuration $config,
         array $composerJsonDependencies
@@ -98,6 +106,14 @@ class Analyser
 
         foreach ($classLoaders as $vendorDir => $classLoader) {
             $this->classLoaders[$vendorDir] = $classLoader;
+        }
+
+        foreach ($this->composerJsonDependencies as $packageName => $_) {
+            $installedRealPath = $installPathDetector->getRealInstallPath($packageName);
+
+            if ($installedRealPath !== null) {
+                $this->packageRealInstallPaths[$packageName] = $installedRealPath;
+            }
         }
     }
 
@@ -293,6 +309,12 @@ class Analyser
             }
         }
 
+        foreach ($this->packageRealInstallPaths as $packageName => $packageRealPath) {
+            if (strpos($realPath, $packageRealPath) === 0) {
+                return $packageName;
+            }
+        }
+
         throw new LogicException("Path '$realPath' not found in vendor. This method can be called only when isVendorPath(\$realPath) returns true");
     }
 
@@ -342,6 +364,12 @@ class Analyser
     {
         foreach ($this->classLoaders as $vendorDir => $_) {
             if (strpos($realPath, $vendorDir) === 0) {
+                return true;
+            }
+        }
+
+        foreach ($this->packageRealInstallPaths as $packageRealPath) {
+            if (strpos($realPath, $packageRealPath) === 0) {
                 return true;
             }
         }

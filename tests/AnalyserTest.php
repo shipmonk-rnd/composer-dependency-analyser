@@ -45,6 +45,7 @@ class AnalyserTest extends TestCase
 
         $detector = new Analyser(
             $this->getStopwatchMock(),
+            $this->getInstallPathDetectorMock(),
             [$vendorDir => $this->getClassLoaderMock()],
             $config,
             $dependencies
@@ -465,6 +466,7 @@ class AnalyserTest extends TestCase
 
         $detector = new Analyser(
             $this->getStopwatchMock(),
+            $this->getInstallPathDetectorMock(),
             [__DIR__ => $this->getClassLoaderMock()],
             $config,
             []
@@ -492,6 +494,7 @@ class AnalyserTest extends TestCase
 
         $detector = new Analyser(
             $this->getStopwatchMock(),
+            $this->getInstallPathDetectorMock(),
             [__DIR__ . '/data/autoloaded/vendor' => $this->getClassLoaderMock()],
             $config,
             []
@@ -521,6 +524,7 @@ class AnalyserTest extends TestCase
 
         $detector = new Analyser(
             $this->getStopwatchMock(),
+            $this->getInstallPathDetectorMock(),
             [$vendorDir => $this->getClassLoaderMock()],
             $config,
             [
@@ -547,6 +551,7 @@ class AnalyserTest extends TestCase
 
         $detector = new Analyser(
             $this->getStopwatchMock(),
+            $this->getInstallPathDetectorMock(),
             [$vendorDir => $this->getClassLoaderMock()],
             $config,
             []
@@ -582,6 +587,7 @@ class AnalyserTest extends TestCase
 
         $detector = new Analyser(
             $this->getStopwatchMock(),
+            $this->getInstallPathDetectorMock(),
             [$vendorDir => $this->getClassLoaderMock()],
             $config,
             [
@@ -621,6 +627,7 @@ class AnalyserTest extends TestCase
 
         $detector = new Analyser(
             $this->getStopwatchMock(),
+            $this->getInstallPathDetectorMock(),
             $classLoaders,
             $config,
             [
@@ -645,6 +652,7 @@ class AnalyserTest extends TestCase
 
         $detector = new Analyser(
             $this->getStopwatchMock(),
+            $this->getInstallPathDetectorMock(),
             [$vendorDir => $this->getClassLoaderMock()],
             $config,
             [
@@ -662,6 +670,16 @@ class AnalyserTest extends TestCase
         $stopwatch->expects(self::once())
             ->method('stop')
             ->willReturn(0.0);
+
+        return $stopwatch;
+    }
+
+    private function getInstallPathDetectorMock(): InstallPathDetector
+    {
+        $stopwatch = $this->createMock(InstallPathDetector::class);
+        $stopwatch->expects(self::any())
+            ->method('getRealInstallPath')
+            ->willReturn(null);
 
         return $stopwatch;
     }
