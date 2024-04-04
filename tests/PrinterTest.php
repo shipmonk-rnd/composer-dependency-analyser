@@ -16,4 +16,12 @@ class PrinterTest extends TestCase
         $printer->printLine('Hello, <red>world</red>!');
     }
 
+    public function testPrint(): void
+    {
+        $printer = new Printer();
+
+        $this->expectOutputString("Hello, \033[31mworld\033[0m!");
+        $printer->print('Hello, <red>world</red>!');
+    }
+
 }

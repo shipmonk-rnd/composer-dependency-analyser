@@ -8,20 +8,18 @@ use ShipMonk\ComposerDependencyAnalyser\Config\Configuration;
 use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
 use ShipMonk\ComposerDependencyAnalyser\Config\Ignore\UnusedErrorIgnore;
 use ShipMonk\ComposerDependencyAnalyser\Result\AnalysisResult;
-use ShipMonk\ComposerDependencyAnalyser\Result\ResultFormatter;
+use ShipMonk\ComposerDependencyAnalyser\Result\JunitFormatter;
 use ShipMonk\ComposerDependencyAnalyser\Result\SymbolUsage;
 use function ob_get_clean;
 use function ob_start;
-use function preg_replace;
 use function str_replace;
 
-class ResultFormatterTest extends TestCase
+class JunitFormatterTest extends TestCase
 {
 
     public function testPrintResult(): void
     {
-        // editorconfig-checker-disable
-        $formatter = new ResultFormatter('/app', new Printer());
+        $formatter = new JunitFormatter('/app', new Printer());
 
         $noIssuesOutput = $this->captureAndNormalizeOutput(static function () use ($formatter): void {
             $formatter->format(new AnalysisResult(2, 0.123, [], [], [], [], [], [], []), new CliOptions(), new Configuration());
@@ -31,25 +29,15 @@ class ResultFormatterTest extends TestCase
         });
 
         $expectedNoIssuesOutput = <<<'OUT'
-
-No composer issues found
-(scanned 2 files in 0.123 s)
-
-
+<?xml version="1.0" encoding="UTF-8"?><testsuites></testsuites>
 OUT;
 
         $expectedNoIssuesButWarningsOutput = <<<'OUT'
-
-Some ignored issues never occurred:
- • Error 'shadow-dependency' was globally ignored, but it was never applied.
-
-(scanned 2 files in 0.123 s)
-
-
+<?xml version="1.0" encoding="UTF-8"?><testsuites><testsuite name="unused-ignore" failures="1"><testcase name="shadow-dependency"><failure>'shadow-dependency' was globally ignored, but it was never applied.</failure></testcase></testsuite></testsuites>
 OUT;
 
-        self::assertSame($this->normalizeEol($expectedNoIssuesOutput), $this->removeColors($noIssuesOutput));
-        self::assertSame($this->normalizeEol($expectedNoIssuesButWarningsOutput), $this->removeColors($noIssuesButUnusedIgnores));
+        self::assertSame($this->normalizeEol($expectedNoIssuesOutput), $noIssuesOutput);
+        self::assertSame($this->normalizeEol($expectedNoIssuesButWarningsOutput), $noIssuesButUnusedIgnores);
 
         $analysisResult = new AnalysisResult(
             10,
@@ -88,110 +76,14 @@ OUT;
         });
 
         $expectedRegularOutput = <<<'OUT'
-
-Unknown classes!
-(unable to autoload those, so we cannot check them)
-
-  • Unknown\Thing
-    in app/init.php:1093
-
-
-
-Found shadow dependencies!
-(those are used, but not listed as dependency in composer.json)
-
-  • shadow/another
-      e.g. Another\Controller in src/bootstrap.php:173
-
-  • shadow/package
-      e.g. Forth\Provider in src/bootstrap.php:873 (+ 6 more)
-
-
-
-Found dev dependencies in production code!
-(those should probably be moved to "require" section in composer.json)
-
-  • some/package
-      e.g. Another\Command in src/ProductGenerator.php:28
-
-
-
-Found prod dependencies used only in dev paths!
-(those should probably be moved to "require-dev" section in composer.json)
-
-  • misplaced/package
-
-
-Found unused dependencies!
-(those are listed in composer.json, but no usage was found in scanned paths)
-
-  • dead/package
-
-(scanned 10 files in 0.123 s)
-
-
+<?xml version="1.0" encoding="UTF-8"?><testsuites><testsuite name="unknown classes" failures="1"><testcase name="Unknown\Thing"><failure>in app/init.php:1093</failure></testcase></testsuite><testsuite name="shadow dependencies" failures="2"><testcase name="shadow/another"><failure>e.g. Another\Controller in src/bootstrap.php:173</failure></testcase><testcase name="shadow/package"><failure>e.g. Forth\Provider in src/bootstrap.php:873 (+ 6 more)</failure></testcase></testsuite><testsuite name="dev dependencies in production code" failures="1"><testcase name="some/package"><failure>e.g. Another\Command in src/ProductGenerator.php:28</failure></testcase></testsuite><testsuite name="prod dependencies used only in dev paths" failures="1"><testcase name="misplaced/package"><failure></failure></testcase></testsuite><testsuite name="unused dependencies" failures="1"><testcase name="dead/package"><failure></failure></testcase></testsuite></testsuites>
 OUT;
         $expectedVerboseOutput = <<<'OUT'
-
-Unknown classes!
-(unable to autoload those, so we cannot check them)
-
-  • Unknown\Thing
-      app/init.php:1093
-
-
-
-Found shadow dependencies!
-(those are used, but not listed as dependency in composer.json)
-
-  • shadow/another
-      Another\Controller
-        src/bootstrap.php:173
-  • shadow/package
-      Forth\Provider
-        src/bootstrap.php:873
-      Shadow\Comparator
-        src/Printer.php:25
-      Shadow\Utils
-        src/Utils.php:19
-        src/Utils.php:22
-        src/Application.php:128
-        + 1 more
-      + 1 more class
-
-
-Found dev dependencies in production code!
-(those should probably be moved to "require" section in composer.json)
-
-  • some/package
-      Another\Command
-        src/ProductGenerator.php:28
-
-
-Found prod dependencies used only in dev paths!
-(those should probably be moved to "require-dev" section in composer.json)
-
-  • misplaced/package
-
-
-Found unused dependencies!
-(those are listed in composer.json, but no usage was found in scanned paths)
-
-  • dead/package
-
-(scanned 10 files in 0.123 s)
-
-
+<?xml version="1.0" encoding="UTF-8"?><testsuites><testsuite name="unknown classes" failures="1"><testcase name="Unknown\Thing"><failure>app/init.php:1093</failure></testcase></testsuite><testsuite name="shadow dependencies" failures="2"><testcase name="shadow/another"><failure>Another\Controller\n  src/bootstrap.php:173</failure></testcase><testcase name="shadow/package"><failure>Forth\Provider\n  src/bootstrap.php:873\nShadow\Comparator\n  src/Printer.php:25\nShadow\Utils\n  src/Utils.php:19\n  src/Utils.php:22\n  src/Application.php:128\n  + 1 more\n  + 1 more class</failure></testcase></testsuite><testsuite name="dev dependencies in production code" failures="1"><testcase name="some/package"><failure>Another\Command\n  src/ProductGenerator.php:28</failure></testcase></testsuite><testsuite name="prod dependencies used only in dev paths" failures="1"><testcase name="misplaced/package"><failure></failure></testcase></testsuite><testsuite name="unused dependencies" failures="1"><testcase name="dead/package"><failure></failure></testcase></testsuite></testsuites>
 OUT;
 
-        self::assertSame($this->normalizeEol($expectedRegularOutput), $this->removeColors($regularOutput));
-        self::assertSame($this->normalizeEol($expectedVerboseOutput), $this->removeColors($verboseOutput));
-        // editorconfig-checker-enable
-    }
-
-    private function removeColors(string $output): string
-    {
-        return (string) preg_replace('#\\x1b[[][^A-Za-z]*[A-Za-z]#', '', $output);
+        self::assertSame($this->normalizeEol($expectedRegularOutput), $regularOutput);
+        self::assertSame($this->normalizeEol($expectedVerboseOutput), $verboseOutput);
     }
 
     /**

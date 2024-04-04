@@ -7,7 +7,6 @@ use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidConfigException;
 use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidPathException;
 use ShipMonk\ComposerDependencyAnalyser\Initializer;
 use ShipMonk\ComposerDependencyAnalyser\Printer;
-use ShipMonk\ComposerDependencyAnalyser\Result\ResultFormatter;
 use ShipMonk\ComposerDependencyAnalyser\Stopwatch;
 
 error_reporting(E_ALL);
@@ -42,7 +41,7 @@ try {
     $analyser = new Analyser($stopwatch, $classLoaders, $configuration, $composerJson->dependencies);
     $result = $analyser->run();
 
-    $formatter = new ResultFormatter($cwd, $printer);
+    $formatter = $initializer->initFormatter($options);
     $exitCode = $formatter->format($result, $options, $configuration);
 
 } catch (

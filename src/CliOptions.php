@@ -60,4 +60,9 @@ class CliOptions
      */
     public $showAllUsages = null;
 
+    /**
+     * @var string|null
+     */
+    public $format = null;
+
 }
