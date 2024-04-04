@@ -24,6 +24,10 @@ jobs:
                         repo: kreait/firebase-php
                         name: firebase
                         args: ''
+                    -
+                        repo: rectorphp/rector-src
+                        name: rector
+                        args: ''
             fail-fast: false
         steps:
             -
