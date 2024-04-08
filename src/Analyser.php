@@ -10,13 +10,13 @@ use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use ReflectionClass;
 use ReflectionException;
+use ReflectionFunction;
 use ShipMonk\ComposerDependencyAnalyser\Config\Configuration;
 use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
 use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidPathException;
 use ShipMonk\ComposerDependencyAnalyser\Result\AnalysisResult;
 use ShipMonk\ComposerDependencyAnalyser\Result\SymbolUsage;
 use UnexpectedValueException;
-use function array_change_key_case;
 use function array_diff;
 use function array_filter;
 use function array_key_exists;
@@ -30,13 +30,13 @@ use function get_defined_constants;
 use function get_defined_functions;
 use function in_array;
 use function is_file;
+use function is_string;
 use function str_replace;
 use function strlen;
 use function strpos;
 use function strtolower;
 use function substr;
 use function trim;
-use const CASE_LOWER;
 use const DIRECTORY_SEPARATOR;
 
 class Analyser
@@ -81,6 +81,13 @@ class Analyser
     private $ignoredSymbols;
 
     /**
+     * function name => path
+     *
+     * @var array<string, string>
+     */
+    private $definedFunctions = [];
+
+    /**
      * @param array<string, ClassLoader> $classLoaders vendorDir => ClassLoader (e.g. result of \Composer\Autoload\ClassLoader::getRegisteredLoaders())
      * @param array<string, bool> $composerJsonDependencies package name => is dev dependency
      */
@@ -94,7 +101,8 @@ class Analyser
         $this->stopwatch = $stopwatch;
         $this->config = $config;
         $this->composerJsonDependencies = $composerJsonDependencies;
-        $this->ignoredSymbols = $this->getIgnoredSymbols();
+
+        $this->initExistingSymbols();
 
         foreach ($classLoaders as $vendorDir => $classLoader) {
             $this->classLoaders[$vendorDir] = $classLoader;
@@ -109,7 +117,8 @@ class Analyser
         $this->stopwatch->start();
 
         $scannedFilesCount = 0;
-        $classmapErrors = [];
+        $unknownClassErrors = [];
+        $unknownFunctionErrors = [];
         $shadowErrors = [];
         $devInProdErrors = [];
         $prodOnlyInDevErrors = [];
@@ -125,59 +134,69 @@ class Analyser
         foreach ($this->getUniqueFilePathsToScan() as $filePath => $isDevFilePath) {
             $scannedFilesCount++;
 
-            foreach ($this->getUsedSymbolsInFile($filePath) as $usedSymbol => $lineNumbers) {
-                if (isset($this->ignoredSymbols[strtolower($usedSymbol)])) {
-                    continue;
-                }
+            $usedSymbolsByKind = $this->getUsedSymbolsInFile($filePath);
 
-                $symbolPath = $this->getSymbolPath($usedSymbol);
+            foreach ($usedSymbolsByKind as $kind => $usedSymbols) {
+                foreach ($usedSymbols as $usedSymbol => $lineNumbers) {
+                    if (isset($this->ignoredSymbols[$usedSymbol])) {
+                        continue;
+                    }
 
-                if ($symbolPath === null) {
-                    if (!$ignoreList->shouldIgnoreUnknownClass($usedSymbol, $filePath)) {
+                    $symbolPath = $this->getSymbolPath($usedSymbol, $kind);
+
+                    if ($symbolPath === null) {
+                        if ($kind === SymbolKind::CLASSLIKE && !$ignoreList->shouldIgnoreUnknownClass($usedSymbol, $filePath)) {
+                            foreach ($lineNumbers as $lineNumber) {
+                                $unknownClassErrors[$usedSymbol][] = new SymbolUsage($filePath, $lineNumber, $kind);
+                            }
+                        }
+
+                        if ($kind === SymbolKind::FUNCTION && !$ignoreList->shouldIgnoreUnknownFunction($usedSymbol, $filePath)) {
+                            foreach ($lineNumbers as $lineNumber) {
+                                $unknownFunctionErrors[$usedSymbol][] = new SymbolUsage($filePath, $lineNumber, $kind);
+                            }
+                        }
+
+                        continue;
+                    }
+
+                    if (!$this->isVendorPath($symbolPath)) {
+                        continue; // local class
+                    }
+
+                    $packageName = $this->getPackageNameFromVendorPath($symbolPath);
+
+                    if (
+                        $this->isShadowDependency($packageName)
+                        && !$ignoreList->shouldIgnoreError(ErrorType::SHADOW_DEPENDENCY, $filePath, $packageName)
+                    ) {
                         foreach ($lineNumbers as $lineNumber) {
-                            $classmapErrors[$usedSymbol][] = new SymbolUsage($filePath, $lineNumber);
+                            $shadowErrors[$packageName][$usedSymbol][] = new SymbolUsage($filePath, $lineNumber, $kind);
                         }
                     }
 
-                    continue;
-                }
-
-                if (!$this->isVendorPath($symbolPath)) {
-                    continue; // local class
-                }
-
-                $packageName = $this->getPackageNameFromVendorPath($symbolPath);
-
-                if (
-                    $this->isShadowDependency($packageName)
-                    && !$ignoreList->shouldIgnoreError(ErrorType::SHADOW_DEPENDENCY, $filePath, $packageName)
-                ) {
-                    foreach ($lineNumbers as $lineNumber) {
-                        $shadowErrors[$packageName][$usedSymbol][] = new SymbolUsage($filePath, $lineNumber);
+                    if (
+                        !$isDevFilePath
+                        && $this->isDevDependency($packageName)
+                        && !$ignoreList->shouldIgnoreError(ErrorType::DEV_DEPENDENCY_IN_PROD, $filePath, $packageName)
+                    ) {
+                        foreach ($lineNumbers as $lineNumber) {
+                            $devInProdErrors[$packageName][$usedSymbol][] = new SymbolUsage($filePath, $lineNumber, $kind);
+                        }
                     }
-                }
 
-                if (
-                    !$isDevFilePath
-                    && $this->isDevDependency($packageName)
-                    && !$ignoreList->shouldIgnoreError(ErrorType::DEV_DEPENDENCY_IN_PROD, $filePath, $packageName)
-                ) {
-                    foreach ($lineNumbers as $lineNumber) {
-                        $devInProdErrors[$packageName][$usedSymbol][] = new SymbolUsage($filePath, $lineNumber);
+                    if (
+                        !$isDevFilePath
+                        && !$this->isDevDependency($packageName)
+                    ) {
+                        $prodPackagesUsedInProdPath[$packageName] = true;
                     }
-                }
 
-                if (
-                    !$isDevFilePath
-                    && !$this->isDevDependency($packageName)
-                ) {
-                    $prodPackagesUsedInProdPath[$packageName] = true;
-                }
+                    $usedPackages[$packageName] = true;
 
-                $usedPackages[$packageName] = true;
-
-                foreach ($lineNumbers as $lineNumber) {
-                    $usages[$packageName][$usedSymbol][] = new SymbolUsage($filePath, $lineNumber);
+                    foreach ($lineNumbers as $lineNumber) {
+                        $usages[$packageName][$usedSymbol][] = new SymbolUsage($filePath, $lineNumber, $kind);
+                    }
                 }
             }
         }
@@ -189,7 +208,7 @@ class Analyser
                 continue;
             }
 
-            $symbolPath = $this->getSymbolPath($forceUsedSymbol);
+            $symbolPath = $this->getSymbolPath($forceUsedSymbol, null);
 
             if ($symbolPath === null || !$this->isVendorPath($symbolPath)) {
                 continue;
@@ -239,7 +258,8 @@ class Analyser
             $scannedFilesCount,
             $this->stopwatch->stop(),
             $usages,
-            $classmapErrors,
+            $unknownClassErrors,
+            $unknownFunctionErrors,
             $shadowErrors,
             $devInProdErrors,
             $prodOnlyInDevErrors,
@@ -297,7 +317,7 @@ class Analyser
     }
 
     /**
-     * @return array<string, list<int>>
+     * @return array<SymbolKind::*, array<string, list<int>>>
      * @throws InvalidPathException
      */
     private function getUsedSymbolsInFile(string $filePath): array
@@ -308,7 +328,7 @@ class Analyser
             throw new InvalidPathException("Unable to get contents of '$filePath'");
         }
 
-        return (new UsedSymbolExtractor($code))->parseUsedClasses();
+        return (new UsedSymbolExtractor($code))->parseUsedSymbols();
     }
 
     /**
@@ -349,8 +369,20 @@ class Analyser
         return false;
     }
 
-    private function getSymbolPath(string $symbol): ?string
+    private function getSymbolPath(string $symbol, ?int $kind): ?string
     {
+        if ($kind === SymbolKind::FUNCTION || $kind === null) {
+            $lowerSymbol = strtolower($symbol);
+
+            if (isset($this->definedFunctions[$lowerSymbol])) {
+                return $this->definedFunctions[$lowerSymbol];
+            }
+
+            if ($kind === SymbolKind::FUNCTION) {
+                return null;
+            }
+        }
+
         if (!array_key_exists($symbol, $this->classmap)) {
             $path = $this->detectFileByClassLoader($symbol) ?? $this->detectFileByReflection($symbol);
             $this->classmap[$symbol] = $path === null
@@ -406,12 +438,9 @@ class Analyser
         return Path::normalize($filePath);
     }
 
-    /**
-     * @return array<string, true>
-     */
-    private function getIgnoredSymbols(): array
+    private function initExistingSymbols(): void
     {
-        $ignoredSymbols = [
+        $this->ignoredSymbols = [
             // built-in types
             'bool' => true,
             'int' => true,
@@ -446,12 +475,19 @@ class Analyser
 
         /** @var string $constantName */
         foreach (get_defined_constants() as $constantName => $constantValue) {
-            $ignoredSymbols[$constantName] = true;
+            $this->ignoredSymbols[$constantName] = true;
         }
 
         foreach (get_defined_functions() as $functionNames) {
             foreach ($functionNames as $functionName) {
-                $ignoredSymbols[$functionName] = true;
+                $reflectionFunction = new ReflectionFunction($functionName);
+                $functionFilePath = $reflectionFunction->getFileName();
+
+                if ($reflectionFunction->getExtension() === null && is_string($functionFilePath)) {
+                    $this->definedFunctions[$functionName] = Path::normalize($functionFilePath);
+                } else {
+                    $this->ignoredSymbols[$functionName] = true;
+                }
             }
         }
 
@@ -464,12 +500,10 @@ class Analyser
         foreach ($classLikes as $classLikeNames) {
             foreach ($classLikeNames as $classLikeName) {
                 if ((new ReflectionClass($classLikeName))->getExtension() !== null) {
-                    $ignoredSymbols[$classLikeName] = true;
+                    $this->ignoredSymbols[$classLikeName] = true;
                 }
             }
         }
-
-        return array_change_key_case($ignoredSymbols, CASE_LOWER); // get_defined_functions returns lowercase functions
     }
 
 }

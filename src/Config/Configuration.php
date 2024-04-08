@@ -80,6 +80,16 @@ class Configuration
     private $ignoredUnknownClassesRegexes = [];
 
     /**
+     * @var list<string>
+     */
+    private $ignoredUnknownFunctions = [];
+
+    /**
+     * @var list<string>
+     */
+    private $ignoredUnknownFunctionsRegexes = [];
+
+    /**
      * @return $this
      */
     public function disableComposerAutoloadPathScan(): self
@@ -320,6 +330,17 @@ class Configuration
     }
 
     /**
+     * @param list<string> $functionNames
+     * @return $this
+     */
+    public function ignoreUnknownFunctions(array $functionNames): self
+    {
+        $this->ignoredUnknownFunctions = array_merge($this->ignoredUnknownFunctions, $functionNames);
+
+        return $this;
+    }
+
+    /**
      * @return $this
      * @throws InvalidConfigException
      */
@@ -333,6 +354,20 @@ class Configuration
         return $this;
     }
 
+    /**
+     * @return $this
+     * @throws InvalidConfigException
+     */
+    public function ignoreUnknownFunctionsRegex(string $functionNameRegex): self
+    {
+        if (@preg_match($functionNameRegex, '') === false) {
+            throw new InvalidConfigException("Invalid regex '$functionNameRegex'");
+        }
+
+        $this->ignoredUnknownFunctionsRegexes[] = $functionNameRegex;
+        return $this;
+    }
+
     public function getIgnoreList(): IgnoreList
     {
         return new IgnoreList(
@@ -341,7 +376,9 @@ class Configuration
             $this->ignoredErrorsOnPackage,
             $this->ignoredErrorsOnPackageAndPath,
             $this->ignoredUnknownClasses,
-            $this->ignoredUnknownClassesRegexes
+            $this->ignoredUnknownClassesRegexes,
+            $this->ignoredUnknownFunctions,
+            $this->ignoredUnknownFunctionsRegexes
         );
     }
 

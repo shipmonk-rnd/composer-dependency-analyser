@@ -20,6 +20,8 @@ class Cli
         'ignore-dev-in-prod-deps' => false,
         'ignore-prod-only-in-dev-deps' => false,
         'ignore-unknown-classes' => false,
+        'ignore-unknown-functions' => false,
+        'ignore-unknown-symbols' => false,
         'composer-json' => true,
         'config' => true,
         'dump-usages' => true,
@@ -150,6 +152,10 @@ class Cli
 
         if (isset($this->providedOptions['ignore-unknown-classes'])) {
             $options->ignoreUnknownClasses = true;
+        }
+
+        if (isset($this->providedOptions['ignore-unknown-functions'])) {
+            $options->ignoreUnknownFunctions = true;
         }
 
         if (isset($this->providedOptions['composer-json'])) {

@@ -4,9 +4,10 @@ namespace ShipMonk\ComposerDependencyAnalyser\Result;
 
 use ShipMonk\ComposerDependencyAnalyser\CliOptions;
 use ShipMonk\ComposerDependencyAnalyser\Config\Configuration;
-use ShipMonk\ComposerDependencyAnalyser\Config\Ignore\UnusedClassIgnore;
 use ShipMonk\ComposerDependencyAnalyser\Config\Ignore\UnusedErrorIgnore;
+use ShipMonk\ComposerDependencyAnalyser\Config\Ignore\UnusedSymbolIgnore;
 use ShipMonk\ComposerDependencyAnalyser\Printer;
+use ShipMonk\ComposerDependencyAnalyser\SymbolKind;
 use function array_fill_keys;
 use function array_reduce;
 use function count;
@@ -51,7 +52,8 @@ class JunitFormatter implements ResultFormatter
         $hasError = false;
         $unusedIgnores = $result->getUnusedIgnores();
 
-        $classmapErrors = $result->getClassmapErrors();
+        $unknownClassErrors = $result->getUnknownClassErrors();
+        $unknownFunctionErrors = $result->getUnknownFunctionErrors();
         $shadowDependencyErrors = $result->getShadowDependencyErrors();
         $devDependencyInProductionErrors = $result->getDevDependencyInProductionErrors();
         $prodDependencyOnlyInDevErrors = $result->getProdDependencyOnlyInDevErrors();
@@ -59,11 +61,20 @@ class JunitFormatter implements ResultFormatter
 
         $maxShownUsages = $this->getMaxUsagesShownForErrors($options);
 
-        if (count($classmapErrors) > 0) {
+        if (count($unknownClassErrors) > 0) {
             $hasError = true;
-            $xml .= $this->createClassBasedTestSuite(
+            $xml .= $this->createSymbolBasedTestSuite(
                 'unknown classes',
-                $classmapErrors,
+                $unknownClassErrors,
+                $maxShownUsages
+            );
+        }
+
+        if (count($unknownFunctionErrors) > 0) {
+            $hasError = true;
+            $xml .= $this->createSymbolBasedTestSuite(
+                'unknown functions',
+                $unknownFunctionErrors,
                 $maxShownUsages
             );
         }
@@ -136,12 +147,12 @@ class JunitFormatter implements ResultFormatter
     /**
      * @param array<string, list<SymbolUsage>> $errors
      */
-    private function createClassBasedTestSuite(string $title, array $errors, int $maxShownUsages): string
+    private function createSymbolBasedTestSuite(string $title, array $errors, int $maxShownUsages): string
     {
         $xml = sprintf('<testsuite name="%s" failures="%u">', $this->escape($title), count($errors));
 
-        foreach ($errors as $classname => $usages) {
-            $xml .= sprintf('<testcase name="%s">', $this->escape($classname));
+        foreach ($errors as $symbol => $usages) {
+            $xml .= sprintf('<testcase name="%s">', $this->escape($symbol));
 
             if ($maxShownUsages > 1) {
                 $failureUsage = [];
@@ -194,36 +205,36 @@ class JunitFormatter implements ResultFormatter
     }
 
     /**
-     * @param array<string, list<SymbolUsage>> $usagesPerClassname
+     * @param array<string, list<SymbolUsage>> $usagesPerSymbol
      * @return list<string>
      */
-    private function createUsages(array $usagesPerClassname, int $maxShownUsages): array
+    private function createUsages(array $usagesPerSymbol, int $maxShownUsages): array
     {
         $usageMessages = [];
 
         if ($maxShownUsages === 1) {
             $countOfAllUsages = array_reduce(
-                $usagesPerClassname,
+                $usagesPerSymbol,
                 static function (int $carry, array $usages): int {
                     return $carry + count($usages);
                 },
                 0
             );
 
-            foreach ($usagesPerClassname as $classname => $usages) {
+            foreach ($usagesPerSymbol as $symbol => $usages) {
                 $firstUsage = $usages[0];
                 $restUsagesCount = $countOfAllUsages - 1;
                 $rest = $countOfAllUsages > 1 ? " (+ {$restUsagesCount} more)" : '';
-                $usageMessages[] = "e.g. {$classname} in {$this->relativizeUsage($firstUsage)}$rest";
+                $usageMessages[] = "e.g. {$symbol} in {$this->relativizeUsage($firstUsage)}$rest";
                 break;
             }
         } else {
             $classnamesPrinted = 0;
 
-            foreach ($usagesPerClassname as $classname => $usages) {
+            foreach ($usagesPerSymbol as $symbol => $usages) {
                 $classnamesPrinted++;
 
-                $usageMessages[] = $classname;
+                $usageMessages[] = $symbol;
 
                 foreach ($usages as $index => $usage) {
                     $usageMessages[] = "  {$this->relativizeUsage($usage)}";
@@ -239,10 +250,10 @@ class JunitFormatter implements ResultFormatter
                 }
 
                 if ($classnamesPrinted === $maxShownUsages) {
-                    $restClassnamesCount = count($usagesPerClassname) - $classnamesPrinted;
+                    $restSymbolsCount = count($usagesPerSymbol) - $classnamesPrinted;
 
-                    if ($restClassnamesCount > 0) {
-                        $usageMessages[] = "  + {$restClassnamesCount} more class" . ($restClassnamesCount > 1 ? 'es' : '');
+                    if ($restSymbolsCount > 0) {
+                        $usageMessages[] = "  + {$restSymbolsCount} more symbol" . ($restSymbolsCount > 1 ? 's' : '');
                         break;
                     }
                 }
@@ -253,17 +264,18 @@ class JunitFormatter implements ResultFormatter
     }
 
     /**
-     * @param list<UnusedClassIgnore|UnusedErrorIgnore> $unusedIgnores
+     * @param list<UnusedSymbolIgnore|UnusedErrorIgnore> $unusedIgnores
      */
     private function createUnusedIgnoresTestSuite(array $unusedIgnores): string
     {
         $xml = sprintf('<testsuite name="unused-ignore" failures="%u">', count($unusedIgnores));
 
         foreach ($unusedIgnores as $unusedIgnore) {
-            if ($unusedIgnore instanceof UnusedClassIgnore) {
+            if ($unusedIgnore instanceof UnusedSymbolIgnore) {
+                $kind = $unusedIgnore->getSymbolKind() === SymbolKind::CLASSLIKE ? 'class' : 'function';
                 $regex = $unusedIgnore->isRegex() ? ' regex' : '';
-                $message = "Unknown class{$regex} '{$unusedIgnore->getUnknownClass()}' was ignored, but it was never applied.";
-                $xml .= sprintf('<testcase name="%s"><failure>%s</failure></testcase>', $this->escape($unusedIgnore->getUnknownClass()), $this->escape($message));
+                $message = "Unknown {$kind}{$regex} '{$unusedIgnore->getUnknownSymbol()}' was ignored, but it was never applied.";
+                $xml .= sprintf('<testcase name="%s"><failure>%s</failure></testcase>', $this->escape($unusedIgnore->getUnknownSymbol()), $this->escape($message));
             } else {
                 $package = $unusedIgnore->getPackage();
                 $path = $unusedIgnore->getPath();

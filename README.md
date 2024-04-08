@@ -72,6 +72,8 @@ This tool reads your `composer.json` and scans all paths listed in `autoload` & 
 ### Unknown classes
   - Any class that cannot be autoloaded gets reported as we cannot say if that one is shadowed or not
 
+### Unknown functions
+  - Any function that is used, but not defined gets reported as we cannot say if that one is shadowed or not
 
 ## Cli options:
 - `--composer-json path/to/composer.json` for custom path to composer.json
@@ -82,6 +84,7 @@ This tool reads your `composer.json` and scans all paths listed in `autoload` & 
 - `--show-all-usages` to see all usages
 - `--format` to use different output format, available are: console (default), junit
 - `--ignore-unknown-classes` to globally ignore unknown classes
+- `--ignore-unknown-functions` to globally ignore unknown functions
 - `--ignore-shadow-deps` to globally ignore shadow dependencies
 - `--ignore-unused-deps` to globally ignore unused dependencies
 - `--ignore-dev-in-prod-deps` to globally ignore dev dependencies in prod code
@@ -185,9 +188,7 @@ Another approach for DIC-only usages is to scan the generated php file, but that
 ## Limitations:
 - Extension dependencies are not analysed (e.g. `ext-json`)
 - Files without namespace has limited support
-  - Only classes with use statements and FQNs are detected
-- Function and constant usages are not analysed
-  - Therefore, if some package contains only functions, it will be reported as unused
+  - Only symbols with use statements and FQNs are detected
 
 -----
 

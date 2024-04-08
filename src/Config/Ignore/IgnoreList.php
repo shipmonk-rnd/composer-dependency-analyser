@@ -4,6 +4,7 @@ namespace ShipMonk\ComposerDependencyAnalyser\Config\Ignore;
 
 use LogicException;
 use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
+use ShipMonk\ComposerDependencyAnalyser\SymbolKind;
 use function array_fill_keys;
 use function preg_match;
 use function strpos;
@@ -42,12 +43,24 @@ class IgnoreList
     private $ignoredUnknownClassesRegexes;
 
     /**
+     * @var array<string, bool>
+     */
+    private $ignoredUnknownFunctions;
+
+    /**
+     * @var array<string, bool>
+     */
+    private $ignoredUnknownFunctionsRegexes;
+
+    /**
      * @param list<ErrorType::*> $ignoredErrors
      * @param array<string, list<ErrorType::*>> $ignoredErrorsOnPath
      * @param array<string, list<ErrorType::*>> $ignoredErrorsOnPackage
      * @param array<string, array<string, list<ErrorType::*>>> $ignoredErrorsOnPackageAndPath
      * @param list<string> $ignoredUnknownClasses
      * @param list<string> $ignoredUnknownClassesRegexes
+     * @param list<string> $ignoredUnknownFunctions
+     * @param list<string> $ignoredUnknownFunctionsRegexes
      */
     public function __construct(
         array $ignoredErrors,
@@ -55,7 +68,9 @@ class IgnoreList
         array $ignoredErrorsOnPackage,
         array $ignoredErrorsOnPackageAndPath,
         array $ignoredUnknownClasses,
-        array $ignoredUnknownClassesRegexes
+        array $ignoredUnknownClassesRegexes,
+        array $ignoredUnknownFunctions,
+        array $ignoredUnknownFunctionsRegexes
     )
     {
         $this->ignoredErrors = array_fill_keys($ignoredErrors, false);
@@ -76,10 +91,12 @@ class IgnoreList
 
         $this->ignoredUnknownClasses = array_fill_keys($ignoredUnknownClasses, false);
         $this->ignoredUnknownClassesRegexes = array_fill_keys($ignoredUnknownClassesRegexes, false);
+        $this->ignoredUnknownFunctions = array_fill_keys($ignoredUnknownFunctions, false);
+        $this->ignoredUnknownFunctionsRegexes = array_fill_keys($ignoredUnknownFunctionsRegexes, false);
     }
 
     /**
-     * @return list<UnusedErrorIgnore|UnusedClassIgnore>
+     * @return list<UnusedErrorIgnore|UnusedSymbolIgnore>
      */
     public function getUnusedIgnores(): array
     {
@@ -119,13 +136,25 @@ class IgnoreList
 
         foreach ($this->ignoredUnknownClasses as $class => $ignored) {
             if (!$ignored) {
-                $unused[] = new UnusedClassIgnore($class, false);
+                $unused[] = new UnusedSymbolIgnore($class, false, SymbolKind::CLASSLIKE);
             }
         }
 
         foreach ($this->ignoredUnknownClassesRegexes as $regex => $ignored) {
             if (!$ignored) {
-                $unused[] = new UnusedClassIgnore($regex, true);
+                $unused[] = new UnusedSymbolIgnore($regex, true, SymbolKind::CLASSLIKE);
+            }
+        }
+
+        foreach ($this->ignoredUnknownFunctions as $function => $ignored) {
+            if (!$ignored) {
+                $unused[] = new UnusedSymbolIgnore($function, false, SymbolKind::FUNCTION);
+            }
+        }
+
+        foreach ($this->ignoredUnknownFunctionsRegexes as $regex => $ignored) {
+            if (!$ignored) {
+                $unused[] = new UnusedSymbolIgnore($regex, true, SymbolKind::FUNCTION);
             }
         }
 
@@ -142,10 +171,30 @@ class IgnoreList
         return $ignoredGlobally || $ignoredByPath || $ignoredByRegex || $ignoredByBlacklist;
     }
 
+    public function shouldIgnoreUnknownFunction(string $function, string $filePath): bool
+    {
+        $ignoredGlobally = $this->shouldIgnoreErrorGlobally(ErrorType::UNKNOWN_FUNCTION);
+        $ignoredByPath = $this->shouldIgnoreErrorOnPath(ErrorType::UNKNOWN_FUNCTION, $filePath);
+        $ignoredByRegex = $this->shouldIgnoreUnknownFunctionByRegex($function);
+        $ignoredByBlacklist = $this->shouldIgnoreUnknownFunctionByBlacklist($function);
+
+        return $ignoredGlobally || $ignoredByPath || $ignoredByRegex || $ignoredByBlacklist;
+    }
+
     private function shouldIgnoreUnknownClassByBlacklist(string $class): bool
     {
         if (isset($this->ignoredUnknownClasses[$class])) {
             $this->ignoredUnknownClasses[$class] = true;
+            return true;
+        }
+
+        return false;
+    }
+
+    private function shouldIgnoreUnknownFunctionByBlacklist(string $function): bool
+    {
+        if (isset($this->ignoredUnknownFunctions[$function])) {
+            $this->ignoredUnknownFunctions[$function] = true;
             return true;
         }
 
@@ -163,6 +212,24 @@ class IgnoreList
 
             if ($matches === 1) {
                 $this->ignoredUnknownClassesRegexes[$regex] = true;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function shouldIgnoreUnknownFunctionByRegex(string $function): bool
+    {
+        foreach ($this->ignoredUnknownFunctionsRegexes as $regex => $ignoreUsed) {
+            $matches = preg_match($regex, $function);
+
+            if ($matches === false) {
+                throw new LogicException("Invalid regex: '$regex'");
+            }
+
+            if ($matches === 1) {
+                $this->ignoredUnknownFunctionsRegexes[$regex] = true;
                 return true;
             }
         }

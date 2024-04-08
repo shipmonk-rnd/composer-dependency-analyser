@@ -9,8 +9,8 @@ use PHPStan\PharAutoloader;
 use PHPUnit\Framework\TestCase;
 use ShipMonk\ComposerDependencyAnalyser\Config\Configuration;
 use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
-use ShipMonk\ComposerDependencyAnalyser\Config\Ignore\UnusedClassIgnore;
 use ShipMonk\ComposerDependencyAnalyser\Config\Ignore\UnusedErrorIgnore;
+use ShipMonk\ComposerDependencyAnalyser\Config\Ignore\UnusedSymbolIgnore;
 use ShipMonk\ComposerDependencyAnalyser\Result\AnalysisResult;
 use ShipMonk\ComposerDependencyAnalyser\Result\SymbolUsage;
 use function array_filter;
@@ -106,9 +106,9 @@ class AnalyserTest extends TestCase
                 $config->addPathToScan($variousUsagesPath, false);
             },
             $this->createAnalysisResult(1, [
-                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11)]],
-                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16)]]],
-                ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24)]]],
+                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11, SymbolKind::CLASSLIKE)]],
+                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16, SymbolKind::CLASSLIKE)]]],
+                ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24, SymbolKind::CLASSLIKE)]]],
                 ErrorType::UNUSED_DEPENDENCY => ['regular/dead']
             ])
         ];
@@ -119,9 +119,9 @@ class AnalyserTest extends TestCase
                 $config->addPathToScan($variousUsagesPath, false);
             },
             $this->createAnalysisResult(1, [
-                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11)]],
-                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16)]]],
-                ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24)]]],
+                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11, SymbolKind::CLASSLIKE)]],
+                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16, SymbolKind::CLASSLIKE)]]],
+                ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24, SymbolKind::CLASSLIKE)]]],
                 ErrorType::UNUSED_DEPENDENCY => ['dev/dead', 'regular/dead']
             ])
         ];
@@ -132,9 +132,9 @@ class AnalyserTest extends TestCase
                 $config->addPathToScan($variousUsagesPath, false);
             },
             $this->createAnalysisResult(1, [
-                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11)]],
-                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16)]]],
-                ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24)]]],
+                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11, SymbolKind::CLASSLIKE)]],
+                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16, SymbolKind::CLASSLIKE)]]],
+                ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24, SymbolKind::CLASSLIKE)]]],
             ])
         ];
 
@@ -143,9 +143,9 @@ class AnalyserTest extends TestCase
                 $config->addPathToScan($variousUsagesPath, true);
             },
             $this->createAnalysisResult(1, [
-                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11)]],
+                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11, SymbolKind::CLASSLIKE)]],
                 ErrorType::PROD_DEPENDENCY_ONLY_IN_DEV => ['regular/package'],
-                ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24)]]],
+                ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24, SymbolKind::CLASSLIKE)]]],
                 ErrorType::UNUSED_DEPENDENCY => ['regular/dead']
             ])
         ];
@@ -156,12 +156,12 @@ class AnalyserTest extends TestCase
             },
             $this->createAnalysisResult(2, [
                 ErrorType::UNKNOWN_CLASS => [
-                    'Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11)],
-                    'Unknown\One' => [new SymbolUsage($unknownClassesPath, 3)],
-                    'Unknown\Two' => [new SymbolUsage($unknownClassesPath, 4)],
+                    'Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11, SymbolKind::CLASSLIKE)],
+                    'Unknown\One' => [new SymbolUsage($unknownClassesPath, 3, SymbolKind::CLASSLIKE)],
+                    'Unknown\Two' => [new SymbolUsage($unknownClassesPath, 4, SymbolKind::CLASSLIKE)],
                 ],
-                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16)]]],
-                ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24)]]],
+                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16, SymbolKind::CLASSLIKE)]]],
+                ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24, SymbolKind::CLASSLIKE)]]],
                 ErrorType::UNUSED_DEPENDENCY => ['regular/dead']
             ])
         ];
@@ -172,12 +172,12 @@ class AnalyserTest extends TestCase
             },
             $this->createAnalysisResult(2, [
                 ErrorType::UNKNOWN_CLASS => [
-                    'Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11)],
-                    'Unknown\One' => [new SymbolUsage($unknownClassesPath, 3)],
-                    'Unknown\Two' => [new SymbolUsage($unknownClassesPath, 4)],
+                    'Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11, SymbolKind::CLASSLIKE)],
+                    'Unknown\One' => [new SymbolUsage($unknownClassesPath, 3, SymbolKind::CLASSLIKE)],
+                    'Unknown\Two' => [new SymbolUsage($unknownClassesPath, 4, SymbolKind::CLASSLIKE)],
                 ],
-                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16)]]],
-                ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24)]]],
+                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16, SymbolKind::CLASSLIKE)]]],
+                ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24, SymbolKind::CLASSLIKE)]]],
                 ErrorType::UNUSED_DEPENDENCY => ['regular/dead']
             ])
         ];
@@ -189,12 +189,12 @@ class AnalyserTest extends TestCase
             },
             $this->createAnalysisResult(2, [
                 ErrorType::UNKNOWN_CLASS => [
-                    'Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11)],
-                    'Unknown\One' => [new SymbolUsage($unknownClassesPath, 3)],
-                    'Unknown\Two' => [new SymbolUsage($unknownClassesPath, 4)],
+                    'Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11, SymbolKind::CLASSLIKE)],
+                    'Unknown\One' => [new SymbolUsage($unknownClassesPath, 3, SymbolKind::CLASSLIKE)],
+                    'Unknown\Two' => [new SymbolUsage($unknownClassesPath, 4, SymbolKind::CLASSLIKE)],
                 ],
-                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16)]]],
-                ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24)]]],
+                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16, SymbolKind::CLASSLIKE)]]],
+                ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24, SymbolKind::CLASSLIKE)]]],
                 ErrorType::UNUSED_DEPENDENCY => ['regular/dead']
             ])
         ];
@@ -205,9 +205,9 @@ class AnalyserTest extends TestCase
                 $config->addPathToExclude($unknownClassesPath);
             },
             $this->createAnalysisResult(1, [
-                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11)]],
-                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16)]]],
-                ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24)]]],
+                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11, SymbolKind::CLASSLIKE)]],
+                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16, SymbolKind::CLASSLIKE)]]],
+                ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24, SymbolKind::CLASSLIKE)]]],
                 ErrorType::UNUSED_DEPENDENCY => ['regular/dead']
             ])
         ];
@@ -218,9 +218,9 @@ class AnalyserTest extends TestCase
                 $config->ignoreErrorsOnPath($unknownClassesPath, [ErrorType::UNKNOWN_CLASS]);
             },
             $this->createAnalysisResult(2, [
-                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11)]],
-                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16)]]],
-                ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24)]]],
+                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11, SymbolKind::CLASSLIKE)]],
+                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16, SymbolKind::CLASSLIKE)]]],
+                ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24, SymbolKind::CLASSLIKE)]]],
                 ErrorType::UNUSED_DEPENDENCY => ['regular/dead']
             ])
         ];
@@ -232,8 +232,8 @@ class AnalyserTest extends TestCase
             },
             $this->createAnalysisResult(2, [
                 ErrorType::UNKNOWN_CLASS => [
-                    'Unknown\One' => [new SymbolUsage($unknownClassesPath, 3)],
-                    'Unknown\Two' => [new SymbolUsage($unknownClassesPath, 4)],
+                    'Unknown\One' => [new SymbolUsage($unknownClassesPath, 3, SymbolKind::CLASSLIKE)],
+                    'Unknown\Two' => [new SymbolUsage($unknownClassesPath, 4, SymbolKind::CLASSLIKE)],
                 ],
                 ErrorType::UNUSED_DEPENDENCY => ['regular/dead'],
             ])
@@ -258,9 +258,9 @@ class AnalyserTest extends TestCase
                 $config->ignoreErrorsOnPackages(['regular/dead'], [ErrorType::UNUSED_DEPENDENCY]);
             },
             $this->createAnalysisResult(1, [
-                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11)]],
-                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16)]]],
-                ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24)]]],
+                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11, SymbolKind::CLASSLIKE)]],
+                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16, SymbolKind::CLASSLIKE)]]],
+                ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24, SymbolKind::CLASSLIKE)]]],
             ])
         ];
 
@@ -272,7 +272,7 @@ class AnalyserTest extends TestCase
                 $config->ignoreErrorsOnPackage('dev/package', [ErrorType::DEV_DEPENDENCY_IN_PROD]);
             },
             $this->createAnalysisResult(1, [
-                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11)]],
+                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11, SymbolKind::CLASSLIKE)]],
             ])
         ];
 
@@ -282,8 +282,8 @@ class AnalyserTest extends TestCase
                 $config->ignoreErrorsOnPackageAndPath('shadow/package', $variousUsagesPath, [ErrorType::SHADOW_DEPENDENCY]);
             },
             $this->createAnalysisResult(1, [
-                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11)]],
-                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16)]]],
+                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11, SymbolKind::CLASSLIKE)]],
+                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16, SymbolKind::CLASSLIKE)]]],
                 ErrorType::UNUSED_DEPENDENCY => ['regular/dead'],
             ])
         ];
@@ -297,8 +297,8 @@ class AnalyserTest extends TestCase
                 $config->ignoreErrorsOnPackageAndPath('shadow/package', $variousUsagesPath, [ErrorType::SHADOW_DEPENDENCY]);
             },
             $this->createAnalysisResult(1, [
-                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11)]],
-                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16)]]],
+                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11, SymbolKind::CLASSLIKE)]],
+                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16, SymbolKind::CLASSLIKE)]]],
                 ErrorType::UNUSED_DEPENDENCY => ['regular/dead'],
             ])
         ];
@@ -312,8 +312,8 @@ class AnalyserTest extends TestCase
                 $config->ignoreErrorsOnPackageAndPath('shadow/package', $unknownClassesPath, [ErrorType::SHADOW_DEPENDENCY]);
             },
             $this->createAnalysisResult(1, [
-                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11)]],
-                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16)]]],
+                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11, SymbolKind::CLASSLIKE)]],
+                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16, SymbolKind::CLASSLIKE)]]],
                 ErrorType::UNUSED_DEPENDENCY => ['regular/dead'],
             ], [
                 new UnusedErrorIgnore(ErrorType::SHADOW_DEPENDENCY, $unknownClassesPath, 'shadow/package'),
@@ -330,8 +330,8 @@ class AnalyserTest extends TestCase
             },
             $this->createAnalysisResult(1, [
                 ErrorType::UNKNOWN_CLASS => [
-                    'Unknown\One' => [new SymbolUsage($unknownClassesPath, 3)],
-                    'Unknown\Two' => [new SymbolUsage($unknownClassesPath, 4)],
+                    'Unknown\One' => [new SymbolUsage($unknownClassesPath, 3, SymbolKind::CLASSLIKE)],
+                    'Unknown\Two' => [new SymbolUsage($unknownClassesPath, 4, SymbolKind::CLASSLIKE)],
                 ],
                 ErrorType::UNUSED_DEPENDENCY => ['regular/dead', 'regular/package'],
             ], [
@@ -348,9 +348,9 @@ class AnalyserTest extends TestCase
                 $config->ignoreErrors([ErrorType::UNUSED_DEPENDENCY]);
             },
             $this->createAnalysisResult(1, [
-                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11)]],
-                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16)]]],
-                ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24)]]],
+                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11, SymbolKind::CLASSLIKE)]],
+                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16, SymbolKind::CLASSLIKE)]]],
+                ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24, SymbolKind::CLASSLIKE)]]],
             ])
         ];
 
@@ -360,8 +360,8 @@ class AnalyserTest extends TestCase
                 $config->ignoreErrors([ErrorType::SHADOW_DEPENDENCY]);
             },
             $this->createAnalysisResult(1, [
-                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11)]],
-                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16)]]],
+                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11, SymbolKind::CLASSLIKE)]],
+                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16, SymbolKind::CLASSLIKE)]]],
                 ErrorType::UNUSED_DEPENDENCY => ['regular/dead']
             ])
         ];
@@ -372,8 +372,8 @@ class AnalyserTest extends TestCase
                 $config->ignoreErrors([ErrorType::DEV_DEPENDENCY_IN_PROD]);
             },
             $this->createAnalysisResult(1, [
-                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11)]],
-                ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24)]]],
+                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11, SymbolKind::CLASSLIKE)]],
+                ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24, SymbolKind::CLASSLIKE)]]],
                 ErrorType::UNUSED_DEPENDENCY => ['regular/dead'],
             ])
         ];
@@ -384,8 +384,8 @@ class AnalyserTest extends TestCase
                 $config->ignoreErrors([ErrorType::PROD_DEPENDENCY_ONLY_IN_DEV]);
             },
             $this->createAnalysisResult(1, [
-                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11)]],
-                ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24)]]],
+                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11, SymbolKind::CLASSLIKE)]],
+                ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24, SymbolKind::CLASSLIKE)]]],
                 ErrorType::UNUSED_DEPENDENCY => ['regular/dead'],
             ])
         ];
@@ -396,8 +396,8 @@ class AnalyserTest extends TestCase
                 $config->ignoreErrors([ErrorType::UNKNOWN_CLASS]);
             },
             $this->createAnalysisResult(1, [
-                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16)]]],
-                ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24)]]],
+                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16, SymbolKind::CLASSLIKE)]]],
+                ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24, SymbolKind::CLASSLIKE)]]],
                 ErrorType::UNUSED_DEPENDENCY => ['regular/dead']
             ])
         ];
@@ -408,7 +408,7 @@ class AnalyserTest extends TestCase
                 $config->ignoreUnknownClasses(['Unknown\One']);
             },
             $this->createAnalysisResult(1, [
-                ErrorType::UNKNOWN_CLASS => ['Unknown\Two' => [new SymbolUsage($unknownClassesPath, 4)]],
+                ErrorType::UNKNOWN_CLASS => ['Unknown\Two' => [new SymbolUsage($unknownClassesPath, 4, SymbolKind::CLASSLIKE)]],
                 ErrorType::UNUSED_DEPENDENCY => ['regular/dead', 'regular/package'],
             ])
         ];
@@ -419,7 +419,7 @@ class AnalyserTest extends TestCase
                 $config->ignoreUnknownClassesRegex('~Two~');
             },
             $this->createAnalysisResult(1, [
-                ErrorType::UNKNOWN_CLASS => ['Unknown\One' => [new SymbolUsage($unknownClassesPath, 3)]],
+                ErrorType::UNKNOWN_CLASS => ['Unknown\One' => [new SymbolUsage($unknownClassesPath, 3, SymbolKind::CLASSLIKE)]],
                 ErrorType::UNUSED_DEPENDENCY => ['regular/dead', 'regular/package'],
             ])
         ];
@@ -438,7 +438,7 @@ class AnalyserTest extends TestCase
 
     /**
      * @param array<ErrorType::*, array<mixed>> $args
-     * @param list<UnusedErrorIgnore|UnusedClassIgnore> $unusedIgnores
+     * @param list<UnusedErrorIgnore|UnusedSymbolIgnore> $unusedIgnores
      */
     private function createAnalysisResult(int $scannedFiles, array $args, array $unusedIgnores = []): AnalysisResult
     {
@@ -447,6 +447,7 @@ class AnalyserTest extends TestCase
             0.0,
             [],
             array_filter($args[ErrorType::UNKNOWN_CLASS] ?? []), // @phpstan-ignore-line ignore mixed
+            array_filter($args[ErrorType::UNKNOWN_FUNCTION] ?? []), // @phpstan-ignore-line ignore mixed
             array_filter($args[ErrorType::SHADOW_DEPENDENCY] ?? []), // @phpstan-ignore-line ignore mixed
             array_filter($args[ErrorType::DEV_DEPENDENCY_IN_PROD] ?? []), // @phpstan-ignore-line ignore mixed
             array_filter($args[ErrorType::PROD_DEPENDENCY_ONLY_IN_DEV] ?? []), // @phpstan-ignore-line ignore mixed
@@ -474,8 +475,8 @@ class AnalyserTest extends TestCase
         self::assertEquals($this->createAnalysisResult(1, [
             ErrorType::UNKNOWN_CLASS => [
                 'resource' => [
-                    new SymbolUsage($path, 34),
-                    new SymbolUsage($path, 53),
+                    new SymbolUsage($path, 34, SymbolKind::CLASSLIKE),
+                    new SymbolUsage($path, 53, SymbolKind::CLASSLIKE),
                 ],
             ],
         ]), $result);
@@ -500,8 +501,8 @@ class AnalyserTest extends TestCase
 
         self::assertEquals($this->createAnalysisResult(1, [
             ErrorType::UNKNOWN_CLASS => [
-                'Unknown\One' => [new SymbolUsage($path, 3)],
-                'Unknown\Two' => [new SymbolUsage($path, 4)],
+                'Unknown\One' => [new SymbolUsage($path, 3, SymbolKind::CLASSLIKE)],
+                'Unknown\Two' => [new SymbolUsage($path, 4, SymbolKind::CLASSLIKE)],
             ],
         ]), $result);
     }
@@ -633,6 +634,30 @@ class AnalyserTest extends TestCase
         $this->assertResultsWithoutUsages($this->createAnalysisResult(1, []), $result);
     }
 
+    public function testFunctions(): void
+    {
+        $path = __DIR__ . '/data/not-autoloaded/functions/org/package/fn-def.php';
+        require_once $path;
+
+        $vendorDir = realpath(__DIR__ . '/data/not-autoloaded/functions');
+        $path = realpath(__DIR__ . '/data/not-autoloaded/functions/fn-usage.php');
+        self::assertNotFalse($vendorDir);
+        self::assertNotFalse($path);
+
+        $config = new Configuration();
+        $config->addPathToScan($path, false);
+
+        $detector = new Analyser(
+            $this->getStopwatchMock(),
+            [$vendorDir => $this->getClassLoaderMock()],
+            $config,
+            ['org/package' => false]
+        );
+        $result = $detector->run();
+
+        $this->assertResultsWithoutUsages($this->createAnalysisResult(1, []), $result);
+    }
+
     public function testExplicitFileWithoutExtension(): void
     {
         $path = realpath(__DIR__ . '/data/not-autoloaded/file-without-extension/script');
@@ -680,7 +705,7 @@ class AnalyserTest extends TestCase
     {
         self::assertSame($expectedResult->getScannedFilesCount(), $result->getScannedFilesCount());
         self::assertEquals($expectedResult->getUnusedIgnores(), $result->getUnusedIgnores());
-        self::assertEquals($expectedResult->getClassmapErrors(), $result->getClassmapErrors());
+        self::assertEquals($expectedResult->getUnknownClassErrors(), $result->getUnknownClassErrors());
         self::assertEquals($expectedResult->getShadowDependencyErrors(), $result->getShadowDependencyErrors());
         self::assertEquals($expectedResult->getDevDependencyInProductionErrors(), $result->getDevDependencyInProductionErrors());
         self::assertEquals($expectedResult->getProdDependencyOnlyInDevErrors(), $result->getProdDependencyOnlyInDevErrors());

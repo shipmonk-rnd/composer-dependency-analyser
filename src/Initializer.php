@@ -103,14 +103,19 @@ EOD;
             $config = new Configuration();
         }
 
-        $ignoreUnknown = $options->ignoreUnknownClasses === true;
+        $ignoreUnknownClasses = $options->ignoreUnknownClasses === true;
+        $ignoreUnknownFunctions = $options->ignoreUnknownFunctions === true;
         $ignoreUnused = $options->ignoreUnusedDeps === true;
         $ignoreShadow = $options->ignoreShadowDeps === true;
         $ignoreDevInProd = $options->ignoreDevInProdDeps === true;
         $ignoreProdOnlyInDev = $options->ignoreProdOnlyInDevDeps === true;
 
-        if ($ignoreUnknown) {
+        if ($ignoreUnknownClasses) {
             $config->ignoreErrors([ErrorType::UNKNOWN_CLASS]);
+        }
+
+        if ($ignoreUnknownFunctions) {
+            $config->ignoreErrors([ErrorType::UNKNOWN_FUNCTION]);
         }
 
         if ($ignoreUnused) {
