@@ -24,6 +24,8 @@
         "ext-tokenizer": "*"
     },
     "require-dev": {
+        "ext-dom": "*",
+        "ext-libxml": "*",
         "editorconfig-checker/editorconfig-checker": "^10.3.0",
         "ergebnis/composer-normalize": "^2.19",
         "phpstan/phpstan": "^1.10.63",
