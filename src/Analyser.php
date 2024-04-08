@@ -345,7 +345,7 @@ class Analyser
         try {
             $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path));
         } catch (UnexpectedValueException $e) {
-            throw new InvalidPathException("Unable to list files in $path", 0, $e);
+            throw new InvalidPathException("Unable to list files in $path", $e);
         }
 
         foreach ($iterator as $entry) {
