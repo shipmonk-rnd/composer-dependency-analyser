@@ -68,7 +68,6 @@ EOD;
 
     /**
      * @throws InvalidConfigException
-     * @throws InvalidPathException
      */
     public function initConfiguration(
         CliOptions $options,
@@ -93,7 +92,7 @@ EOD;
                     return require $configPath;
                 })();
             } catch (Throwable $e) {
-                throw new InvalidConfigException(get_class($e) . " in {$e->getFile()}:{$e->getLine()}\n > " . $e->getMessage(), 0, $e);
+                throw new InvalidConfigException("Error while loading configuration from '$configPath':\n\n" . get_class($e) . " in {$e->getFile()}:{$e->getLine()}\n > " . $e->getMessage(), $e);
             }
 
             if (!$config instanceof Configuration) {
@@ -135,8 +134,12 @@ EOD;
         }
 
         if ($config->shouldScanComposerAutoloadPaths()) {
-            foreach ($composerJson->autoloadPaths as $absolutePath => $isDevPath) {
-                $config->addPathToScan($absolutePath, $isDevPath);
+            try {
+                foreach ($composerJson->autoloadPaths as $absolutePath => $isDevPath) {
+                    $config->addPathToScan($absolutePath, $isDevPath);
+                }
+            } catch (InvalidPathException $e) {
+                throw new InvalidConfigException('Error while processing composer.json autoload path: ' . $e->getMessage(), $e);
             }
 
             if ($config->getPathsToScan() === []) {

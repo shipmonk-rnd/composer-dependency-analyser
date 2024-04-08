@@ -112,13 +112,13 @@ class ComposerJson
                     }
 
                     foreach ($globPaths as $globPath) {
-                        $result[Path::realpath($globPath)] = $isDev;
+                        $result[Path::normalize($globPath)] = $isDev;
                     }
 
                     continue;
                 }
 
-                $result[Path::realpath($absolutePath)] = $isDev;
+                $result[Path::normalize($absolutePath)] = $isDev;
             }
         }
 
