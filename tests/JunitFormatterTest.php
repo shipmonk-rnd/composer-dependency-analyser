@@ -26,10 +26,10 @@ class JunitFormatterTest extends TestCase
         $formatter = new JunitFormatter('/app', new Printer());
 
         $noIssuesOutput = $this->captureAndNormalizeOutput(static function () use ($formatter): void {
-            $formatter->format(new AnalysisResult(2, 0.123, [], [], [], [], [], [], [], [], []), new CliOptions(), new Configuration());
+            $formatter->format(new AnalysisResult(2, 0.123, [], [], [], [], [], [], [], []), new CliOptions(), new Configuration());
         });
         $noIssuesButUnusedIgnores = $this->captureAndNormalizeOutput(static function () use ($formatter): void {
-            $formatter->format(new AnalysisResult(2, 0.123, [], [], [], [], [], [], [], [], [new UnusedErrorIgnore(ErrorType::SHADOW_DEPENDENCY, null, null)]), new CliOptions(), new Configuration());
+            $formatter->format(new AnalysisResult(2, 0.123, [], [], [], [], [], [], [], [new UnusedErrorIgnore(ErrorType::SHADOW_DEPENDENCY, null, null)]), new CliOptions(), new Configuration());
         });
 
         $expectedNoIssuesOutput = <<<'OUT'
@@ -54,7 +54,6 @@ OUT;
         $analysisResult = new AnalysisResult(
             10,
             0.123,
-            [],
             [],
             ['Unknown\\Thing' => [new SymbolUsage('/app/app/init.php', 1093, SymbolKind::CLASSLIKE)]],
             ['Unknown\\function' => [new SymbolUsage('/app/app/foo.php', 51, SymbolKind::FUNCTION)]],

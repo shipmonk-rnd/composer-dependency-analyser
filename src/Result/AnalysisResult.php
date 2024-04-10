@@ -28,11 +28,6 @@ class AnalysisResult
     /**
      * @var array<string, list<SymbolUsage>>
      */
-    private $missingExtensionsErrors = [];
-
-    /**
-     * @var array<string, list<SymbolUsage>>
-     */
     private $unknownClassErrors;
 
     /**
@@ -67,7 +62,6 @@ class AnalysisResult
 
     /**
      * @param array<string, array<string, list<SymbolUsage>>> $usages package => [ classname => usage[] ]
-     * @param array<string, list<SymbolUsage>> $missingExtensionErrors extension => usages
      * @param array<string, list<SymbolUsage>> $unknownClassErrors package => usages
      * @param array<string, list<SymbolUsage>> $unknownFunctionErrors package => usages
      * @param array<string, array<string, list<SymbolUsage>>> $shadowDependencyErrors package => [ classname => usage[] ]
@@ -80,7 +74,6 @@ class AnalysisResult
         int $scannedFilesCount,
         float $elapsedTime,
         array $usages,
-        array $missingExtensionErrors,
         array $unknownClassErrors,
         array $unknownFunctionErrors,
         array $shadowDependencyErrors,
@@ -91,7 +84,6 @@ class AnalysisResult
     )
     {
         ksort($usages);
-        ksort($missingExtensionErrors);
         ksort($unknownClassErrors);
         ksort($unknownFunctionErrors);
         ksort($shadowDependencyErrors);
@@ -101,7 +93,6 @@ class AnalysisResult
 
         $this->scannedFilesCount = $scannedFilesCount;
         $this->elapsedTime = $elapsedTime;
-        $this->missingExtensionsErrors = $missingExtensionErrors;
         $this->unknownClassErrors = $unknownClassErrors;
         $this->unknownFunctionErrors = $unknownFunctionErrors;
 
@@ -141,14 +132,6 @@ class AnalysisResult
     public function getUsages(): array
     {
         return $this->usages;
-    }
-
-    /**
-     * @return array<string, list<SymbolUsage>>
-     */
-    public function getMissingExtensionsErrors(): array
-    {
-        return $this->missingExtensionsErrors;
     }
 
     /**

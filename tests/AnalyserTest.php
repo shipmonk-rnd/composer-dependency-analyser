@@ -47,8 +47,7 @@ class AnalyserTest extends TestCase
             $this->getStopwatchMock(),
             [$vendorDir => $this->getClassLoaderMock()],
             $config,
-            $dependencies,
-            []
+            $dependencies
         );
         $result = $detector->run();
 
@@ -447,7 +446,6 @@ class AnalyserTest extends TestCase
             $scannedFiles,
             0.0,
             [],
-            [],
             array_filter($args[ErrorType::UNKNOWN_CLASS] ?? []), // @phpstan-ignore-line ignore mixed
             array_filter($args[ErrorType::UNKNOWN_FUNCTION] ?? []), // @phpstan-ignore-line ignore mixed
             array_filter($args[ErrorType::SHADOW_DEPENDENCY] ?? []), // @phpstan-ignore-line ignore mixed
@@ -470,7 +468,6 @@ class AnalyserTest extends TestCase
             $this->getStopwatchMock(),
             [__DIR__ => $this->getClassLoaderMock()],
             $config,
-            [],
             []
         );
         $result = $detector->run();
@@ -498,7 +495,6 @@ class AnalyserTest extends TestCase
             $this->getStopwatchMock(),
             [__DIR__ . '/data/autoloaded/vendor' => $this->getClassLoaderMock()],
             $config,
-            [],
             []
         );
         $result = $detector->run();
@@ -531,8 +527,7 @@ class AnalyserTest extends TestCase
             [
                 'regular/package' => false,
                 'dev/package' => true
-            ],
-            []
+            ]
         );
         $result = $detector->run();
 
@@ -555,7 +550,6 @@ class AnalyserTest extends TestCase
             $this->getStopwatchMock(),
             [$vendorDir => $this->getClassLoaderMock()],
             $config,
-            [],
             []
         );
         $result = $detector->run();
@@ -593,8 +587,7 @@ class AnalyserTest extends TestCase
             $config,
             [
                 'org/package' => false,
-            ],
-            []
+            ]
         );
         $result = $detector->run();
 
@@ -633,8 +626,7 @@ class AnalyserTest extends TestCase
             $config,
             [
                 'phpstan/phpstan' => true,
-            ],
-            []
+            ]
         );
         $result = $detector->run();
 
@@ -659,8 +651,7 @@ class AnalyserTest extends TestCase
             $this->getStopwatchMock(),
             [$vendorDir => $this->getClassLoaderMock()],
             $config,
-            ['org/package' => false],
-            []
+            ['org/package' => false]
         );
         $result = $detector->run();
 
@@ -683,8 +674,7 @@ class AnalyserTest extends TestCase
             $config,
             [
                 'dev/package' => true,
-            ],
-            []
+            ]
         );
         $result = $detector->run();
 

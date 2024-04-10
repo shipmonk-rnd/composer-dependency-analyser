@@ -31,15 +31,7 @@ class ComposerJson
     public $composerAutoloadPath;
 
     /**
-     * ext-* => isDev
-     *
-     * @readonly
-     * @var array<string, bool>
-     */
-    public $extensions;
-
-    /**
-     * Package => isDev
+     * Package or ext-* => isDev
      *
      * @readonly
      * @var array<string, bool>
@@ -90,10 +82,8 @@ class ComposerJson
 
         $this->dependencies = array_merge(
             array_fill_keys(array_keys(array_filter($requiredPackages, $filterPackages, ARRAY_FILTER_USE_KEY)), false),
-            array_fill_keys(array_keys(array_filter($requiredDevPackages, $filterPackages, ARRAY_FILTER_USE_KEY)), true)
-        );
-        $this->extensions = array_merge(
             array_fill_keys(array_keys(array_filter($requiredPackages, $filterExtensions, ARRAY_FILTER_USE_KEY)), false),
+            array_fill_keys(array_keys(array_filter($requiredDevPackages, $filterPackages, ARRAY_FILTER_USE_KEY)), true),
             array_fill_keys(array_keys(array_filter($requiredDevPackages, $filterExtensions, ARRAY_FILTER_USE_KEY)), true)
         );
 
