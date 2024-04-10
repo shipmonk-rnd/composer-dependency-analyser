@@ -23,6 +23,7 @@ use function preg_replace_callback;
 use function realpath;
 use function str_replace;
 use function strpos;
+use function strtolower;
 use function strtr;
 use function trim;
 use const ARRAY_FILTER_USE_KEY;
@@ -44,7 +45,7 @@ class ComposerJson
     public $composerAutoloadPath;
 
     /**
-     * Package => isDev
+     * Package or ext-* => isDev
      *
      * @readonly
      * @var array<string, bool>
@@ -99,18 +100,52 @@ class ComposerJson
             $this->extractAutoloadExcludeRegexes($basePath, $composerJsonData['autoload-dev']['exclude-from-classmap'] ?? [], true)
         );
 
+        $filterExtensions = static function (string $dependency): bool {
+            return strpos($dependency, 'ext-') === 0;
+        };
         $filterPackages = static function (string $package): bool {
             return strpos($package, '/') !== false;
         };
 
-        $this->dependencies = array_merge(
+        $this->dependencies = $this->normalizeNames(array_merge(
             array_fill_keys(array_keys(array_filter($requiredPackages, $filterPackages, ARRAY_FILTER_USE_KEY)), false),
-            array_fill_keys(array_keys(array_filter($requiredDevPackages, $filterPackages, ARRAY_FILTER_USE_KEY)), true)
-        );
+            array_fill_keys(array_keys(array_filter($requiredPackages, $filterExtensions, ARRAY_FILTER_USE_KEY)), false),
+            array_fill_keys(array_keys(array_filter($requiredDevPackages, $filterPackages, ARRAY_FILTER_USE_KEY)), true),
+            array_fill_keys(array_keys(array_filter($requiredDevPackages, $filterExtensions, ARRAY_FILTER_USE_KEY)), true)
+        ));
 
         if (count($this->dependencies) === 0) {
-            throw new InvalidConfigException("No packages found in $composerJsonPath file.");
+            throw new InvalidConfigException("No dependencies found in $composerJsonPath file.");
         }
+    }
+
+    /**
+     * @param array<string, bool> $dependencies
+     * @return array<string, bool>
+     */
+    private function normalizeNames(array $dependencies): array
+    {
+        $normalized = [];
+
+        foreach ($dependencies as $dependency => $isDev) {
+            if (strpos($dependency, 'ext-') === 0) {
+                $key = self::normalizeExtensionName($dependency);
+            } else {
+                $key = $dependency;
+            }
+
+            $normalized[$key] = $isDev;
+        }
+
+        return $normalized;
+    }
+
+    /**
+     * Zend Opcache -> zend-opcache
+     */
+    public static function normalizeExtensionName(string $extension): string
+    {
+        return str_replace(' ', '-', strtolower($extension));
     }
 
     /**
