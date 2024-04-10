@@ -117,11 +117,22 @@ class ConsoleFormatter implements ResultFormatter
         $unusedIgnores = $result->getUnusedIgnores();
 
         $unknownClassErrors = $result->getUnknownClassErrors();
+        $missingExtensionErrors = $result->getMissingExtensionsErrors();
         $unknownFunctionErrors = $result->getUnknownFunctionErrors();
         $shadowDependencyErrors = $result->getShadowDependencyErrors();
         $devDependencyInProductionErrors = $result->getDevDependencyInProductionErrors();
         $prodDependencyOnlyInDevErrors = $result->getProdDependencyOnlyInDevErrors();
         $unusedDependencyErrors = $result->getUnusedDependencyErrors();
+
+        if (count($missingExtensionErrors) > 0) {
+            $hasError = true;
+            $this->printSymbolBasedErrors(
+                'Missing extensions!',
+                'those are used, but not listed in composer.json',
+                $missingExtensionErrors,
+                $maxShownUsages
+            );
+        }
 
         if (count($unknownClassErrors) > 0) {
             $hasError = true;

@@ -42,6 +42,19 @@ use const DIRECTORY_SEPARATOR;
 class Analyser
 {
 
+    private const CORE_EXTENSIONS = [
+        'Core',
+        'date',
+        'json',
+        'hash',
+        'pcre',
+        'Phar',
+        'Reflection',
+        'SPL',
+        'random',
+        'standard',
+    ];
+
     /**
      * @var Stopwatch
      */
@@ -74,6 +87,13 @@ class Analyser
     private $composerJsonDependencies;
 
     /**
+     * ext-* => is dev dependency
+     *
+     * @var array<string, bool>
+     */
+    private $composerJsonExtensions;
+
+    /**
      * symbol name => true
      *
      * @var array<string, true>
@@ -81,26 +101,43 @@ class Analyser
     private $ignoredSymbols;
 
     /**
-     * function name => path
+     * custom function name => path
      *
      * @var array<string, string>
      */
     private $definedFunctions = [];
 
     /**
+     * class name => ext-*
+     *
+     * @var array<string, string>
+     */
+    private $extensionClasses;
+
+    /**
+     * function name => ext-*
+     *
+     * @var array<string, string>
+     */
+    private $extensionFunctions;
+
+    /**
      * @param array<string, ClassLoader> $classLoaders vendorDir => ClassLoader (e.g. result of \Composer\Autoload\ClassLoader::getRegisteredLoaders())
      * @param array<string, bool> $composerJsonDependencies package name => is dev dependency
+     * @param array<string, bool> $composerJsonExtensions ext-* => is dev dependency
      */
     public function __construct(
         Stopwatch $stopwatch,
         array $classLoaders,
         Configuration $config,
-        array $composerJsonDependencies
+        array $composerJsonDependencies,
+        array $composerJsonExtensions
     )
     {
         $this->stopwatch = $stopwatch;
         $this->config = $config;
         $this->composerJsonDependencies = $composerJsonDependencies;
+        $this->composerJsonExtensions = $composerJsonExtensions;
 
         $this->initExistingSymbols();
 
@@ -119,6 +156,7 @@ class Analyser
         $scannedFilesCount = 0;
         $unknownClassErrors = [];
         $unknownFunctionErrors = [];
+        $missingExtensions = [];
         $shadowErrors = [];
         $devInProdErrors = [];
         $prodOnlyInDevErrors = [];
@@ -139,6 +177,30 @@ class Analyser
             foreach ($usedSymbolsByKind as $kind => $usedSymbols) {
                 foreach ($usedSymbols as $usedSymbol => $lineNumbers) {
                     if (isset($this->ignoredSymbols[$usedSymbol])) {
+                        continue;
+                    }
+
+                    if ($kind === SymbolKind::FUNCTION && isset($this->extensionFunctions[$usedSymbol])) {
+                        $neededExtension = $this->extensionFunctions[$usedSymbol];
+
+                        if (!isset($this->composerJsonExtensions[$neededExtension])) {
+                            foreach ($lineNumbers as $lineNumber) {
+                                $missingExtensions[$neededExtension][] = new SymbolUsage($filePath, $lineNumber, $kind);
+                            }
+                        }
+
+                        continue;
+                    }
+
+                    if ($kind === SymbolKind::CLASSLIKE && isset($this->extensionClasses[$usedSymbol])) {
+                        $neededExtension = $this->extensionClasses[$usedSymbol];
+
+                        if (!isset($this->composerJsonExtensions[$neededExtension])) {
+                            foreach ($lineNumbers as $lineNumber) {
+                                $missingExtensions[$neededExtension][] = new SymbolUsage($filePath, $lineNumber, $kind);
+                            }
+                        }
+
                         continue;
                     }
 
@@ -258,6 +320,7 @@ class Analyser
             $scannedFilesCount,
             $this->stopwatch->stop(),
             $usages,
+            $missingExtensions,
             $unknownClassErrors,
             $unknownFunctionErrors,
             $shadowErrors,
@@ -328,7 +391,7 @@ class Analyser
             throw new InvalidPathException("Unable to get contents of '$filePath'");
         }
 
-        return (new UsedSymbolExtractor($code))->parseUsedSymbols();
+        return (new UsedSymbolExtractor($code))->parseUsedSymbols($this->extensionFunctions);
     }
 
     /**
@@ -483,10 +546,18 @@ class Analyser
                 $reflectionFunction = new ReflectionFunction($functionName);
                 $functionFilePath = $reflectionFunction->getFileName();
 
-                if ($reflectionFunction->getExtension() === null && is_string($functionFilePath)) {
-                    $this->definedFunctions[$functionName] = Path::normalize($functionFilePath);
+                if ($reflectionFunction->getExtension() === null) {
+                    if (is_string($functionFilePath)) {
+                        $this->definedFunctions[$functionName] = Path::normalize($functionFilePath);
+                    }
                 } else {
-                    $this->ignoredSymbols[$functionName] = true;
+                    $extensionName = $reflectionFunction->getExtension()->name;
+
+                    if (in_array($extensionName, self::CORE_EXTENSIONS, true)) {
+                        $this->ignoredSymbols[$functionName] = true;
+                    } else {
+                        $this->extensionFunctions[$functionName] = 'ext-' . $extensionName;
+                    }
                 }
             }
         }
@@ -499,8 +570,16 @@ class Analyser
 
         foreach ($classLikes as $classLikeNames) {
             foreach ($classLikeNames as $classLikeName) {
-                if ((new ReflectionClass($classLikeName))->getExtension() !== null) {
-                    $this->ignoredSymbols[$classLikeName] = true;
+                $classReflection = new ReflectionClass($classLikeName);
+
+                if ($classReflection->getExtension() !== null) {
+                    $extensionName = $classReflection->getExtension()->name;
+
+                    if (in_array($extensionName, self::CORE_EXTENSIONS, true)) {
+                        $this->ignoredSymbols[$classLikeName] = true;
+                    } else {
+                        $this->extensionClasses[$classLikeName] = 'ext-' . $extensionName;
+                    }
                 }
             }
         }
