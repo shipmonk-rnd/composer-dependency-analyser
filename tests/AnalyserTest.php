@@ -609,6 +609,48 @@ class AnalyserTest extends TestCase
         self::assertEquals($this->createAnalysisResult(1, []), $result);
     }
 
+    public function testExtensions(): void
+    {
+        $vendorDir = realpath(__DIR__ . '/../vendor');
+        $prodPath = realpath(__DIR__ . '/data/not-autoloaded/extensions/ext-prod-usages.php');
+        $devPath = realpath(__DIR__ . '/data/not-autoloaded/extensions/ext-dev-usages.php');
+        self::assertNotFalse($vendorDir);
+        self::assertNotFalse($prodPath);
+        self::assertNotFalse($devPath);
+
+        $config = new Configuration();
+        $config->addPathToScan($prodPath, false);
+        $config->addPathToScan($devPath, true);
+
+        $detector = new Analyser(
+            $this->getStopwatchMock(),
+            $vendorDir,
+            [$vendorDir => $this->getClassLoaderMock()],
+            $config,
+            [
+                'ext-dom' => false,
+                'ext-libxml' => true,
+                'ext-mbstring' => false,
+            ]
+        );
+        $result = $detector->run();
+
+        $this->assertResultsWithoutUsages($this->createAnalysisResult(2, [
+            ErrorType::SHADOW_DEPENDENCY => [
+                'ext-pdo' => ['PDO' => [new SymbolUsage($prodPath, 5, SymbolKind::CLASSLIKE)]],
+            ],
+            ErrorType::DEV_DEPENDENCY_IN_PROD => [
+                'ext-libxml' => ['LIBXML_NOEMPTYTAG' => [new SymbolUsage($prodPath, 3, SymbolKind::CONSTANT)]],
+            ],
+            ErrorType::PROD_DEPENDENCY_ONLY_IN_DEV => [
+                'ext-dom',
+            ],
+            ErrorType::UNUSED_DEPENDENCY => [
+                'ext-mbstring',
+            ],
+        ]), $result);
+    }
+
     public function testPharSupport(): void
     {
         $canCreatePhar = ini_set('phar.readonly', '0');

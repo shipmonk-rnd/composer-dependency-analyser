@@ -167,7 +167,7 @@ NO_COLOR=1 vendor/bin/composer-dependency-analyser
 ```
 
 ## Limitations:
-- Extension dependencies are not analysed (e.g. `ext-json`)
+- For precise `ext-x` analysis, your enabled extentions of your php runtime should be superset of those used in the scanned project
 
 ## Contributing:
 - Check your code by `composer check`

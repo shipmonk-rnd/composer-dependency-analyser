@@ -20,7 +20,7 @@ class UsedSymbolExtractorTest extends TestCase
 
         $extractor = new UsedSymbolExtractor($code);
 
-        self::assertSame($expectedUsages, $extractor->parseUsedSymbols());
+        self::assertSame($expectedUsages, $extractor->parseUsedSymbols(['PDO'], ['json_encode'], ['LIBXML_ERR_FATAL']));
     }
 
     /**
@@ -116,6 +116,23 @@ class UsedSymbolExtractorTest extends TestCase
         yield 'curly braces' => [
             __DIR__ . '/data/not-autoloaded/used-symbols/curly-braces.php',
             [],
+        ];
+
+        yield 'extensions' => [
+            __DIR__ . '/data/not-autoloaded/used-symbols/extensions.php',
+            [
+                SymbolKind::FUNCTION => [
+                    'json_encode' => [5],
+                    'json_decode' => [12],
+                ],
+                SymbolKind::CONSTANT => [
+                    'LIBXML_ERR_FATAL' => [6],
+                ],
+                SymbolKind::CLASSLIKE => [
+                    'PDO' => [7],
+                    'CURLOPT_SSL_VERIFYHOST' => [10],
+                ],
+            ],
         ];
 
         if (PHP_VERSION_ID >= 80000) {
