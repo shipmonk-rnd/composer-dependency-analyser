@@ -21,6 +21,7 @@ use function array_diff;
 use function array_filter;
 use function array_key_exists;
 use function array_keys;
+use function array_merge;
 use function explode;
 use function file_get_contents;
 use function get_declared_classes;
@@ -43,16 +44,16 @@ class Analyser
 {
 
     private const CORE_EXTENSIONS = [
-        'Core',
-        'date',
-        'json',
-        'hash',
-        'pcre',
-        'Phar',
-        'Reflection',
-        'SPL',
-        'random',
-        'standard',
+        'ext-Core',
+        'ext-date',
+        'ext-json',
+        'ext-hash',
+        'ext-pcre',
+        'ext-Phar',
+        'ext-Reflection',
+        'ext-SPL',
+        'ext-random',
+        'ext-standard',
     ];
 
     /**
@@ -108,18 +109,11 @@ class Analyser
     private $definedFunctions = [];
 
     /**
-     * class name => ext-*
+     * kind => [symbol name => ext-*]
      *
-     * @var array<string, string>
+     * @var array<SymbolKind::*, array<string, string>>
      */
-    private $extensionClasses;
-
-    /**
-     * function name => ext-*
-     *
-     * @var array<string, string>
-     */
-    private $extensionFunctions;
+    private $extensionSymbols;
 
     /**
      * @param array<string, ClassLoader> $classLoaders vendorDir => ClassLoader (e.g. result of \Composer\Autoload\ClassLoader::getRegisteredLoaders())
@@ -163,6 +157,7 @@ class Analyser
         $unusedErrors = [];
 
         $usedPackages = [];
+        $usedExtensions = [];
         $prodPackagesUsedInProdPath = [];
 
         $usages = [];
@@ -180,20 +175,9 @@ class Analyser
                         continue;
                     }
 
-                    if ($kind === SymbolKind::FUNCTION && isset($this->extensionFunctions[$usedSymbol])) {
-                        $neededExtension = $this->extensionFunctions[$usedSymbol];
-
-                        if (!isset($this->composerJsonExtensions[$neededExtension])) {
-                            foreach ($lineNumbers as $lineNumber) {
-                                $missingExtensions[$neededExtension][] = new SymbolUsage($filePath, $lineNumber, $kind);
-                            }
-                        }
-
-                        continue;
-                    }
-
-                    if ($kind === SymbolKind::CLASSLIKE && isset($this->extensionClasses[$usedSymbol])) {
-                        $neededExtension = $this->extensionClasses[$usedSymbol];
+                    if (isset($this->extensionSymbols[$kind][$usedSymbol])) {
+                        $neededExtension = $this->extensionSymbols[$kind][$usedSymbol];
+                        $usedExtensions[$neededExtension] = true;
 
                         if (!isset($this->composerJsonExtensions[$neededExtension])) {
                             foreach ($lineNumbers as $lineNumber) {
@@ -282,16 +266,25 @@ class Analyser
         }
 
         if ($this->config->shouldReportUnusedDevDependencies()) {
-            $dependenciesForUnusedAnalysis = array_keys($this->composerJsonDependencies);
+            $dependenciesForUnusedAnalysis = array_merge(
+                array_keys($this->composerJsonDependencies),
+                array_keys($this->composerJsonExtensions)
+            );
+
         } else {
-            $dependenciesForUnusedAnalysis = array_keys(array_filter($this->composerJsonDependencies, static function (bool $devDependency) {
-                return !$devDependency; // dev deps are typically used only in CI
-            }));
+            $dependenciesForUnusedAnalysis = array_merge(
+                array_keys(array_filter($this->composerJsonDependencies, static function (bool $devDependency) {
+                    return !$devDependency; // dev deps are typically used only in CI
+                })),
+                array_keys($this->composerJsonExtensions)
+            );
         }
 
         $unusedDependencies = array_diff(
             $dependenciesForUnusedAnalysis,
-            array_keys($usedPackages)
+            array_keys($usedPackages),
+            array_keys($usedExtensions),
+            self::CORE_EXTENSIONS
         );
 
         foreach ($unusedDependencies as $unusedDependency) {
@@ -391,7 +384,10 @@ class Analyser
             throw new InvalidPathException("Unable to get contents of '$filePath'");
         }
 
-        return (new UsedSymbolExtractor($code))->parseUsedSymbols($this->extensionFunctions);
+        return (new UsedSymbolExtractor($code))->parseUsedSymbols(
+            $this->extensionSymbols[SymbolKind::FUNCTION],
+            $this->extensionSymbols[SymbolKind::CONSTANT]
+        );
     }
 
     /**
@@ -536,9 +532,21 @@ class Analyser
             'Composer\\Autoload\\ClassLoader' => true,
         ];
 
-        /** @var string $constantName */
-        foreach (get_defined_constants() as $constantName => $constantValue) {
-            $this->ignoredSymbols[$constantName] = true;
+        /** @var array<string, mixed> $constants */
+        foreach (get_defined_constants(true) as $constantExtension => $constants) {
+            foreach ($constants as $constantName => $_) {
+                if ($constantExtension === 'user') {
+                    $this->ignoredSymbols[$constantName] = true;
+                } else {
+                    $extensionName = 'ext-' . $constantExtension;
+
+                    if (in_array($extensionName, self::CORE_EXTENSIONS, true)) {
+                        $this->ignoredSymbols[$constantName] = true;
+                    } else {
+                        $this->extensionSymbols[SymbolKind::CONSTANT][$constantName] = $extensionName;
+                    }
+                }
+            }
         }
 
         foreach (get_defined_functions() as $functionNames) {
@@ -551,12 +559,12 @@ class Analyser
                         $this->definedFunctions[$functionName] = Path::normalize($functionFilePath);
                     }
                 } else {
-                    $extensionName = $reflectionFunction->getExtension()->name;
+                    $extensionName = 'ext-' . $reflectionFunction->getExtension()->name;
 
                     if (in_array($extensionName, self::CORE_EXTENSIONS, true)) {
                         $this->ignoredSymbols[$functionName] = true;
                     } else {
-                        $this->extensionFunctions[$functionName] = 'ext-' . $extensionName;
+                        $this->extensionSymbols[SymbolKind::FUNCTION][$functionName] = $extensionName;
                     }
                 }
             }
@@ -573,12 +581,12 @@ class Analyser
                 $classReflection = new ReflectionClass($classLikeName);
 
                 if ($classReflection->getExtension() !== null) {
-                    $extensionName = $classReflection->getExtension()->name;
+                    $extensionName = 'ext-' . $classReflection->getExtension()->name;
 
                     if (in_array($extensionName, self::CORE_EXTENSIONS, true)) {
                         $this->ignoredSymbols[$classLikeName] = true;
                     } else {
-                        $this->extensionClasses[$classLikeName] = 'ext-' . $extensionName;
+                        $this->extensionSymbols[SymbolKind::CLASSLIKE][$classLikeName] = $extensionName;
                     }
                 }
             }

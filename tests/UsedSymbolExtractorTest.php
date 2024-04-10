@@ -19,7 +19,7 @@ class UsedSymbolExtractorTest extends TestCase
 
         $extractor = new UsedSymbolExtractor($code);
 
-        self::assertSame($expectedUsages, $extractor->parseUsedSymbols(['json_encode']));
+        self::assertSame($expectedUsages, $extractor->parseUsedSymbols(['json_encode'], []));
     }
 
     /**

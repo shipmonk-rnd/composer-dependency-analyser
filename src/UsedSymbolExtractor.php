@@ -4,6 +4,7 @@ namespace ShipMonk\ComposerDependencyAnalyser;
 
 use function array_combine;
 use function array_fill_keys;
+use function array_merge;
 use function count;
 use function explode;
 use function is_array;
@@ -61,14 +62,24 @@ class UsedSymbolExtractor
      * - this results in very limited functionality in files without namespace
      *
      * @param array<string> $definedFunctions
+     * @param array<string> $definedConstants
      * @return array<SymbolKind::*, array<string, list<int>>>
      * @license Inspired by https://github.com/doctrine/annotations/blob/2.0.0/lib/Doctrine/Common/Annotations/TokenParser.php
      */
-    public function parseUsedSymbols(array $definedFunctions): array
+    public function parseUsedSymbols(
+        array $definedFunctions,
+        array $definedConstants
+    ): array
     {
         $usedSymbols = [];
-        $useStatements = array_combine($definedFunctions, $definedFunctions);
-        $useStatementKinds = array_fill_keys($definedFunctions, SymbolKind::FUNCTION);
+        $useStatements = $initialSseStatements = array_merge(
+            array_combine($definedFunctions, $definedFunctions),
+            array_combine($definedConstants, $definedConstants)
+        );
+        $useStatementKinds = $initialUseStatementKinds = array_merge(
+            array_fill_keys($definedFunctions, SymbolKind::FUNCTION),
+            array_fill_keys($definedConstants, SymbolKind::CONSTANT)
+        );
 
         $level = 0;
         $inClassLevel = null;
@@ -100,8 +111,8 @@ class UsedSymbolExtractor
 
                     case PHP_VERSION_ID >= 80000 ? T_NAMESPACE : -1:
                         // reset use statements on namespace change
-                        $useStatements = array_combine($definedFunctions, $definedFunctions);
-                        $useStatementKinds = array_fill_keys($definedFunctions, SymbolKind::FUNCTION);
+                        $useStatements = $initialSseStatements;
+                        $useStatementKinds = $initialUseStatementKinds;
                         break;
 
                     case PHP_VERSION_ID >= 80000 ? T_NAME_FULLY_QUALIFIED : -1:
@@ -138,8 +149,8 @@ class UsedSymbolExtractor
 
                         if (substr($nextName, 0, 1) !== '\\') { // not a namespace-relative name, but a new namespace declaration
                             // reset use statements on namespace change
-                            $useStatements = array_combine($definedFunctions, $definedFunctions);
-                            $useStatementKinds = array_fill_keys($definedFunctions, SymbolKind::FUNCTION);
+                            $useStatements = $initialSseStatements;
+                            $useStatementKinds = $initialUseStatementKinds;
                         }
 
                         break;
@@ -192,7 +203,7 @@ class UsedSymbolExtractor
             }
         }
 
-        return $usedSymbols; // @phpstan-ignore-line Not enough precise analysis "Offset 'kind' (1|2|3) does not accept type int<1, max>"
+        return $usedSymbols;
     }
 
     /**
