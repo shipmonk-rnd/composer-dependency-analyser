@@ -31,7 +31,7 @@ class ComposerJson
     public $composerAutoloadPath;
 
     /**
-     * Package => isDev
+     * Package or ext-* => isDev
      *
      * @readonly
      * @var array<string, bool>
@@ -73,13 +73,18 @@ class ComposerJson
             $this->extractAutoloadPaths($basePath, $composerJsonData['autoload-dev']['classmap'] ?? [], true)
         );
 
+        $filterExtensions = static function (string $dependency): bool {
+            return strpos($dependency, 'ext-') === 0;
+        };
         $filterPackages = static function (string $package): bool {
             return strpos($package, '/') !== false;
         };
 
         $this->dependencies = array_merge(
             array_fill_keys(array_keys(array_filter($requiredPackages, $filterPackages, ARRAY_FILTER_USE_KEY)), false),
-            array_fill_keys(array_keys(array_filter($requiredDevPackages, $filterPackages, ARRAY_FILTER_USE_KEY)), true)
+            array_fill_keys(array_keys(array_filter($requiredPackages, $filterExtensions, ARRAY_FILTER_USE_KEY)), false),
+            array_fill_keys(array_keys(array_filter($requiredDevPackages, $filterPackages, ARRAY_FILTER_USE_KEY)), true),
+            array_fill_keys(array_keys(array_filter($requiredDevPackages, $filterExtensions, ARRAY_FILTER_USE_KEY)), true)
         );
 
         if (count($this->dependencies) === 0) {

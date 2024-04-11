@@ -19,7 +19,7 @@ class UsedSymbolExtractorTest extends TestCase
 
         $extractor = new UsedSymbolExtractor($code);
 
-        self::assertSame($expectedUsages, $extractor->parseUsedSymbols());
+        self::assertSame($expectedUsages, $extractor->parseUsedSymbols(['json_encode'], []));
     }
 
     /**
@@ -111,6 +111,16 @@ class UsedSymbolExtractorTest extends TestCase
         yield 'curly braces' => [
             __DIR__ . '/data/not-autoloaded/used-symbols/curly-braces.php',
             []
+        ];
+
+        yield 'extensions' => [
+            __DIR__ . '/data/not-autoloaded/used-symbols/extensions.php',
+            [
+                SymbolKind::FUNCTION => [
+                    'json_encode' => [5],
+                    'json_decode' => [6],
+                ],
+            ],
         ];
     }
 
