@@ -11,6 +11,7 @@ use function substr;
 use function token_get_all;
 use const PHP_VERSION_ID;
 use const T_AS;
+use const T_ATTRIBUTE;
 use const T_CLASS;
 use const T_COMMENT;
 use const T_CONST;
@@ -337,9 +338,13 @@ class UsedSymbolExtractor
             break;
         } while ($pointerAfterName < $this->numTokens);
 
+        // phpcs:disable Squiz.PHP.CommentedOutCode.Found
         if (
             $tokenAfterName === '('
-            && $tokenBeforeName[0] !== T_NEW // eliminate new \ClassName( syntax
+            && !(
+                $tokenBeforeName[0] === T_NEW // eliminate new \ClassName( syntax
+                || (PHP_VERSION_ID > 80000 && $tokenBeforeName[0] === T_ATTRIBUTE) // eliminate #[\AttributeName( syntax
+            )
         ) {
             return SymbolKind::FUNCTION;
         }

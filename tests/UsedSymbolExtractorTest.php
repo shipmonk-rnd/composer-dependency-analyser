@@ -79,6 +79,7 @@ class UsedSymbolExtractorTest extends TestCase
                 ],
                 SymbolKind::CLASSLIKE => [
                     'DIRECTORY_SEPARATOR' => [10],
+                    'SomeAttribute' => [18],
                 ],
                 SymbolKind::FUNCTION => [
                     'strlen' => [12],
