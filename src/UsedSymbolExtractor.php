@@ -342,8 +342,8 @@ class UsedSymbolExtractor
         if (
             $tokenAfterName === '('
             && !(
-                $tokenBeforeName[0] === T_NEW // eliminate new \ClassName( syntax
-                || (PHP_VERSION_ID > 80000 && $tokenBeforeName[0] === T_ATTRIBUTE) // eliminate #[\AttributeName( syntax
+                $tokenBeforeName[0] === T_NEW // eliminate new \ClassName(
+                || (PHP_VERSION_ID > 80000 && $tokenBeforeName[0] === T_ATTRIBUTE) // eliminate #[\AttributeName(
             )
         ) {
             return SymbolKind::FUNCTION;

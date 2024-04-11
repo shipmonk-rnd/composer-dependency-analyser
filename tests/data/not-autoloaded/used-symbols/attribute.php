@@ -1,0 +1,4 @@
+<?php
+
+#[\SomeAttribute()]
+class ClassWithAttribute {}

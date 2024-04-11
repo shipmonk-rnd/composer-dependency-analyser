@@ -4,6 +4,7 @@ namespace ShipMonk\ComposerDependencyAnalyser;
 
 use PHPUnit\Framework\TestCase;
 use function file_get_contents;
+use const PHP_VERSION_ID;
 
 class UsedSymbolExtractorTest extends TestCase
 {
@@ -79,7 +80,6 @@ class UsedSymbolExtractorTest extends TestCase
                 ],
                 SymbolKind::CLASSLIKE => [
                     'DIRECTORY_SEPARATOR' => [10],
-                    'SomeAttribute' => [18],
                 ],
                 SymbolKind::FUNCTION => [
                     'strlen' => [12],
@@ -112,6 +112,17 @@ class UsedSymbolExtractorTest extends TestCase
         yield 'curly braces' => [
             __DIR__ . '/data/not-autoloaded/used-symbols/curly-braces.php',
             []
+        ];
+
+        yield 'attribute' => [
+            __DIR__ . '/data/not-autoloaded/used-symbols/attribute.php',
+            PHP_VERSION_ID >= 80000
+                ? [
+                    SymbolKind::CLASSLIKE => [
+                        'SomeAttribute' => [3],
+                    ],
+                ]
+                : []
         ];
     }
 

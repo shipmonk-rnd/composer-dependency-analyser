@@ -13,7 +13,3 @@ echo \DIRECTORY_SEPARATOR . "\n";
 strpos('', '');
 assertAlias('', []);
 Framework\assertArrayNotHasKey/**/('', []);
-
-
-#[\SomeAttribute()]
-class ClassWithAttribute {}
