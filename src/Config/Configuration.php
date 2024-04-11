@@ -473,6 +473,10 @@ class Configuration
         if (in_array(ErrorType::UNKNOWN_CLASS, $errorTypes, true)) {
             throw new InvalidConfigException('UNKNOWN_CLASS errors cannot be ignored on a package');
         }
+
+        if (in_array(ErrorType::UNKNOWN_FUNCTION, $errorTypes, true)) {
+            throw new InvalidConfigException('UNKNOWN_FUNCTION errors cannot be ignored on a package');
+        }
     }
 
 }
