@@ -28,6 +28,7 @@
         "ext-libxml": "*",
         "editorconfig-checker/editorconfig-checker": "^10.3.0",
         "ergebnis/composer-normalize": "^2.19",
+        "phpcompatibility/php-compatibility": "^9.3",
         "phpstan/phpstan": "^1.10.63",
         "phpstan/phpstan-phpunit": "^1.1.1",
         "phpstan/phpstan-strict-rules": "^1.2.3",
