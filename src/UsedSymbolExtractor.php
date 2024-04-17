@@ -70,6 +70,7 @@ class UsedSymbolExtractor
 
         $level = 0;
         $inClassLevel = null;
+        $inAttribute = false;
 
         $numTokens = $this->numTokens;
         $tokens = $this->tokens;
@@ -96,13 +97,17 @@ class UsedSymbolExtractor
 
                         break;
 
+                    case PHP_VERSION_ID > 80000 ? T_ATTRIBUTE : -1:
+                        $inAttribute = true;
+                        break;
+
                     case PHP_VERSION_ID >= 80000 ? T_NAMESPACE : -1:
                         $useStatements = []; // reset use statements on namespace change
                         break;
 
                     case PHP_VERSION_ID >= 80000 ? T_NAME_FULLY_QUALIFIED : -1:
                         $symbolName = $this->normalizeBackslash($token[1]);
-                        $kind = $this->getFqnSymbolKind($this->pointer - 2, $this->pointer);
+                        $kind = $this->getFqnSymbolKind($this->pointer - 2, $this->pointer, $inAttribute);
                         $usedSymbols[$kind][$symbolName][] = $token[2];
                         break;
 
@@ -111,7 +116,7 @@ class UsedSymbolExtractor
 
                         if (isset($useStatements[$neededAlias])) {
                             $symbolName = $useStatements[$neededAlias] . substr($token[1], strlen($neededAlias));
-                            $kind = $this->getFqnSymbolKind($this->pointer - 2, $this->pointer);
+                            $kind = $this->getFqnSymbolKind($this->pointer - 2, $this->pointer, $inAttribute);
                             $usedSymbols[$kind][$symbolName][] = $token[2];
                         }
 
@@ -143,7 +148,7 @@ class UsedSymbolExtractor
                         $symbolName = $this->normalizeBackslash($this->parseNameForOldPhp());
 
                         if ($symbolName !== '') { // e.g. \array (NS separator followed by not-a-name)
-                            $kind = $this->getFqnSymbolKind($pointerBeforeName, $this->pointer - 1);
+                            $kind = $this->getFqnSymbolKind($pointerBeforeName, $this->pointer - 1, false);
                             $usedSymbols[$kind][$symbolName][] = $token[2];
                         }
 
@@ -163,7 +168,7 @@ class UsedSymbolExtractor
 
                             if (isset($useStatements[$neededAlias])) { // qualified name
                                 $symbolName = $useStatements[$neededAlias] . substr($name, strlen($neededAlias));
-                                $kind = $this->getFqnSymbolKind($pointerBeforeName, $this->pointer - 1);
+                                $kind = $this->getFqnSymbolKind($pointerBeforeName, $this->pointer - 1, false);
                                 $usedSymbols[$kind][$symbolName][] = $token[2];
                             }
                         }
@@ -183,6 +188,8 @@ class UsedSymbolExtractor
                 }
 
                 $level--;
+            } elseif ($token === ']' && $inAttribute) {
+                $inAttribute = false;
             }
         }
 
@@ -306,8 +313,16 @@ class UsedSymbolExtractor
     /**
      * @return SymbolKind::CLASSLIKE|SymbolKind::FUNCTION
      */
-    private function getFqnSymbolKind(int $pointerBeforeName, int $pointerAfterName): int
+    private function getFqnSymbolKind(
+        int $pointerBeforeName,
+        int $pointerAfterName,
+        bool $inAttribute
+    ): int
     {
+        if ($inAttribute) {
+            return SymbolKind::CLASSLIKE;
+        }
+
         do {
             $tokenBeforeName = $this->tokens[$pointerBeforeName];
 
@@ -341,10 +356,7 @@ class UsedSymbolExtractor
         // phpcs:disable Squiz.PHP.CommentedOutCode.Found
         if (
             $tokenAfterName === '('
-            && !(
-                $tokenBeforeName[0] === T_NEW // eliminate new \ClassName(
-                || (PHP_VERSION_ID > 80000 && $tokenBeforeName[0] === T_ATTRIBUTE) // eliminate #[\AttributeName(
-            )
+            && $tokenBeforeName[0] !== T_NEW // eliminate new \ClassName(
         ) {
             return SymbolKind::FUNCTION;
         }

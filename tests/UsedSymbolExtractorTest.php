@@ -120,6 +120,8 @@ class UsedSymbolExtractorTest extends TestCase
                 ? [
                     SymbolKind::CLASSLIKE => [
                         'SomeAttribute' => [3],
+                        'Assert\NotNull' => [7],
+                        'Assert\NotBlank' => [8],
                     ],
                 ]
                 : []
