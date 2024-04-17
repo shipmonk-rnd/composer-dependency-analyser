@@ -114,16 +114,18 @@ class UsedSymbolExtractorTest extends TestCase
             []
         ];
 
-        yield 'attribute' => [
-            __DIR__ . '/data/not-autoloaded/used-symbols/attribute.php',
-            PHP_VERSION_ID >= 80000
-                ? [
+        if (PHP_VERSION_ID >= 80000) {
+            yield 'attribute' => [
+                __DIR__ . '/data/not-autoloaded/used-symbols/attribute.php',
+                [
                     SymbolKind::CLASSLIKE => [
                         'SomeAttribute' => [3],
+                        'Assert\NotNull' => [7],
+                        'Assert\NotBlank' => [8],
                     ],
-                ]
-                : []
-        ];
+                ],
+            ];
+        }
     }
 
 }
