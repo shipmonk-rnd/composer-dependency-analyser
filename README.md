@@ -148,7 +148,7 @@ return $config
     // for multiple, use ignoreErrorsOnPackagesAndPaths() or ignoreErrorsOnPackageAndPaths()
     ->ignoreErrorsOnPackageAndPath('symfony/console', __DIR__ . '/src/OptionalCommand.php', [ErrorType::SHADOW_DEPENDENCY])
 
-    // allow using classes not present in composer's autoloader
+    // allow using non-autoloadable classes
     // e.g. a library may conditionally support some feature only when Memcached is available
     ->ignoreUnknownClasses(['Memcached'])
     ->ignoreUnknownClassesRegex('~^DDTrace~')
