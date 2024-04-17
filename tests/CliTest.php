@@ -33,22 +33,22 @@ class CliTest extends TestCase
     {
         yield 'unknown long option' => [
             'Unknown option --unknown, see --help',
-            ['bin/script.php', '--unknown']
+            ['bin/script.php', '--unknown'],
         ];
 
         yield 'unknown short option' => [
             'Unknown option -u, see --help',
-            ['bin/script.php', '-u']
+            ['bin/script.php', '-u'],
         ];
 
         yield 'unknown argument' => [
             'Unknown argument unknown, see --help',
-            ['bin/script.php', 'unknown']
+            ['bin/script.php', 'unknown'],
         ];
 
         yield 'path passed' => [
             'Cannot pass paths (data) to analyse as arguments, use --config instead.',
-            ['bin/script.php', 'data']
+            ['bin/script.php', 'data'],
         ];
 
         yield 'valid bool options' => [
@@ -64,7 +64,7 @@ class CliTest extends TestCase
                 $options->ignoreUnknownClasses = true;
                 $options->ignoreUnknownFunctions = true;
                 return $options;
-            })()
+            })(),
         ];
 
         yield 'valid options with values' => [
@@ -75,7 +75,7 @@ class CliTest extends TestCase
                 $options->composerJson = '../composer.json';
                 $options->verbose = true;
                 return $options;
-            })()
+            })(),
         ];
 
         yield 'valid options with values, multiple' => [
@@ -86,7 +86,7 @@ class CliTest extends TestCase
                 $options->composerJson = '../composer.json';
                 $options->config = '../config.php';
                 return $options;
-            })()
+            })(),
         ];
 
         yield 'valid options with values using =' => [
@@ -97,22 +97,22 @@ class CliTest extends TestCase
                 $options->composerJson = '../composer.json';
                 $options->verbose = true;
                 return $options;
-            })()
+            })(),
         ];
 
         yield 'missing argument for option' => [
             'Missing argument for --composer-json, see --help',
-            ['bin/script.php', '--composer-json']
+            ['bin/script.php', '--composer-json'],
         ];
 
         yield 'missing argument for option, next option is valid' => [
             'Missing argument for --composer-json, see --help',
-            ['bin/script.php', '--composer-json', '--verbose']
+            ['bin/script.php', '--composer-json', '--verbose'],
         ];
 
         yield 'missing argument for option with =' => [
             'Missing argument value in --composer-json=, see --help',
-            ['bin/script.php', '--composer-json=']
+            ['bin/script.php', '--composer-json='],
         ];
     }
 
