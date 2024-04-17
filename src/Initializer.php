@@ -187,22 +187,24 @@ EOD;
     /**
      * @return array<string, ClassLoader>
      */
-    public function initComposerClassLoaders(): array
+    public function initComposerClassLoaders(CliOptions $options): array
     {
         $loaders = ClassLoader::getRegisteredLoaders();
 
-        if (count($loaders) > 1) {
-            $this->printer->printLine("\nDetected multiple class loaders:");
+        if ($options->format === null || $options->format === 'console') {
+            if (count($loaders) > 1) {
+                $this->printer->printLine("\nDetected multiple class loaders:");
 
-            foreach ($loaders as $vendorDir => $_) {
-                $this->printer->printLine(" • <gray>$vendorDir</gray>");
+                foreach ($loaders as $vendorDir => $_) {
+                    $this->printer->printLine(" • <gray>$vendorDir</gray>");
+                }
+
+                $this->printer->printLine('');
             }
 
-            $this->printer->printLine('');
-        }
-
-        if (count($loaders) === 0) {
-            $this->printer->printLine("\nNo composer class loader detected!\n");
+            if (count($loaders) === 0) {
+                $this->printer->printLine("\nNo composer class loader detected!\n");
+            }
         }
 
         return $loaders;
