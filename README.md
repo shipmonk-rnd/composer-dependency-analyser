@@ -151,10 +151,11 @@ return $config
     // allow using classes not present in composer's autoloader
     // e.g. a library may conditionally support some feature only when Memcached is available
     ->ignoreUnknownClasses(['Memcached'])
+    ->ignoreUnknownClassesRegex('~^DDTrace~')
 
-    // allow using classes not present in composer's autoloader by regex
-    // e.g. when you want to ignore whole namespace of classes
-    ->ignoreUnknownClassesRegex('~^PHPStan\\.*?~')
+    // allow using functions not defined during runtime
+    ->ignoreUnknownFunctions(['opcache_invalidate'])
+    ->ignoreUnknownFunctionsRegex('~^opcache_~')
 
     // force certain classes to be treated as used
     // handy when dealing with dependencies in non-php files (e.g. DIC config), see example below
