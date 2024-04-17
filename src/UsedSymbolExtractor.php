@@ -31,6 +31,8 @@ use const T_TRAIT;
 use const T_USE;
 use const T_WHITESPACE;
 
+// phpcs:disable Squiz.PHP.CommentedOutCode.Found
+
 class UsedSymbolExtractor
 {
 
@@ -68,9 +70,10 @@ class UsedSymbolExtractor
         $useStatements = [];
         $useStatementKinds = [];
 
-        $level = 0;
+        $level = 0; // {, }, {$, ${
+        $squareLevel = 0; // [, ], #[
         $inClassLevel = null;
-        $inAttribute = false;
+        $inAttributeSquareLevel = null;
 
         $numTokens = $this->numTokens;
         $tokens = $this->tokens;
@@ -98,7 +101,7 @@ class UsedSymbolExtractor
                         break;
 
                     case PHP_VERSION_ID > 80000 ? T_ATTRIBUTE : -1:
-                        $inAttribute = true;
+                        $inAttributeSquareLevel = ++$squareLevel;
                         break;
 
                     case PHP_VERSION_ID >= 80000 ? T_NAMESPACE : -1:
@@ -107,7 +110,7 @@ class UsedSymbolExtractor
 
                     case PHP_VERSION_ID >= 80000 ? T_NAME_FULLY_QUALIFIED : -1:
                         $symbolName = $this->normalizeBackslash($token[1]);
-                        $kind = $this->getFqnSymbolKind($this->pointer - 2, $this->pointer, $inAttribute);
+                        $kind = $this->getFqnSymbolKind($this->pointer - 2, $this->pointer, $inAttributeSquareLevel !== null);
                         $usedSymbols[$kind][$symbolName][] = $token[2];
                         break;
 
@@ -116,7 +119,7 @@ class UsedSymbolExtractor
 
                         if (isset($useStatements[$neededAlias])) {
                             $symbolName = $useStatements[$neededAlias] . substr($token[1], strlen($neededAlias));
-                            $kind = $this->getFqnSymbolKind($this->pointer - 2, $this->pointer, $inAttribute);
+                            $kind = $this->getFqnSymbolKind($this->pointer - 2, $this->pointer, $inAttributeSquareLevel !== null);
                             $usedSymbols[$kind][$symbolName][] = $token[2];
                         }
 
@@ -188,8 +191,14 @@ class UsedSymbolExtractor
                 }
 
                 $level--;
-            } elseif ($token === ']' && $inAttribute) {
-                $inAttribute = false;
+            } elseif ($token === '[') {
+                $squareLevel++;
+            } elseif ($token === ']') {
+                if ($squareLevel === $inAttributeSquareLevel) {
+                    $inAttributeSquareLevel = null;
+                }
+
+                $squareLevel--;
             }
         }
 
@@ -353,7 +362,6 @@ class UsedSymbolExtractor
             break;
         } while ($pointerAfterName < $this->numTokens);
 
-        // phpcs:disable Squiz.PHP.CommentedOutCode.Found
         if (
             $tokenAfterName === '('
             && $tokenBeforeName[0] !== T_NEW // eliminate new \ClassName(

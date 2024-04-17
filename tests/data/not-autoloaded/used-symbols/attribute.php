@@ -4,7 +4,7 @@
 class ClassWithAttribute {}
 
 #[
-    \Assert\NotNull(),
+    \Assert\NotNull(foo: []),
     \Assert\NotBlank(),
 ]
 class ClassWithMultipleAttributes {}
