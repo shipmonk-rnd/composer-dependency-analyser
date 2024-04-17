@@ -46,7 +46,7 @@ class UsedSymbolExtractorTest extends TestCase
                     'PHPUnit\Framework\assertArrayHasKey' => [37],
                     'PHPUnit\Framework\assertEquals' => [38],
                 ],
-            ]
+            ],
         ];
 
         yield 'various usages' => [
@@ -59,7 +59,7 @@ class UsedSymbolExtractorTest extends TestCase
                     'PHPUnit\Framework\Error' => [14],
                     'LogicException' => [15, 20],
                 ],
-            ]
+            ],
         ];
 
         yield 'bracket namespace' => [
@@ -69,7 +69,7 @@ class UsedSymbolExtractorTest extends TestCase
                     'DateTimeImmutable' => [5],
                     'DateTime' => [11],
                 ],
-            ]
+            ],
         ];
 
         yield 'other symbols' => [
@@ -87,7 +87,7 @@ class UsedSymbolExtractorTest extends TestCase
                     'PHPUnit\Framework\assertArrayHasKey' => [14],
                     'PHPUnit\Framework\assertArrayNotHasKey' => [15],
                 ],
-            ]
+            ],
         ];
 
         yield 'relative namespace' => [
@@ -111,7 +111,7 @@ class UsedSymbolExtractorTest extends TestCase
 
         yield 'curly braces' => [
             __DIR__ . '/data/not-autoloaded/used-symbols/curly-braces.php',
-            []
+            [],
         ];
 
         if (PHP_VERSION_ID >= 80000) {
