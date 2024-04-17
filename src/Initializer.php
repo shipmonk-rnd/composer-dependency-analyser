@@ -85,7 +85,9 @@ EOD;
         }
 
         if (is_file($configPath)) {
-            $this->printer->printLine('<gray>Using config</gray> ' . $configPath);
+            if ($options->format === null || $options->format === 'console') {
+                $this->printer->printLine('<gray>Using config</gray> ' . $configPath);
+            }
 
             try {
                 $config = (static function () use ($configPath) {
