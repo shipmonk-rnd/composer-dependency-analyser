@@ -3,6 +3,8 @@
 namespace ShipMonk\ComposerDependencyAnalyser;
 
 use PHPUnit\Framework\TestCase;
+use function fopen;
+use function stream_get_contents;
 use const PHP_EOL;
 
 class PrinterTest extends TestCase
@@ -10,18 +12,15 @@ class PrinterTest extends TestCase
 
     public function testPrintLine(): void
     {
-        $printer = new Printer();
+        $stream = fopen('php://memory', 'w');
+        self::assertNotFalse($stream);
 
-        $this->expectOutputString("Hello, \033[31mworld\033[0m!" . PHP_EOL);
+        $printer = new Printer($stream);
+
         $printer->printLine('Hello, <red>world</red>!');
-    }
+        $printer->print('New line!');
 
-    public function testPrint(): void
-    {
-        $printer = new Printer();
-
-        $this->expectOutputString("Hello, \033[31mworld\033[0m!");
-        $printer->print('Hello, <red>world</red>!');
+        self::assertSame("Hello, \033[31mworld\033[0m!" . PHP_EOL . 'New line!', stream_get_contents($stream, -1, 0));
     }
 
 }

@@ -27,13 +27,13 @@ class BinTest extends TestCase
 
         $this->runCommand('php bin/composer-dependency-analyser', $rootDir, 0, $okOutput);
         $this->runCommand('php bin/composer-dependency-analyser --verbose', $rootDir, 0, $okOutput);
-        $this->runCommand('php ../bin/composer-dependency-analyser', $testsDir, 255, $noComposerJsonError);
+        $this->runCommand('php ../bin/composer-dependency-analyser', $testsDir, 255, null, $noComposerJsonError);
         $this->runCommand('php bin/composer-dependency-analyser --help', $rootDir, 255, $helpOutput);
         $this->runCommand('php ../bin/composer-dependency-analyser --help', $testsDir, 255, $helpOutput);
         $this->runCommand('php bin/composer-dependency-analyser --composer-json=composer.json', $rootDir, 0, $okOutput);
-        $this->runCommand('php bin/composer-dependency-analyser --composer-json=composer.lock', $rootDir, 255, $noPackagesError);
-        $this->runCommand('php bin/composer-dependency-analyser --composer-json=README.md', $rootDir, 255, $parseError);
-        $this->runCommand('php ../bin/composer-dependency-analyser --composer-json=composer.json', $testsDir, 255, $noComposerJsonError);
+        $this->runCommand('php bin/composer-dependency-analyser --composer-json=composer.lock', $rootDir, 255, null, $noPackagesError);
+        $this->runCommand('php bin/composer-dependency-analyser --composer-json=README.md', $rootDir, 255, null, $parseError);
+        $this->runCommand('php ../bin/composer-dependency-analyser --composer-json=composer.json', $testsDir, 255, null, $noComposerJsonError);
         $this->runCommand('php ../bin/composer-dependency-analyser --composer-json=../composer.json --config=../composer-dependency-analyser.php', $testsDir, 0, $okOutput);
         $this->runCommand('php bin/composer-dependency-analyser --composer-json=composer.json --format=console', $rootDir, 0, $okOutput);
         $this->runCommand('php bin/composer-dependency-analyser --composer-json=composer.json --format=junit', $rootDir, 0, $junitOutput);
@@ -43,7 +43,8 @@ class BinTest extends TestCase
         string $command,
         string $cwd,
         int $expectedExitCode,
-        string $expectedOutputContains
+        ?string $expectedOutputContains = null,
+        ?string $expectedErrorContains = null
     ): void
     {
         $desc = [
@@ -74,11 +75,21 @@ class BinTest extends TestCase
             $extraInfo
         );
 
-        self::assertStringContainsString(
-            $expectedOutputContains,
-            $output,
-            $extraInfo
-        );
+        if ($expectedOutputContains !== null) {
+            self::assertStringContainsString(
+                $expectedOutputContains,
+                $output,
+                $extraInfo
+            );
+        }
+
+        if ($expectedErrorContains !== null) {
+            self::assertStringContainsString(
+                $expectedErrorContains,
+                $errorOutput,
+                $extraInfo
+            );
+        }
     }
 
 }

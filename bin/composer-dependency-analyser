@@ -27,8 +27,9 @@ spl_autoload_register(static function (string $class) use ($psr4Prefix): void {
 /** @var non-empty-string $cwd */
 $cwd = getcwd();
 
-$printer = new Printer();
-$initializer = new Initializer($cwd, $printer);
+$stdOutPrinter = new Printer(STDOUT);
+$stdErrPrinter = new Printer(STDERR);
+$initializer = new Initializer($cwd, $stdOutPrinter, $stdErrPrinter);
 $stopwatch = new Stopwatch();
 
 try {
@@ -49,7 +50,7 @@ try {
     InvalidConfigException |
     InvalidCliException $e
 ) {
-    $printer->printLine("\n<red>{$e->getMessage()}</red>" . PHP_EOL);
+    $stdErrPrinter->printLine("\n<red>{$e->getMessage()}</red>" . PHP_EOL);
     exit(255);
 }
 

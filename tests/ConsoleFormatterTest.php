@@ -2,31 +2,24 @@
 
 namespace ShipMonk\ComposerDependencyAnalyser;
 
-use Closure;
-use PHPUnit\Framework\TestCase;
 use ShipMonk\ComposerDependencyAnalyser\Config\Configuration;
 use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
 use ShipMonk\ComposerDependencyAnalyser\Config\Ignore\UnusedErrorIgnore;
 use ShipMonk\ComposerDependencyAnalyser\Result\AnalysisResult;
 use ShipMonk\ComposerDependencyAnalyser\Result\ConsoleFormatter;
+use ShipMonk\ComposerDependencyAnalyser\Result\ResultFormatter;
 use ShipMonk\ComposerDependencyAnalyser\Result\SymbolUsage;
-use function ob_get_clean;
-use function ob_start;
-use function preg_replace;
-use function str_replace;
 
-class ConsoleFormatterTest extends TestCase
+class ConsoleFormatterTest extends FormatterTest
 {
 
     public function testPrintResult(): void
     {
         // editorconfig-checker-disable
-        $formatter = new ConsoleFormatter('/app', new Printer());
-
-        $noIssuesOutput = $this->captureAndNormalizeOutput(static function () use ($formatter): void {
+        $noIssuesOutput = $this->getFormatterNormalizedOutput(static function (ResultFormatter $formatter): void {
             $formatter->format(new AnalysisResult(2, 0.123, [], [], [], [], [], [], [], []), new CliOptions(), new Configuration());
         });
-        $noIssuesButUnusedIgnores = $this->captureAndNormalizeOutput(static function () use ($formatter): void {
+        $noIssuesButUnusedIgnores = $this->getFormatterNormalizedOutput(static function (ResultFormatter $formatter): void {
             $formatter->format(new AnalysisResult(2, 0.123, [], [], [], [], [], [], [], [new UnusedErrorIgnore(ErrorType::SHADOW_DEPENDENCY, null, null)]), new CliOptions(), new Configuration());
         });
 
@@ -79,10 +72,10 @@ OUT;
             []
         );
 
-        $regularOutput = $this->captureAndNormalizeOutput(static function () use ($formatter, $analysisResult): void {
+        $regularOutput = $this->getFormatterNormalizedOutput(static function ($formatter) use ($analysisResult): void {
             $formatter->format($analysisResult, new CliOptions(), new Configuration());
         });
-        $verboseOutput = $this->captureAndNormalizeOutput(static function () use ($formatter, $analysisResult): void {
+        $verboseOutput = $this->getFormatterNormalizedOutput(static function ($formatter) use ($analysisResult): void {
             $options = new CliOptions();
             $options->verbose = true;
             $formatter->format($analysisResult, $options, new Configuration());
@@ -206,24 +199,9 @@ OUT;
         // editorconfig-checker-enable
     }
 
-    private function removeColors(string $output): string
+    protected function createFormatter(Printer $printer): ResultFormatter
     {
-        return (string) preg_replace('#\\x1b[[][^A-Za-z]*[A-Za-z]#', '', $output);
-    }
-
-    /**
-     * @param Closure(): void $closure
-     */
-    private function captureAndNormalizeOutput(Closure $closure): string
-    {
-        ob_start();
-        $closure();
-        return $this->normalizeEol((string) ob_get_clean());
-    }
-
-    private function normalizeEol(string $string): string
-    {
-        return str_replace("\r\n", "\n", $string);
+        return new ConsoleFormatter('/app', $printer);
     }
 
 }

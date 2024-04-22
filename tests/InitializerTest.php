@@ -26,7 +26,7 @@ class InitializerTest extends TestCase
         $options = new CliOptions();
         $options->ignoreUnknownClasses = true;
 
-        $initializer = new Initializer(__DIR__, $printer);
+        $initializer = new Initializer(__DIR__, $printer, $printer);
         $config = $initializer->initConfiguration($options, $composerJson);
 
         self::assertEquals([new PathToScan(__DIR__, false)], $config->getPathsToScan());
@@ -44,7 +44,7 @@ class InitializerTest extends TestCase
         $options = new CliOptions();
         $options->composerJson = 'sample.json';
 
-        $initializer = new Initializer($cwd, $printer);
+        $initializer = new Initializer($cwd, $printer, $printer);
         $composerJson = $initializer->initComposerJson($options);
 
         self::assertSame(
@@ -70,7 +70,7 @@ class InitializerTest extends TestCase
         $options = new CliOptions();
         $options->composerJson = $composerJsonPath;
 
-        $initializer = new Initializer($cwd, $printer);
+        $initializer = new Initializer($cwd, $printer, $printer);
         $composerJson = $initializer->initComposerJson($options);
 
         self::assertSame(
@@ -90,7 +90,7 @@ class InitializerTest extends TestCase
     {
         $printer = $this->createMock(Printer::class);
 
-        $initializer = new Initializer(__DIR__, $printer);
+        $initializer = new Initializer(__DIR__, $printer, $printer);
         $options = $initializer->initCliOptions(__DIR__, ['script.php', '--verbose']);
 
         self::assertNull($options->showAllUsages);
@@ -108,7 +108,7 @@ class InitializerTest extends TestCase
     {
         $printer = $this->createMock(Printer::class);
 
-        $initializer = new Initializer(__DIR__, $printer);
+        $initializer = new Initializer(__DIR__, $printer, $printer);
 
         $this->expectException(InvalidCliException::class);
         $initializer->initCliOptions(__DIR__, ['script.php', '--help']);
@@ -118,7 +118,7 @@ class InitializerTest extends TestCase
     {
         $printer = $this->createMock(Printer::class);
 
-        $initializer = new Initializer(__DIR__, $printer);
+        $initializer = new Initializer(__DIR__, $printer, $printer);
 
         $optionsNoFormat = new CliOptions();
         self::assertInstanceOf(ConsoleFormatter::class, $initializer->initFormatter($optionsNoFormat));
