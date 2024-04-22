@@ -130,11 +130,43 @@ class InitializerTest extends TestCase
         $optionsFormatJunit = new CliOptions();
         $optionsFormatJunit->format = 'junit';
         self::assertInstanceOf(JunitFormatter::class, $initializer->initFormatter($optionsFormatJunit));
+    }
 
-        self::expectException(InvalidConfigException::class);
-        $optionsFormatUnknown = new CliOptions();
-        $optionsFormatUnknown->format = 'unknown';
-        $initializer->initFormatter($optionsFormatUnknown);
+    /**
+     * @dataProvider provideInitFormatterFailures
+     */
+    public function testInitFormatterFailures(CliOptions $options, string $message): void
+    {
+        $printer = $this->createMock(Printer::class);
+
+        $initializer = new Initializer(__DIR__, $printer, $printer);
+
+        $this->expectException(InvalidConfigException::class);
+        $this->expectExceptionMessage($message);
+        $initializer->initFormatter($options);
+    }
+
+    /**
+     * @return iterable<string, array{CliOptions, string}>
+     */
+    public static function provideInitFormatterFailures(): iterable
+    {
+        $junitWithDumpUsages = new CliOptions();
+        $junitWithDumpUsages->format = 'junit';
+        $junitWithDumpUsages->dumpUsages = 'symfony/*';
+
+        $unknownFormat = new CliOptions();
+        $unknownFormat->format = 'unknown';
+
+        yield 'junit with dump-usages' => [
+            $junitWithDumpUsages,
+            "Cannot use 'junit' format with '--dump-usages' option.",
+        ];
+
+        yield 'unknown format' => [
+            $unknownFormat,
+            "Invalid format option provided, allowed are 'console' or 'junit'.",
+        ];
     }
 
 }

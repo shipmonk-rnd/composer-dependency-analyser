@@ -234,17 +234,21 @@ EOD;
      */
     public function initFormatter(CliOptions $options): ResultFormatter
     {
-        switch ($options->format) {
-            case 'junit':
-                return new JunitFormatter($this->cwd, $this->stdOutPrinter);
+        $format = $options->format ?? 'console';
 
-            case 'console':
-            case null:
-                return new ConsoleFormatter($this->cwd, $this->stdOutPrinter);
+        if ($format === 'junit') {
+            if ($options->dumpUsages !== null) {
+                throw new InvalidConfigException("Cannot use 'junit' format with '--dump-usages' option.");
+            }
 
-            default:
-                throw new InvalidConfigException("Invalid format option provided, allowed are 'console' or 'junit'.");
+            return new JunitFormatter($this->cwd, $this->stdOutPrinter);
         }
+
+        if ($format === 'console') {
+            return new ConsoleFormatter($this->cwd, $this->stdOutPrinter);
+        }
+
+        throw new InvalidConfigException("Invalid format option provided, allowed are 'console' or 'junit'.");
     }
 
 }
