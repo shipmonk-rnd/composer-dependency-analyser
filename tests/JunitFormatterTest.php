@@ -2,33 +2,27 @@
 
 namespace ShipMonk\ComposerDependencyAnalyser;
 
-use Closure;
 use DOMDocument;
-use PHPUnit\Framework\TestCase;
 use ShipMonk\ComposerDependencyAnalyser\Config\Configuration;
 use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
 use ShipMonk\ComposerDependencyAnalyser\Config\Ignore\UnusedErrorIgnore;
 use ShipMonk\ComposerDependencyAnalyser\Result\AnalysisResult;
 use ShipMonk\ComposerDependencyAnalyser\Result\JunitFormatter;
+use ShipMonk\ComposerDependencyAnalyser\Result\ResultFormatter;
 use ShipMonk\ComposerDependencyAnalyser\Result\SymbolUsage;
-use function ob_get_clean;
-use function ob_start;
-use function str_replace;
 use function trim;
 use const LIBXML_NOEMPTYTAG;
 
-class JunitFormatterTest extends TestCase
+class JunitFormatterTest extends FormatterTest
 {
 
     public function testPrintResult(): void
     {
         // editorconfig-checker-disable
-        $formatter = new JunitFormatter('/app', new Printer());
-
-        $noIssuesOutput = $this->captureAndNormalizeOutput(static function () use ($formatter): void {
+        $noIssuesOutput = $this->getFormatterNormalizedOutput(static function (ResultFormatter $formatter): void {
             $formatter->format(new AnalysisResult(2, 0.123, [], [], [], [], [], [], [], []), new CliOptions(), new Configuration());
         });
-        $noIssuesButUnusedIgnores = $this->captureAndNormalizeOutput(static function () use ($formatter): void {
+        $noIssuesButUnusedIgnores = $this->getFormatterNormalizedOutput(static function (ResultFormatter $formatter): void {
             $formatter->format(new AnalysisResult(2, 0.123, [], [], [], [], [], [], [], [new UnusedErrorIgnore(ErrorType::SHADOW_DEPENDENCY, null, null)]), new CliOptions(), new Configuration());
         });
 
@@ -79,10 +73,10 @@ OUT;
             []
         );
 
-        $regularOutput = $this->captureAndNormalizeOutput(static function () use ($formatter, $analysisResult): void {
+        $regularOutput = $this->getFormatterNormalizedOutput(static function ($formatter) use ($analysisResult): void {
             $formatter->format($analysisResult, new CliOptions(), new Configuration());
         });
-        $verboseOutput = $this->captureAndNormalizeOutput(static function () use ($formatter, $analysisResult): void {
+        $verboseOutput = $this->getFormatterNormalizedOutput(static function ($formatter) use ($analysisResult): void {
             $options = new CliOptions();
             $options->verbose = true;
             $formatter->format($analysisResult, $options, new Configuration());
@@ -170,21 +164,6 @@ OUT;
         // editorconfig-checker-enable
     }
 
-    /**
-     * @param Closure(): void $closure
-     */
-    private function captureAndNormalizeOutput(Closure $closure): string
-    {
-        ob_start();
-        $closure();
-        return $this->normalizeEol((string) ob_get_clean());
-    }
-
-    private function normalizeEol(string $string): string
-    {
-        return str_replace("\r\n", "\n", $string);
-    }
-
     private function prettyPrintXml(string $inputXml): string
     {
         $dom = new DOMDocument();
@@ -196,6 +175,11 @@ OUT;
         self::assertNotFalse($outputXml);
 
         return trim($outputXml);
+    }
+
+    protected function createFormatter(Printer $printer): ResultFormatter
+    {
+        return new JunitFormatter('/app', $printer);
     }
 
 }

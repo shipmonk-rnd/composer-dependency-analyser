@@ -2,8 +2,10 @@
 
 namespace ShipMonk\ComposerDependencyAnalyser;
 
+use LogicException;
 use function array_keys;
 use function array_values;
+use function fwrite;
 use function str_replace;
 use const PHP_EOL;
 
@@ -21,14 +23,31 @@ class Printer
         '</gray>' => "\033[0m",
     ];
 
+    /**
+     * @var resource
+     */
+    private $resource;
+
+    /**
+     * @param resource $resource
+     */
+    public function __construct($resource)
+    {
+        $this->resource = $resource;
+    }
+
     public function printLine(string $string): void
     {
-        echo $this->colorize($string) . PHP_EOL;
+        $this->print($string . PHP_EOL);
     }
 
     public function print(string $string): void
     {
-        echo $this->colorize($string);
+        $result = fwrite($this->resource, $this->colorize($string));
+
+        if ($result === false) {
+            throw new LogicException('Could not write to output stream.');
+        }
     }
 
     private function colorize(string $string): string
