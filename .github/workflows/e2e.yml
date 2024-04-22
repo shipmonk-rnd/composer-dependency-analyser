@@ -28,6 +28,10 @@ jobs:
                         repo: rectorphp/rector-src
                         name: rector
                         args: ''
+                    -
+                        repo: inspirum/balikobot-php
+                        name: balikobot
+                        args: ''
             fail-fast: false
         steps:
             -
