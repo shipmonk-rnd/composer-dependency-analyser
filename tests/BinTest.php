@@ -19,8 +19,10 @@ class BinTest extends TestCase
         $noComposerJsonError = 'File composer.json not found';
         $noPackagesError = 'No packages found';
         $parseError = 'Failure while parsing';
+        $junitDumpError = "Cannot use 'junit' format with '--dump-usages' option";
 
         $okOutput = 'No composer issues found';
+        $dumpingOutput = 'Dumping sample usages of';
         $helpOutput = 'Usage:';
 
         $usingConfig = 'Using config';
@@ -38,7 +40,9 @@ class BinTest extends TestCase
         $this->runCommand('php ../bin/composer-dependency-analyser --composer-json=composer.json', $testsDir, 255, null, $noComposerJsonError);
         $this->runCommand('php ../bin/composer-dependency-analyser --composer-json=../composer.json --config=../composer-dependency-analyser.php', $testsDir, 0, $okOutput, $usingConfig);
         $this->runCommand('php bin/composer-dependency-analyser --composer-json=composer.json --format=console', $rootDir, 0, $okOutput, $usingConfig);
+        $this->runCommand('php bin/composer-dependency-analyser --composer-json=composer.json --format=console --dump-usages=symfony/*', $rootDir, 1, $dumpingOutput, $usingConfig);
         $this->runCommand('php bin/composer-dependency-analyser --composer-json=composer.json --format=junit', $rootDir, 0, $junitOutput, $usingConfig);
+        $this->runCommand('php bin/composer-dependency-analyser --composer-json=composer.json --format=junit --dump-usages=symfony/*', $rootDir, 255, null, $junitDumpError);
     }
 
     private function runCommand(
