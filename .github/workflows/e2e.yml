@@ -32,6 +32,11 @@ jobs:
                         repo: inspirum/balikobot-php
                         name: balikobot
                         args: ''
+
+                    -
+                        repo: tomasvotruba/unused-public
+                        name: unused-public
+                        args: ''
             fail-fast: false
         steps:
             -
