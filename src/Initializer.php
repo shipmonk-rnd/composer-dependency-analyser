@@ -145,6 +145,10 @@ EOD;
                 foreach ($composerJson->autoloadPaths as $absolutePath => $isDevPath) {
                     $config->addPathToScan($absolutePath, $isDevPath);
                 }
+
+                foreach ($composerJson->autoloadExcludeRegexps as $excludeRegexp => $isDevRegexp) {
+                    $config->addRegexpToExclude($excludeRegexp);
+                }
             } catch (InvalidPathException $e) {
                 throw new InvalidConfigException('Error while processing composer.json autoload path: ' . $e->getMessage(), $e);
             }
