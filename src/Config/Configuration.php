@@ -55,6 +55,11 @@ class Configuration
     private $pathsToExclude = [];
 
     /**
+     * @var list<string>
+     */
+    private $regexpsToExclude = [];
+
+    /**
      * @var array<string, list<ErrorType::*>>
      */
     private $ignoredErrorsOnPath = [];
@@ -200,6 +205,28 @@ class Configuration
     public function addPathToExclude(string $path): self
     {
         $this->pathsToExclude[] = Path::realpath($path);
+        return $this;
+    }
+
+    /**
+     * @param list<string> $regexps
+     * @return $this
+     */
+    public function addRegexpsToExclude(array $regexps): self
+    {
+        foreach ($regexps as $regexp) {
+            $this->addRegexpToExclude($regexp);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    public function addRegexpToExclude(string $regexp): self
+    {
+        $this->regexpsToExclude[] = $regexp;
         return $this;
     }
 
@@ -425,6 +452,12 @@ class Configuration
     {
         foreach ($this->pathsToExclude as $pathToExclude) {
             if ($this->isFilepathWithinPath($filePath, $pathToExclude)) {
+                return true;
+            }
+        }
+
+        foreach ($this->regexpsToExclude as $regexpToExclude) {
+            if ((bool) preg_match($regexpToExclude, $filePath)) {
                 return true;
             }
         }

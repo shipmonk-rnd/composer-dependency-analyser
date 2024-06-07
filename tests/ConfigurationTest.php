@@ -256,6 +256,18 @@ class ConfigurationTest extends TestCase
         $configure($configuration);
     }
 
+    public function testIsExcludedFilepath(): void
+    {
+        $configuration = new Configuration();
+        $configuration->addPathToExclude(__FILE__);
+        $configuration->addRegexpToExclude('{^/excluded$}');
+
+        self::assertFalse($configuration->isExcludedFilepath(__DIR__));
+        self::assertTrue($configuration->isExcludedFilepath(__FILE__));
+        self::assertTrue($configuration->isExcludedFilepath('/excluded'));
+        self::assertFalse($configuration->isExcludedFilepath('/excluded/not/match'));
+    }
+
     /**
      * @return iterable<string, array{callable(Configuration): void, string}>
      */
