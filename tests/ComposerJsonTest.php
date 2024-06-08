@@ -8,6 +8,7 @@ use function dirname;
 use function file_put_contents;
 use function json_encode;
 use function mkdir;
+use function preg_quote;
 use function realpath;
 use function str_replace;
 use function strtr;
@@ -45,7 +46,7 @@ class ComposerJsonTest extends TestCase
         );
 
         $replacements = [
-            '__DIR__' => str_replace(DIRECTORY_SEPARATOR, '/', __DIR__),
+            '__DIR__' => preg_quote(str_replace(DIRECTORY_SEPARATOR, '/', __DIR__), '#'),
         ];
 
         self::assertSame(
