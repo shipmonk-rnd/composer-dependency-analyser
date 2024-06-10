@@ -13,6 +13,7 @@ use ReflectionException;
 use ReflectionFunction;
 use ShipMonk\ComposerDependencyAnalyser\Config\Configuration;
 use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
+use ShipMonk\ComposerDependencyAnalyser\Config\PathToScan;
 use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidPathException;
 use ShipMonk\ComposerDependencyAnalyser\Result\AnalysisResult;
 use ShipMonk\ComposerDependencyAnalyser\Result\SymbolUsage;
@@ -37,6 +38,7 @@ use function strpos;
 use function strtolower;
 use function substr;
 use function trim;
+use function usort;
 use const DIRECTORY_SEPARATOR;
 
 class Analyser
@@ -279,7 +281,12 @@ class Analyser
     {
         $allFilePaths = [];
 
-        foreach ($this->config->getPathsToScan() as $scanPath) {
+        $scanPaths = $this->config->getPathsToScan();
+        usort($scanPaths, static function (PathToScan $a, PathToScan $b): int {
+            return strlen($a->getPath()) <=> strlen($b->getPath());
+        });
+
+        foreach ($scanPaths as $scanPath) {
             foreach ($this->listPhpFilesIn($scanPath->getPath()) as $filePath) {
                 if ($this->config->isExcludedFilepath($filePath)) {
                     continue;

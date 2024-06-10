@@ -534,6 +534,33 @@ class AnalyserTest extends TestCase
         $this->assertResultsWithoutUsages($this->createAnalysisResult(2, []), $result);
     }
 
+    public function testProdPathInsideDevPath(): void
+    {
+        $vendorDir = realpath(__DIR__ . '/data/autoloaded/vendor');
+        $devPath = realpath(__DIR__ . '/data/not-autoloaded/prod-in-subdirectory');
+        $prodPath = realpath(__DIR__ . '/data/not-autoloaded/prod-in-subdirectory/prod');
+        self::assertNotFalse($vendorDir);
+        self::assertNotFalse($devPath);
+        self::assertNotFalse($prodPath);
+
+        $config = new Configuration();
+        $config->addPathToScan($prodPath, false);
+        $config->addPathToScan($devPath, true);
+
+        $detector = new Analyser(
+            $this->getStopwatchMock(),
+            [$vendorDir => $this->getClassLoaderMock()],
+            $config,
+            [
+                'regular/package' => false,
+                'dev/package' => true,
+            ]
+        );
+        $result = $detector->run();
+
+        $this->assertResultsWithoutUsages($this->createAnalysisResult(2, []), $result);
+    }
+
     public function testOtherSymbols(): void
     {
         require_once __DIR__ . '/data/not-autoloaded/other-symbols/symbol-declaration.php';
@@ -703,13 +730,13 @@ class AnalyserTest extends TestCase
 
     private function assertResultsWithoutUsages(AnalysisResult $expectedResult, AnalysisResult $result): void
     {
-        self::assertSame($expectedResult->getScannedFilesCount(), $result->getScannedFilesCount());
-        self::assertEquals($expectedResult->getUnusedIgnores(), $result->getUnusedIgnores());
-        self::assertEquals($expectedResult->getUnknownClassErrors(), $result->getUnknownClassErrors());
-        self::assertEquals($expectedResult->getShadowDependencyErrors(), $result->getShadowDependencyErrors());
-        self::assertEquals($expectedResult->getDevDependencyInProductionErrors(), $result->getDevDependencyInProductionErrors());
-        self::assertEquals($expectedResult->getProdDependencyOnlyInDevErrors(), $result->getProdDependencyOnlyInDevErrors());
-        self::assertEquals($expectedResult->getUnusedDependencyErrors(), $result->getUnusedDependencyErrors());
+        self::assertSame($expectedResult->getScannedFilesCount(), $result->getScannedFilesCount(), 'Scanned files count mismatch');
+        self::assertEquals($expectedResult->getUnusedIgnores(), $result->getUnusedIgnores(), 'Unused ignores mismatch');
+        self::assertEquals($expectedResult->getUnknownClassErrors(), $result->getUnknownClassErrors(), 'Unknown class mismatch');
+        self::assertEquals($expectedResult->getShadowDependencyErrors(), $result->getShadowDependencyErrors(), 'Shadow dependency mismatch');
+        self::assertEquals($expectedResult->getDevDependencyInProductionErrors(), $result->getDevDependencyInProductionErrors(), 'Dev dependency in production mismatch');
+        self::assertEquals($expectedResult->getProdDependencyOnlyInDevErrors(), $result->getProdDependencyOnlyInDevErrors(), 'Prod dependency only in dev mismatch');
+        self::assertEquals($expectedResult->getUnusedDependencyErrors(), $result->getUnusedDependencyErrors(), 'Unused dependency mismatch');
     }
 
 }
