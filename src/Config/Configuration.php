@@ -211,6 +211,7 @@ class Configuration
     /**
      * @param list<string> $regexes
      * @return $this
+     * @throws InvalidConfigException
      */
     public function addRegexesToExclude(array $regexes): self
     {
@@ -223,9 +224,14 @@ class Configuration
 
     /**
      * @return $this
+     * @throws InvalidConfigException
      */
     public function addRegexToExclude(string $regex): self
     {
+        if (@preg_match($regex, '') === false) {
+            throw new InvalidConfigException("Invalid regex '$regex'");
+        }
+
         $this->regexesToExclude[] = $regex;
         return $this;
     }

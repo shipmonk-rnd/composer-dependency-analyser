@@ -241,6 +241,13 @@ class ConfigurationTest extends TestCase
             },
             "Invalid regex '~[~'",
         ];
+
+        yield 'invalid regex to exclude' => [
+            static function (Configuration $configuration): void {
+                $configuration->addRegexToExclude('~[~');
+            },
+            "Invalid regex '~[~'",
+        ];
     }
 
     /**
