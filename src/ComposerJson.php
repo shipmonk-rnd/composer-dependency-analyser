@@ -193,7 +193,7 @@ class ComposerJson
                 return '';
             },
             $path
-            // note: composer also use `PREG_UNMATCHED_AS_NULL` but it is supported since PHP v7.4
+            // note: composer also uses `PREG_UNMATCHED_AS_NULL` but the `$flags` arg supported since PHP v7.4
         );
 
         if ($path === null) {
