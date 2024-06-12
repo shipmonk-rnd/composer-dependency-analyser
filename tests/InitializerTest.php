@@ -22,7 +22,7 @@ class InitializerTest extends TestCase
 
         $composerJson = $this->createMock(ComposerJson::class);
         $composerJson->autoloadPaths = [__DIR__ => false]; // @phpstan-ignore-line ignore readonly
-        $composerJson->autoloadExcludeRegexes = ['{^/excluded$}' => false]; // @phpstan-ignore-line ignore readonly
+        $composerJson->autoloadExcludeRegexes = ['{/excluded}' => false, '{/excluded-dev}' => false]; // @phpstan-ignore-line ignore readonly
 
         $options = new CliOptions();
         $options->ignoreUnknownClasses = true;
@@ -33,6 +33,9 @@ class InitializerTest extends TestCase
         self::assertEquals([new PathToScan(__DIR__, false)], $config->getPathsToScan());
         self::assertTrue($config->getIgnoreList()->shouldIgnoreUnknownClass('Any', 'any'));
         self::assertFalse($config->getIgnoreList()->shouldIgnoreError(ErrorType::SHADOW_DEPENDENCY, null, null));
+        self::assertFalse($config->isExcludedFilepath(__DIR__ . '/not-excluded.php'));
+        self::assertTrue($config->isExcludedFilepath(__DIR__ . '/excluded.php'));
+        self::assertTrue($config->isExcludedFilepath(__DIR__ . '/excluded-dev.php'));
     }
 
     public function testInitComposerJson(): void
