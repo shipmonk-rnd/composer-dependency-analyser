@@ -56,7 +56,7 @@ class ComposerJsonTest extends TestCase
                 strtr('#^__DIR__/data/not\-autoloaded/composer/tests($|/)#', $replacements)               => false,
                 strtr('#^__DIR__/data/not\-autoloaded/composer/dir1/file1\.php($|/)#', $replacements)     => true,
             ],
-            $composerJson->autoloadExcludeRegexps
+            $composerJson->autoloadExcludeRegexes
         );
     }
 

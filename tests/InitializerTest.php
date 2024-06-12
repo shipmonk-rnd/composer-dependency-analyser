@@ -22,7 +22,7 @@ class InitializerTest extends TestCase
 
         $composerJson = $this->createMock(ComposerJson::class);
         $composerJson->autoloadPaths = [__DIR__ => false]; // @phpstan-ignore-line ignore readonly
-        $composerJson->autoloadExcludeRegexps = ['{^/excluded$}' => false]; // @phpstan-ignore-line ignore readonly
+        $composerJson->autoloadExcludeRegexes = ['{^/excluded$}' => false]; // @phpstan-ignore-line ignore readonly
 
         $options = new CliOptions();
         $options->ignoreUnknownClasses = true;

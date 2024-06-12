@@ -260,7 +260,7 @@ class ConfigurationTest extends TestCase
     {
         $configuration = new Configuration();
         $configuration->addPathToExclude(__FILE__);
-        $configuration->addRegexpToExclude('{^/excluded$}');
+        $configuration->addRegexToExclude('{^/excluded$}');
 
         self::assertFalse($configuration->isExcludedFilepath(__DIR__));
         self::assertTrue($configuration->isExcludedFilepath(__FILE__));

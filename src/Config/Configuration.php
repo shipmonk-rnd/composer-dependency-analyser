@@ -57,7 +57,7 @@ class Configuration
     /**
      * @var list<string>
      */
-    private $regexpsToExclude = [];
+    private $regexesToExclude = [];
 
     /**
      * @var array<string, list<ErrorType::*>>
@@ -209,13 +209,13 @@ class Configuration
     }
 
     /**
-     * @param list<string> $regexps
+     * @param list<string> $regexes
      * @return $this
      */
-    public function addRegexpsToExclude(array $regexps): self
+    public function addRegexesToExclude(array $regexes): self
     {
-        foreach ($regexps as $regexp) {
-            $this->addRegexpToExclude($regexp);
+        foreach ($regexes as $regex) {
+            $this->addRegexToExclude($regex);
         }
 
         return $this;
@@ -224,9 +224,9 @@ class Configuration
     /**
      * @return $this
      */
-    public function addRegexpToExclude(string $regexp): self
+    public function addRegexToExclude(string $regex): self
     {
-        $this->regexpsToExclude[] = $regexp;
+        $this->regexesToExclude[] = $regex;
         return $this;
     }
 
@@ -456,8 +456,8 @@ class Configuration
             }
         }
 
-        foreach ($this->regexpsToExclude as $regexpToExclude) {
-            if ((bool) preg_match($regexpToExclude, $filePath)) {
+        foreach ($this->regexesToExclude as $regexToExclude) {
+            if ((bool) preg_match($regexToExclude, $filePath)) {
                 return true;
             }
         }

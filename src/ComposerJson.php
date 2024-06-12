@@ -54,12 +54,12 @@ class ComposerJson
     public $autoloadPaths;
 
     /**
-     * Regexp => isDev
+     * Regex => isDev
      *
      * @readonly
      * @var array<string, bool>
      */
-    public $autoloadExcludeRegexps;
+    public $autoloadExcludeRegexes;
 
     /**
      * @throws InvalidPathException
@@ -87,9 +87,9 @@ class ComposerJson
             $this->extractAutoloadPaths($basePath, $composerJsonData['autoload-dev']['files'] ?? [], true),
             $this->extractAutoloadPaths($basePath, $composerJsonData['autoload-dev']['classmap'] ?? [], true)
         );
-        $this->autoloadExcludeRegexps = array_merge(
-            $this->extractAutoloadExcludeRegexps($basePath, $composerJsonData['autoload']['exclude-from-classmap'] ?? [], false),
-            $this->extractAutoloadExcludeRegexps($basePath, $composerJsonData['autoload-dev']['exclude-from-classmap'] ?? [], true)
+        $this->autoloadExcludeRegexes = array_merge(
+            $this->extractAutoloadExcludeRegexes($basePath, $composerJsonData['autoload']['exclude-from-classmap'] ?? [], false),
+            $this->extractAutoloadExcludeRegexes($basePath, $composerJsonData['autoload-dev']['exclude-from-classmap'] ?? [], true)
         );
 
         $filterPackages = static function (string $package): bool {
@@ -149,15 +149,15 @@ class ComposerJson
      * @return array<string, bool>
      * @throws InvalidPathException
      */
-    private function extractAutoloadExcludeRegexps(string $basePath, array $exclude, bool $isDev): array
+    private function extractAutoloadExcludeRegexes(string $basePath, array $exclude, bool $isDev): array
     {
-        $regexps = [];
+        $regexes = [];
 
         foreach ($exclude as $path) {
-            $regexps[$this->resolveAutoloadExclude($basePath, $path)] = $isDev;
+            $regexes[$this->resolveAutoloadExclude($basePath, $path)] = $isDev;
         }
 
-        return $regexps;
+        return $regexes;
     }
 
     /**
