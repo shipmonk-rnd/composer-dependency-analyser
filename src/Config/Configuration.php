@@ -57,7 +57,7 @@ class Configuration
     /**
      * @var list<string>
      */
-    private $regexesToExclude = [];
+    private $pathRegexesToExclude = [];
 
     /**
      * @var array<string, list<ErrorType::*>>
@@ -213,10 +213,10 @@ class Configuration
      * @return $this
      * @throws InvalidConfigException
      */
-    public function addRegexesToExclude(array $regexes): self
+    public function addPathRegexesToExclude(array $regexes): self
     {
         foreach ($regexes as $regex) {
-            $this->addRegexToExclude($regex);
+            $this->addPathRegexToExclude($regex);
         }
 
         return $this;
@@ -226,13 +226,13 @@ class Configuration
      * @return $this
      * @throws InvalidConfigException
      */
-    public function addRegexToExclude(string $regex): self
+    public function addPathRegexToExclude(string $regex): self
     {
         if (@preg_match($regex, '') === false) {
             throw new InvalidConfigException("Invalid regex '$regex'");
         }
 
-        $this->regexesToExclude[] = $regex;
+        $this->pathRegexesToExclude[] = $regex;
         return $this;
     }
 
@@ -462,8 +462,8 @@ class Configuration
             }
         }
 
-        foreach ($this->regexesToExclude as $regexToExclude) {
-            if ((bool) preg_match($regexToExclude, $filePath)) {
+        foreach ($this->pathRegexesToExclude as $pathRegexToExclude) {
+            if ((bool) preg_match($pathRegexToExclude, $filePath)) {
                 return true;
             }
         }

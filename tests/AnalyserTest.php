@@ -215,8 +215,8 @@ class AnalyserTest extends TestCase
         yield 'scan dir, exclude regex' => [
             static function (Configuration $config) use ($variousUsagesPath): void {
                 $config->addPathToScan(dirname($variousUsagesPath), false);
-                $config->addRegexToExclude('/unknown/');
-                $config->addRegexesToExclude([
+                $config->addPathRegexToExclude('/unknown/');
+                $config->addPathRegexesToExclude([
                     '/^not match$/',
                 ]);
             },

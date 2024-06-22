@@ -147,7 +147,7 @@ EOD;
                 }
 
                 foreach ($composerJson->autoloadExcludeRegexes as $excludeRegex => $isDevRegex) {
-                    $config->addRegexToExclude($excludeRegex);
+                    $config->addPathRegexToExclude($excludeRegex);
                 }
             } catch (InvalidPathException $e) {
                 throw new InvalidConfigException('Error while processing composer.json autoload path: ' . $e->getMessage(), $e);

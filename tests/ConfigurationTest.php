@@ -244,7 +244,7 @@ class ConfigurationTest extends TestCase
 
         yield 'invalid regex to exclude' => [
             static function (Configuration $configuration): void {
-                $configuration->addRegexToExclude('~[~');
+                $configuration->addPathRegexToExclude('~[~');
             },
             "Invalid regex '~[~'",
         ];
@@ -267,7 +267,7 @@ class ConfigurationTest extends TestCase
     {
         $configuration = new Configuration();
         $configuration->addPathToExclude(__FILE__);
-        $configuration->addRegexToExclude('{^/excluded$}');
+        $configuration->addPathRegexToExclude('{^/excluded$}');
 
         self::assertFalse($configuration->isExcludedFilepath(__DIR__));
         self::assertTrue($configuration->isExcludedFilepath(__FILE__));
