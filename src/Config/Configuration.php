@@ -55,6 +55,11 @@ class Configuration
     private $pathsToExclude = [];
 
     /**
+     * @var list<string>
+     */
+    private $pathRegexesToExclude = [];
+
+    /**
      * @var array<string, list<ErrorType::*>>
      */
     private $ignoredErrorsOnPath = [];
@@ -200,6 +205,34 @@ class Configuration
     public function addPathToExclude(string $path): self
     {
         $this->pathsToExclude[] = Path::realpath($path);
+        return $this;
+    }
+
+    /**
+     * @param list<string> $regexes
+     * @return $this
+     * @throws InvalidConfigException
+     */
+    public function addPathRegexesToExclude(array $regexes): self
+    {
+        foreach ($regexes as $regex) {
+            $this->addPathRegexToExclude($regex);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     * @throws InvalidConfigException
+     */
+    public function addPathRegexToExclude(string $regex): self
+    {
+        if (@preg_match($regex, '') === false) {
+            throw new InvalidConfigException("Invalid regex '$regex'");
+        }
+
+        $this->pathRegexesToExclude[] = $regex;
         return $this;
     }
 
@@ -425,6 +458,12 @@ class Configuration
     {
         foreach ($this->pathsToExclude as $pathToExclude) {
             if ($this->isFilepathWithinPath($filePath, $pathToExclude)) {
+                return true;
+            }
+        }
+
+        foreach ($this->pathRegexesToExclude as $pathRegexToExclude) {
+            if ((bool) preg_match($pathRegexToExclude, $filePath)) {
                 return true;
             }
         }

@@ -12,6 +12,17 @@
         ],
         "files": [
             "dir2/file1.php"
+        ],
+        "exclude-from-classmap": [
+            "/dir2///*.php",
+            "/dir3/**/file1.php",
+            "/tests/",
+            "../composer///dir1/file1.php"
+        ]
+    },
+    "autoload-dev": {
+        "exclude-from-classmap": [
+            "/dir1/file1.php"
         ]
     },
     "config": {

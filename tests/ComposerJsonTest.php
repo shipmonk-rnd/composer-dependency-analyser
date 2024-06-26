@@ -8,7 +8,9 @@ use function dirname;
 use function file_put_contents;
 use function json_encode;
 use function mkdir;
+use function preg_quote;
 use function realpath;
+use function str_replace;
 use function strtr;
 use function sys_get_temp_dir;
 use const DIRECTORY_SEPARATOR;
@@ -41,6 +43,20 @@ class ComposerJsonTest extends TestCase
                 realpath(__DIR__ . '/data/not-autoloaded/composer/dir2') => false,
             ],
             $composerJson->autoloadPaths
+        );
+
+        $replacements = [
+            '__DIR__' => preg_quote(str_replace(DIRECTORY_SEPARATOR, '/', __DIR__), '#'),
+        ];
+
+        self::assertSame(
+            [
+                strtr('#^__DIR__/data/not\-autoloaded/composer/dir2/[^/]+?\.php($|/)#', $replacements)    => false,
+                strtr('#^__DIR__/data/not\-autoloaded/composer/dir3/.+?/file1\.php($|/)#', $replacements) => false,
+                strtr('#^__DIR__/data/not\-autoloaded/composer/tests($|/)#', $replacements)               => false,
+                strtr('#^__DIR__/data/not\-autoloaded/composer/dir1/file1\.php($|/)#', $replacements)     => true,
+            ],
+            $composerJson->autoloadExcludeRegexes
         );
     }
 

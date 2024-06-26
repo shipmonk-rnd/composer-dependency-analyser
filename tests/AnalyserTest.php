@@ -212,6 +212,22 @@ class AnalyserTest extends TestCase
             ]),
         ];
 
+        yield 'scan dir, exclude regex' => [
+            static function (Configuration $config) use ($variousUsagesPath): void {
+                $config->addPathToScan(dirname($variousUsagesPath), false);
+                $config->addPathRegexToExclude('/unknown/');
+                $config->addPathRegexesToExclude([
+                    '/^not match$/',
+                ]);
+            },
+            $this->createAnalysisResult(1, [
+                ErrorType::UNKNOWN_CLASS => ['Unknown\Clazz' => [new SymbolUsage($variousUsagesPath, 11, SymbolKind::CLASSLIKE)]],
+                ErrorType::DEV_DEPENDENCY_IN_PROD => ['dev/package' => ['Dev\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 16, SymbolKind::CLASSLIKE)]]],
+                ErrorType::SHADOW_DEPENDENCY => ['shadow/package' => ['Shadow\Package\Clazz' => [new SymbolUsage($variousUsagesPath, 24, SymbolKind::CLASSLIKE)]]],
+                ErrorType::UNUSED_DEPENDENCY => ['regular/dead'],
+            ]),
+        ];
+
         yield 'ignore on path' => [
             static function (Configuration $config) use ($variousUsagesPath, $unknownClassesPath): void {
                 $config->addPathToScan(dirname($variousUsagesPath), false);
