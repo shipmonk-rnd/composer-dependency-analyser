@@ -140,7 +140,9 @@ class Analyser
 
             foreach ($usedSymbolsByKind as $kind => $usedSymbols) {
                 foreach ($usedSymbols as $usedSymbol => $lineNumbers) {
-                    if (isset($this->ignoredSymbols[$usedSymbol])) {
+                    $usedSymbolNameForIgnoreCheck = $kind === SymbolKind::FUNCTION ? strtolower($usedSymbol) : $usedSymbol;
+
+                    if (isset($this->ignoredSymbols[$usedSymbolNameForIgnoreCheck])) {
                         continue;
                     }
 
