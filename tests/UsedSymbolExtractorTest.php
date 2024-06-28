@@ -28,6 +28,17 @@ class UsedSymbolExtractorTest extends TestCase
      */
     public function provideVariants(): iterable
     {
+        yield 'qualified named' => [
+            __DIR__ . '/data/not-autoloaded/used-symbols/qualified-named.php',
+            [
+                SymbolKind::CLASSLIKE => [
+                    'Foo\Bar' => [4, 12, 15, 19],
+                    'Foo2\Baz' => [6, 17, 20, 21],
+                    'Foo2\Bar' => [24],
+                ],
+            ],
+        ];
+
         yield 'use statements' => [
             __DIR__ . '/data/not-autoloaded/used-symbols/use-statements.php',
             [

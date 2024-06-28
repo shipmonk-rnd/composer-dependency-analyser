@@ -4,6 +4,7 @@ namespace ShipMonk\ComposerDependencyAnalyser;
 
 use function count;
 use function explode;
+use function in_array;
 use function is_array;
 use function ltrim;
 use function strlen;
@@ -18,6 +19,7 @@ use const T_CONST;
 use const T_CURLY_OPEN;
 use const T_DOC_COMMENT;
 use const T_DOLLAR_OPEN_CURLY_BRACES;
+use const T_DOUBLE_COLON;
 use const T_ENUM;
 use const T_FUNCTION;
 use const T_INTERFACE;
@@ -119,6 +121,12 @@ class UsedSymbolExtractor
 
                         if (isset($useStatements[$neededAlias])) {
                             $symbolName = $useStatements[$neededAlias] . substr($token[1], strlen($neededAlias));
+                            $kind = $this->getFqnSymbolKind($this->pointer - 2, $this->pointer, $inAttributeSquareLevel !== null);
+                            $usedSymbols[$kind][$symbolName][] = $token[2];
+                        }
+
+                        if ($this->isNextActiveTokenType($tokens, T_DOUBLE_COLON)) {
+                            $symbolName = $token[1];
                             $kind = $this->getFqnSymbolKind($this->pointer - 2, $this->pointer, $inAttributeSquareLevel !== null);
                             $usedSymbols[$kind][$symbolName][] = $token[2];
                         }
@@ -370,6 +378,22 @@ class UsedSymbolExtractor
         }
 
         return SymbolKind::CLASSLIKE; // constant may fall here, this is eliminated later
+    }
+
+    /**
+     * @param list<array{int, string, int}|string> $tokens
+     */
+    private function isNextActiveTokenType(array $tokens, int $expectedType): bool
+    {
+        for ($i = $this->pointer; $i <= count($tokens); $i++) {
+            if (in_array($tokens[$i][0], [T_COMMENT, T_DOC_COMMENT], true)) {
+                continue;
+            }
+
+            return $tokens[$i][0] === $expectedType;
+        }
+
+        return false;
     }
 
 }
