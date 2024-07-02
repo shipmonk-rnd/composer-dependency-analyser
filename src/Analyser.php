@@ -103,12 +103,9 @@ class Analyser
         $this->stopwatch = $stopwatch;
         $this->config = $config;
         $this->composerJsonDependencies = $composerJsonDependencies;
+        $this->classLoaders = $classLoaders;
 
         $this->initExistingSymbols();
-
-        foreach ($classLoaders as $vendorDir => $classLoader) {
-            $this->classLoaders[$vendorDir] = $classLoader;
-        }
     }
 
     /**
