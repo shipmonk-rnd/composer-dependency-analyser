@@ -54,7 +54,7 @@ class Analyser
      *
      * @var array<string, ClassLoader>
      */
-    private $classLoaders;
+    private $classLoaders = [];
 
     /**
      * @var Configuration
