@@ -12,6 +12,7 @@ use ShipMonk\ComposerDependencyAnalyser\Result\ConsoleFormatter;
 use ShipMonk\ComposerDependencyAnalyser\Result\JunitFormatter;
 use ShipMonk\ComposerDependencyAnalyser\Result\ResultFormatter;
 use Throwable;
+use function array_merge;
 use function count;
 use function get_class;
 use function is_file;
@@ -181,7 +182,7 @@ EOD;
     /**
      * @throws InvalidConfigException
      */
-    public function initComposerAutoloader(ComposerJson $composerJson): void
+    public function initComposerAutoloader(ComposerJson $composerJson): ClassLoader
     {
         // load vendor that belongs to given composer.json
         $autoloadFile = $composerJson->composerAutoloadPath;
@@ -190,15 +191,24 @@ EOD;
             throw new InvalidConfigException("Cannot find composer's autoload file, expected at '$autoloadFile'");
         }
 
-        require $autoloadFile;
+        $classLoader = require $autoloadFile;
+
+        if (!$classLoader instanceof ClassLoader) {
+            throw new InvalidConfigException("Invalid composer's autoload file '$autoloadFile', it is expected to return instance of " . ClassLoader::class);
+        }
+
+        return $classLoader;
     }
 
     /**
      * @return array<string, ClassLoader>
      */
-    public function initComposerClassLoaders(): array
+    public function initComposerClassLoaders(ClassLoader $defaultClassLoader, ComposerJson $composerJson): array
     {
-        $loaders = ClassLoader::getRegisteredLoaders();
+        $loaders = array_merge(
+            ClassLoader::getRegisteredLoaders(),
+            [$composerJson->composerVendorDir => $defaultClassLoader]
+        );
 
         if (count($loaders) > 1) {
             $this->stdErrPrinter->printLine("\nDetected multiple class loaders:");
@@ -208,10 +218,6 @@ EOD;
             }
 
             $this->stdErrPrinter->printLine('');
-        }
-
-        if (count($loaders) === 0) {
-            $this->stdErrPrinter->printLine("\nNo composer class loader detected!\n");
         }
 
         return $loaders;

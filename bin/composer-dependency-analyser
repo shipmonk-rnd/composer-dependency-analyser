@@ -35,9 +35,9 @@ $stopwatch = new Stopwatch();
 try {
     $options = $initializer->initCliOptions($cwd, $argv);
     $composerJson = $initializer->initComposerJson($options);
-    $initializer->initComposerAutoloader($composerJson);
+    $defaultClassLoader = $initializer->initComposerAutoloader($composerJson);
     $configuration = $initializer->initConfiguration($options, $composerJson);
-    $classLoaders = $initializer->initComposerClassLoaders();
+    $classLoaders = $initializer->initComposerClassLoaders($defaultClassLoader, $composerJson);
 
     $analyser = new Analyser($stopwatch, $classLoaders, $configuration, $composerJson->dependencies);
     $result = $analyser->run();

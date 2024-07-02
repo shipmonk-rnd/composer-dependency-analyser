@@ -35,6 +35,12 @@ class ComposerJson
      * @readonly
      * @var string
      */
+    public $composerVendorDir;
+
+    /**
+     * @readonly
+     * @var string
+     */
     public $composerAutoloadPath;
 
     /**
@@ -72,7 +78,8 @@ class ComposerJson
         $basePath = dirname($composerJsonPath);
 
         $composerJsonData = $this->parseComposerJson($composerJsonPath);
-        $this->composerAutoloadPath = $this->resolveComposerAutoloadPath($basePath, $composerJsonData['config']['vendor-dir'] ?? 'vendor');
+        $this->composerVendorDir = $this->resolveComposerVendorDir($basePath, $composerJsonData['config']['vendor-dir'] ?? 'vendor');
+        $this->composerAutoloadPath = Path::normalize($this->composerVendorDir . '/autoload.php');
 
         $requiredPackages = $composerJsonData['require'] ?? [];
         $requiredDevPackages = $composerJsonData['require-dev'] ?? [];
@@ -261,13 +268,13 @@ class ComposerJson
         return $composerJsonData; // @phpstan-ignore-line ignore mixed returned
     }
 
-    private function resolveComposerAutoloadPath(string $basePath, string $vendorDir): string
+    private function resolveComposerVendorDir(string $basePath, string $vendorDir): string
     {
         if (Path::isAbsolute($vendorDir)) {
-            return Path::normalize($vendorDir . '/autoload.php');
+            return Path::normalize($vendorDir);
         }
 
-        return Path::normalize($basePath . '/' . $vendorDir . '/autoload.php');
+        return Path::normalize($basePath . '/' . $vendorDir);
     }
 
 }

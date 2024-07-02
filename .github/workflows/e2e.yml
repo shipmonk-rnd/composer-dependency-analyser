@@ -32,11 +32,15 @@ jobs:
                         repo: inspirum/balikobot-php
                         name: balikobot
                         args: ''
-
                     -
                         repo: tomasvotruba/unused-public
                         name: unused-public
                         args: ''
+                    -
+                        repo: tomasnorre/crawler
+                        name: typo3-crawler
+                        args: ''
+
             fail-fast: false
         steps:
             -
