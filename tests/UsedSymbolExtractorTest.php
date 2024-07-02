@@ -105,6 +105,7 @@ class UsedSymbolExtractorTest extends TestCase
             [
                 SymbolKind::CLASSLIKE => [
                     'DateTimeImmutable' => [3],
+                    'PHPUnit\Framework\Error' => [5],
                 ],
             ],
         ];
