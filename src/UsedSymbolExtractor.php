@@ -7,6 +7,7 @@ use function explode;
 use function is_array;
 use function ltrim;
 use function strlen;
+use function strpos;
 use function substr;
 use function token_get_all;
 use const PHP_VERSION_ID;
@@ -72,6 +73,7 @@ class UsedSymbolExtractor
 
         $level = 0; // {, }, {$, ${
         $squareLevel = 0; // [, ], #[
+        $inGlobalScope = true;
         $inClassLevel = null;
         $inAttributeSquareLevel = null;
 
@@ -105,6 +107,7 @@ class UsedSymbolExtractor
                         break;
 
                     case PHP_VERSION_ID >= 80000 ? T_NAMESPACE : -1:
+                        $inGlobalScope = false;
                         $useStatements = []; // reset use statements on namespace change
                         break;
 
@@ -119,6 +122,11 @@ class UsedSymbolExtractor
 
                         if (isset($useStatements[$neededAlias])) {
                             $symbolName = $useStatements[$neededAlias] . substr($token[1], strlen($neededAlias));
+                            $kind = $this->getFqnSymbolKind($this->pointer - 2, $this->pointer, $inAttributeSquareLevel !== null);
+                            $usedSymbols[$kind][$symbolName][] = $token[2];
+
+                        } elseif ($inGlobalScope) {
+                            $symbolName = $token[1];
                             $kind = $this->getFqnSymbolKind($this->pointer - 2, $this->pointer, $inAttributeSquareLevel !== null);
                             $usedSymbols[$kind][$symbolName][] = $token[2];
                         }
@@ -142,6 +150,7 @@ class UsedSymbolExtractor
 
                         if (substr($nextName, 0, 1) !== '\\') { // not a namespace-relative name, but a new namespace declaration
                             $useStatements = []; // reset use statements on namespace change
+                            $inGlobalScope = false;
                         }
 
                         break;
@@ -171,6 +180,11 @@ class UsedSymbolExtractor
 
                             if (isset($useStatements[$neededAlias])) { // qualified name
                                 $symbolName = $useStatements[$neededAlias] . substr($name, strlen($neededAlias));
+                                $kind = $this->getFqnSymbolKind($pointerBeforeName, $this->pointer - 1, false);
+                                $usedSymbols[$kind][$symbolName][] = $token[2];
+
+                            } elseif ($inGlobalScope && strpos($name, '\\') !== false) {
+                                $symbolName = $name;
                                 $kind = $this->getFqnSymbolKind($pointerBeforeName, $this->pointer - 1, false);
                                 $usedSymbols[$kind][$symbolName][] = $token[2];
                             }

@@ -161,8 +161,6 @@ Another approach for DIC-only usages is to scan the generated php file, but that
 
 ## Limitations:
 - Extension dependencies are not analysed (e.g. `ext-json`)
-- Files without namespace has limited support
-  - Only symbols with use statements and FQNs are detected
 
 ## Contributing:
 - Check your code by `composer check`
