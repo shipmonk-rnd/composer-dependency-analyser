@@ -2,6 +2,7 @@
 
 namespace ShipMonk\ComposerDependencyAnalyser\Result;
 
+use DOMException;
 use ShipMonk\ComposerDependencyAnalyser\CliOptions;
 use ShipMonk\ComposerDependencyAnalyser\Config\Configuration;
 use ShipMonk\ComposerDependencyAnalyser\Config\Ignore\UnusedErrorIgnore;
@@ -19,9 +20,10 @@ use function strpos;
 use function substr;
 use const ENT_COMPAT;
 use const ENT_XML1;
+use const LIBXML_NOEMPTYTAG;
 use const PHP_INT_MAX;
 
-class JunitFormatter implements ResultFormatter
+final class JunitFormatter extends AbstractXmlFormatter implements ResultFormatter
 {
 
     /**
@@ -30,25 +32,29 @@ class JunitFormatter implements ResultFormatter
     private $cwd;
 
     /**
-     * @var Printer
+     * @throws DOMException
      */
-    private $printer;
-
-    public function __construct(string $cwd, Printer $printer)
+    public function __construct(string $cwd, Printer $printer, ?bool $verbose = null)
     {
+        if ($verbose === null) {
+            $verbose = false;
+        }
+
+        parent::__construct($printer, $verbose);
         $this->cwd = $cwd;
-        $this->printer = $printer;
+        $this->rootElement = $this->document->createElement('testsuites');
+        $this->document->appendChild($this->rootElement);
     }
 
+    /**
+     * @throws DOMException
+     */
     public function format(
         AnalysisResult $result,
         CliOptions $options,
         Configuration $configuration
     ): int
     {
-        $xml = '<?xml version="1.0" encoding="UTF-8"?>';
-        $xml .= '<testsuites>';
-
         $hasError = false;
         $unusedIgnores = $result->getUnusedIgnores();
 
@@ -63,7 +69,7 @@ class JunitFormatter implements ResultFormatter
 
         if (count($unknownClassErrors) > 0) {
             $hasError = true;
-            $xml .= $this->createSymbolBasedTestSuite(
+            $this->createSymbolBasedTestSuite(
                 'unknown classes',
                 $unknownClassErrors,
                 $maxShownUsages
@@ -72,7 +78,7 @@ class JunitFormatter implements ResultFormatter
 
         if (count($unknownFunctionErrors) > 0) {
             $hasError = true;
-            $xml .= $this->createSymbolBasedTestSuite(
+            $this->createSymbolBasedTestSuite(
                 'unknown functions',
                 $unknownFunctionErrors,
                 $maxShownUsages
@@ -81,7 +87,7 @@ class JunitFormatter implements ResultFormatter
 
         if (count($shadowDependencyErrors) > 0) {
             $hasError = true;
-            $xml .= $this->createPackageBasedTestSuite(
+            $this->createPackageBasedTestSuite(
                 'shadow dependencies',
                 $shadowDependencyErrors,
                 $maxShownUsages
@@ -90,7 +96,7 @@ class JunitFormatter implements ResultFormatter
 
         if (count($devDependencyInProductionErrors) > 0) {
             $hasError = true;
-            $xml .= $this->createPackageBasedTestSuite(
+            $this->createPackageBasedTestSuite(
                 'dev dependencies in production code',
                 $devDependencyInProductionErrors,
                 $maxShownUsages
@@ -99,7 +105,7 @@ class JunitFormatter implements ResultFormatter
 
         if (count($prodDependencyOnlyInDevErrors) > 0) {
             $hasError = true;
-            $xml .= $this->createPackageBasedTestSuite(
+            $this->createPackageBasedTestSuite(
                 'prod dependencies used only in dev paths',
                 array_fill_keys($prodDependencyOnlyInDevErrors, []),
                 $maxShownUsages
@@ -108,7 +114,7 @@ class JunitFormatter implements ResultFormatter
 
         if (count($unusedDependencyErrors) > 0) {
             $hasError = true;
-            $xml .= $this->createPackageBasedTestSuite(
+            $this->createPackageBasedTestSuite(
                 'unused dependencies',
                 array_fill_keys($unusedDependencyErrors, []),
                 $maxShownUsages
@@ -117,12 +123,16 @@ class JunitFormatter implements ResultFormatter
 
         if ($unusedIgnores !== [] && $configuration->shouldReportUnmatchedIgnoredErrors()) {
             $hasError = true;
-            $xml .= $this->createUnusedIgnoresTestSuite($unusedIgnores);
+            $this->createUnusedIgnoresTestSuite($unusedIgnores);
         }
 
-        $xml .= '</testsuites>';
+        $xmlString = $this->document->saveXML(null, LIBXML_NOEMPTYTAG);
 
-        $this->printer->print($xml);
+        if ($xmlString === false) {
+            $xmlString = '';
+        }
+
+        $this->printer->print($xmlString);
 
         if ($hasError) {
             return 255;
@@ -146,13 +156,20 @@ class JunitFormatter implements ResultFormatter
 
     /**
      * @param array<string, list<SymbolUsage>> $errors
+     * @throws DOMException
      */
-    private function createSymbolBasedTestSuite(string $title, array $errors, int $maxShownUsages): string
+    private function createSymbolBasedTestSuite(string $title, array $errors, int $maxShownUsages): void
     {
-        $xml = sprintf('<testsuite name="%s" failures="%u">', $this->escape($title), count($errors));
+        $testsuite = $this->document->createElement('testsuite');
+        $testsuite->setAttribute('name', $this->escape($title));
+        $testsuite->setAttribute('failures', sprintf('%u', count($errors)));
+
+        $this->rootElement->appendChild($testsuite);
 
         foreach ($errors as $symbol => $usages) {
-            $xml .= sprintf('<testcase name="%s">', $this->escape($symbol));
+            $testcase = $this->document->createElement('testcase');
+            $testcase->setAttribute('name', $this->escape($symbol));
+            $testsuite->appendChild($testcase);
 
             if ($maxShownUsages > 1) {
                 $failureUsage = [];
@@ -170,38 +187,43 @@ class JunitFormatter implements ResultFormatter
                     }
                 }
 
-                $xml .= sprintf('<failure>%s</failure>', $this->escape(implode('\n', $failureUsage)));
+                $failureMessage = $this->escape(implode('\n', $failureUsage));
             } else {
                 $firstUsage = $usages[0];
                 $restUsagesCount = count($usages) - 1;
                 $rest = $restUsagesCount > 0 ? " (+ {$restUsagesCount} more)" : '';
-                $xml .= sprintf('<failure>in %s%s</failure>', $this->escape($this->relativizeUsage($firstUsage)), $rest);
+
+                $failureMessage = sprintf('in %s%s', $this->escape($this->relativizeUsage($firstUsage)), $rest);
             }
 
-            $xml .= '</testcase>';
+            $failure = $this->document->createElement('failure', $failureMessage);
+            $testcase->appendChild($failure);
         }
-
-        $xml .= '</testsuite>';
-
-        return $xml;
     }
 
     /**
      * @param array<string, array<string, list<SymbolUsage>>> $errors
+     * @throws DOMException
      */
-    private function createPackageBasedTestSuite(string $title, array $errors, int $maxShownUsages): string
+    private function createPackageBasedTestSuite(string $title, array $errors, int $maxShownUsages): void
     {
-        $xml = sprintf('<testsuite name="%s" failures="%u">', $this->escape($title), count($errors));
+        $testsuite = $this->document->createElement('testsuite');
+        $testsuite->setAttribute('name', $this->escape($title));
+        $testsuite->setAttribute('failures', sprintf('%u', count($errors)));
+
+        $this->rootElement->appendChild($testsuite);
 
         foreach ($errors as $packageName => $usagesPerClassname) {
-            $xml .= sprintf('<testcase name="%s">', $this->escape($packageName));
-            $xml .= sprintf('<failure>%s</failure>', $this->escape(implode('\n', $this->createUsages($usagesPerClassname, $maxShownUsages))));
-            $xml .= '</testcase>';
+            $testcase = $this->document->createElement('testcase');
+            $testcase->setAttribute('name', $this->escape($packageName));
+            $testsuite->appendChild($testcase);
+
+            $failure = $this->document->createElement(
+                'failure',
+                $this->escape(implode('\n', $this->createUsages($usagesPerClassname, $maxShownUsages)))
+            );
+            $testcase->appendChild($failure);
         }
-
-        $xml .= '</testsuite>';
-
-        return $xml;
     }
 
     /**
@@ -265,17 +287,23 @@ class JunitFormatter implements ResultFormatter
 
     /**
      * @param list<UnusedSymbolIgnore|UnusedErrorIgnore> $unusedIgnores
+     * @throws DOMException
      */
-    private function createUnusedIgnoresTestSuite(array $unusedIgnores): string
+    private function createUnusedIgnoresTestSuite(array $unusedIgnores): void
     {
-        $xml = sprintf('<testsuite name="unused-ignore" failures="%u">', count($unusedIgnores));
+        $testsuite = $this->document->createElement('testsuite');
+        $testsuite->setAttribute('name', 'unused-ignore');
+        $testsuite->setAttribute('failures', sprintf('%u', count($unusedIgnores)));
+
+        $this->rootElement->appendChild($testsuite);
 
         foreach ($unusedIgnores as $unusedIgnore) {
             if ($unusedIgnore instanceof UnusedSymbolIgnore) {
                 $kind = $unusedIgnore->getSymbolKind() === SymbolKind::CLASSLIKE ? 'class' : 'function';
                 $regex = $unusedIgnore->isRegex() ? ' regex' : '';
                 $message = "Unknown {$kind}{$regex} '{$unusedIgnore->getUnknownSymbol()}' was ignored, but it was never applied.";
-                $xml .= sprintf('<testcase name="%s"><failure>%s</failure></testcase>', $this->escape($unusedIgnore->getUnknownSymbol()), $this->escape($message));
+
+                $testcaseName = $this->escape($unusedIgnore->getUnknownSymbol());
             } else {
                 $package = $unusedIgnore->getPackage();
                 $path = $unusedIgnore->getPath();
@@ -297,11 +325,16 @@ class JunitFormatter implements ResultFormatter
                     $message = "'{$unusedIgnore->getErrorType()}' was ignored for package '{$package}' and path '{$this->relativizePath($path)}', but it was never applied.";
                 }
 
-                $xml .= sprintf('<testcase name="%s"><failure>%s</failure></testcase>', $this->escape($unusedIgnore->getErrorType()), $this->escape($message));
+                $testcaseName = $this->escape($unusedIgnore->getErrorType());
             }
-        }
 
-        return $xml . '</testsuite>';
+            $testcase = $this->document->createElement('testcase');
+            $testcase->setAttribute('name', $testcaseName);
+            $testsuite->appendChild($testcase);
+
+            $failure = $this->document->createElement('failure', $this->escape($message));
+            $testcase->appendChild($failure);
+        }
     }
 
     private function relativizeUsage(SymbolUsage $usage): string

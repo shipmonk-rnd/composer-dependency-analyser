@@ -27,7 +27,7 @@ class BinTest extends TestCase
 
         $usingConfig = 'Using config';
 
-        $junitOutput = '<?xml version="1.0" encoding="UTF-8"?><testsuites></testsuites>';
+        $junitOutput = '<?xml version="1.0" encoding="UTF-8"?>' . "\n" . '<testsuites></testsuites>';
 
         $this->runCommand('php bin/composer-dependency-analyser', $rootDir, 0, $okOutput, $usingConfig);
         $this->runCommand('php bin/composer-dependency-analyser --verbose', $rootDir, 0, $okOutput, $usingConfig);

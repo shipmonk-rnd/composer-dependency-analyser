@@ -20,12 +20,12 @@
     ],
     "require": {
         "php": "^7.2 || ^8.0",
+        "ext-dom": "*",
         "ext-json": "*",
+        "ext-libxml": "*",
         "ext-tokenizer": "*"
     },
     "require-dev": {
-        "ext-dom": "*",
-        "ext-libxml": "*",
         "editorconfig-checker/editorconfig-checker": "^10.3.0",
         "ergebnis/composer-normalize": "^2.19",
         "phpcompatibility/php-compatibility": "^9.3",

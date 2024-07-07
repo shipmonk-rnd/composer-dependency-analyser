@@ -245,7 +245,7 @@ EOD;
                 throw new InvalidConfigException("Cannot use 'junit' format with '--dump-usages' option.");
             }
 
-            return new JunitFormatter($this->cwd, $this->stdOutPrinter);
+            return new JunitFormatter($this->cwd, $this->stdOutPrinter, $options->verbose);
         }
 
         if ($format === 'console') {

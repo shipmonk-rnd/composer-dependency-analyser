@@ -3,6 +3,7 @@
 namespace ShipMonk\ComposerDependencyAnalyser;
 
 use DOMDocument;
+use DOMException;
 use ShipMonk\ComposerDependencyAnalyser\Config\Configuration;
 use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
 use ShipMonk\ComposerDependencyAnalyser\Config\Ignore\UnusedErrorIgnore;
@@ -168,7 +169,7 @@ OUT;
     {
         $dom = new DOMDocument();
         $dom->preserveWhiteSpace = false;
-        $dom->formatOutput = true;
+        $dom->formatOutput = true;  // always in human-readable format
         $dom->loadXML($inputXml);
 
         $outputXml = $dom->saveXML(null, LIBXML_NOEMPTYTAG);
@@ -177,9 +178,13 @@ OUT;
         return trim($outputXml);
     }
 
+    /**
+     * @throws DOMException
+     */
     protected function createFormatter(Printer $printer): ResultFormatter
     {
-        return new JunitFormatter('/app', $printer);
+        // human-readable format with 'verbose' option set to true
+        return new JunitFormatter('/app', $printer, true);
     }
 
 }
