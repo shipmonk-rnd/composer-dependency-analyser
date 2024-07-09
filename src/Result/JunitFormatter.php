@@ -133,12 +133,12 @@ class JunitFormatter implements ResultFormatter
 
     private function getMaxUsagesShownForErrors(CliOptions $options): int
     {
-        if ($options->verbose === true) {
-            return self::VERBOSE_SHOWN_USAGES;
-        }
-
         if ($options->showAllUsages === true) {
             return PHP_INT_MAX;
+        }
+
+        if ($options->verbose === true) {
+            return self::VERBOSE_SHOWN_USAGES;
         }
 
         return 1;
