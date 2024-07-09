@@ -41,6 +41,7 @@ Ignore options:
     (or use --config for better granularity)
 
     --ignore-unknown-classes            Ignore all non-autoloadable classes
+    --ignore-unknown-functions          Ignore all undefined functions
     --ignore-unused-deps                Ignore all unused dependency issues
     --ignore-shadow-deps                Ignore all shadow dependency issues
     --ignore-dev-in-prod-deps           Ignore all dev dependency in production code issues
