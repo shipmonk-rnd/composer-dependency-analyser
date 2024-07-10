@@ -45,6 +45,7 @@ class AnalyserTest extends TestCase
 
         $detector = new Analyser(
             $this->getStopwatchMock(),
+            $vendorDir,
             [$vendorDir => $this->getClassLoaderMock()],
             $config,
             $dependencies
@@ -477,12 +478,14 @@ class AnalyserTest extends TestCase
         $path = realpath(__DIR__ . '/data/not-autoloaded/builtin/native-symbols.php');
         self::assertNotFalse($path);
 
+        $vendorDir = __DIR__;
         $config = new Configuration();
         $config->addPathToScan($path, false);
 
         $detector = new Analyser(
             $this->getStopwatchMock(),
-            [__DIR__ => $this->getClassLoaderMock()],
+            $vendorDir,
+            [$vendorDir => $this->getClassLoaderMock()],
             $config,
             []
         );
@@ -503,13 +506,16 @@ class AnalyserTest extends TestCase
         $path = realpath(__DIR__ . '/data/not-autoloaded/analysis/unknown-classes.php');
         self::assertNotFalse($path);
 
+        $vendorDir = __DIR__ . '/data/autoloaded/vendor';
+
         $config = new Configuration();
         $config->addPathToScan($path, true);
         $config->addPathToScan($path, true);
 
         $detector = new Analyser(
             $this->getStopwatchMock(),
-            [__DIR__ . '/data/autoloaded/vendor' => $this->getClassLoaderMock()],
+            $vendorDir,
+            [$vendorDir => $this->getClassLoaderMock()],
             $config,
             []
         );
@@ -538,6 +544,7 @@ class AnalyserTest extends TestCase
 
         $detector = new Analyser(
             $this->getStopwatchMock(),
+            $vendorDir,
             [$vendorDir => $this->getClassLoaderMock()],
             $config,
             [
@@ -565,6 +572,7 @@ class AnalyserTest extends TestCase
 
         $detector = new Analyser(
             $this->getStopwatchMock(),
+            $vendorDir,
             [$vendorDir => $this->getClassLoaderMock()],
             $config,
             [
@@ -591,6 +599,7 @@ class AnalyserTest extends TestCase
 
         $detector = new Analyser(
             $this->getStopwatchMock(),
+            $vendorDir,
             [$vendorDir => $this->getClassLoaderMock()],
             $config,
             []
@@ -626,6 +635,7 @@ class AnalyserTest extends TestCase
 
         $detector = new Analyser(
             $this->getStopwatchMock(),
+            $vendorDir,
             [$vendorDir => $this->getClassLoaderMock()],
             $config,
             [
@@ -665,6 +675,7 @@ class AnalyserTest extends TestCase
 
         $detector = new Analyser(
             $this->getStopwatchMock(),
+            $vendorDir,
             $classLoaders,
             $config,
             [
@@ -692,6 +703,7 @@ class AnalyserTest extends TestCase
 
         $detector = new Analyser(
             $this->getStopwatchMock(),
+            $vendorDir,
             [$vendorDir => $this->getClassLoaderMock()],
             $config,
             ['org/package' => false]
@@ -713,6 +725,7 @@ class AnalyserTest extends TestCase
 
         $detector = new Analyser(
             $this->getStopwatchMock(),
+            $vendorDir,
             [$vendorDir => $this->getClassLoaderMock()],
             $config,
             [
