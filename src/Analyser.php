@@ -22,6 +22,7 @@ use function array_diff;
 use function array_filter;
 use function array_key_exists;
 use function array_keys;
+use function array_values;
 use function explode;
 use function file_get_contents;
 use function get_declared_classes;
@@ -50,9 +51,12 @@ class Analyser
     private $stopwatch;
 
     /**
-     * vendorDir => ClassLoader
-     *
-     * @var array<string, ClassLoader>
+     * @var list<string>
+     */
+    private $vendorDirs;
+
+    /**
+     * @var list<ClassLoader>
      */
     private $classLoaders;
 
@@ -95,6 +99,7 @@ class Analyser
      */
     public function __construct(
         Stopwatch $stopwatch,
+        string $defaultVendorDir,
         array $classLoaders,
         Configuration $config,
         array $composerJsonDependencies
@@ -103,7 +108,8 @@ class Analyser
         $this->stopwatch = $stopwatch;
         $this->config = $config;
         $this->composerJsonDependencies = $composerJsonDependencies;
-        $this->classLoaders = $classLoaders;
+        $this->vendorDirs = array_keys($classLoaders + [$defaultVendorDir => null]);
+        $this->classLoaders = array_values($classLoaders);
 
         $this->initExistingSymbols();
     }
@@ -311,7 +317,7 @@ class Analyser
 
     private function getPackageNameFromVendorPath(string $realPath): string
     {
-        foreach ($this->classLoaders as $vendorDir => $_) {
+        foreach ($this->vendorDirs as $vendorDir) {
             if (strpos($realPath, $vendorDir) === 0) {
                 $filePathInVendor = trim(str_replace($vendorDir, '', $realPath), DIRECTORY_SEPARATOR);
                 [$vendor, $package] = explode(DIRECTORY_SEPARATOR, $filePathInVendor, 3);
@@ -366,7 +372,7 @@ class Analyser
 
     private function isVendorPath(string $realPath): bool
     {
-        foreach ($this->classLoaders as $vendorDir => $_) {
+        foreach ($this->vendorDirs as $vendorDir) {
             if (strpos($realPath, $vendorDir) === 0) {
                 return true;
             }
