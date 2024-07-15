@@ -22,7 +22,6 @@ use function array_diff;
 use function array_filter;
 use function array_key_exists;
 use function array_keys;
-use function array_unique;
 use function array_values;
 use function explode;
 use function file_get_contents;
@@ -109,14 +108,7 @@ class Analyser
         $this->stopwatch = $stopwatch;
         $this->config = $config;
         $this->composerJsonDependencies = $composerJsonDependencies;
-
-        $vendorDirs = [$defaultVendorDir];
-
-        foreach ($classLoaders as $vendorDir => $classLoader) {
-            $vendorDirs[] = $vendorDir;
-        }
-
-        $this->vendorDirs = array_values(array_unique($vendorDirs));
+        $this->vendorDirs = array_keys($classLoaders + [$defaultVendorDir => null]);
         $this->classLoaders = array_values($classLoaders);
 
         $this->initExistingSymbols();
