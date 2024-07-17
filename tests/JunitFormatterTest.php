@@ -2,7 +2,6 @@
 
 namespace ShipMonk\ComposerDependencyAnalyser;
 
-use DOMDocument;
 use ShipMonk\ComposerDependencyAnalyser\Config\Configuration;
 use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
 use ShipMonk\ComposerDependencyAnalyser\Config\Ignore\UnusedErrorIgnore;
@@ -10,8 +9,6 @@ use ShipMonk\ComposerDependencyAnalyser\Result\AnalysisResult;
 use ShipMonk\ComposerDependencyAnalyser\Result\JunitFormatter;
 use ShipMonk\ComposerDependencyAnalyser\Result\ResultFormatter;
 use ShipMonk\ComposerDependencyAnalyser\Result\SymbolUsage;
-use function trim;
-use const LIBXML_NOEMPTYTAG;
 
 class JunitFormatterTest extends FormatterTest
 {
@@ -39,11 +36,12 @@ OUT;
       <failure>'shadow-dependency' was globally ignored, but it was never applied.</failure>
     </testcase>
   </testsuite>
+  <!-- showing only first example failure usage -->
 </testsuites>
 OUT;
 
-        self::assertSame($this->normalizeEol($expectedNoIssuesOutput), $this->prettyPrintXml($noIssuesOutput));
-        self::assertSame($this->normalizeEol($expectedNoIssuesButWarningsOutput), $this->prettyPrintXml($noIssuesButUnusedIgnores));
+        self::assertSame($this->normalizeEol($expectedNoIssuesOutput), $noIssuesOutput);
+        self::assertSame($this->normalizeEol($expectedNoIssuesButWarningsOutput), $noIssuesButUnusedIgnores);
 
         $analysisResult = new AnalysisResult(
             10,
@@ -87,37 +85,34 @@ OUT;
 <testsuites>
   <testsuite name="unknown classes" failures="1">
     <testcase name="Unknown\Thing">
-      <failure>in app/init.php:1093</failure>
+      <failure>app/init.php:1093</failure>
     </testcase>
   </testsuite>
   <testsuite name="unknown functions" failures="1">
     <testcase name="Unknown\function">
-      <failure>in app/foo.php:51</failure>
+      <failure>app/foo.php:51</failure>
     </testcase>
   </testsuite>
   <testsuite name="shadow dependencies" failures="2">
     <testcase name="shadow/another">
-      <failure>e.g. Another\Controller in src/bootstrap.php:173</failure>
+      <failure message="Another\Controller">src/bootstrap.php:173</failure>
     </testcase>
     <testcase name="shadow/package">
-      <failure>e.g. Forth\Provider in src/bootstrap.php:873 (+ 6 more)</failure>
+      <failure message="Forth\Provider">src/bootstrap.php:873</failure>
     </testcase>
   </testsuite>
   <testsuite name="dev dependencies in production code" failures="1">
     <testcase name="some/package">
-      <failure>e.g. Another\Command in src/ProductGenerator.php:28</failure>
+      <failure message="Another\Command">src/ProductGenerator.php:28</failure>
     </testcase>
   </testsuite>
   <testsuite name="prod dependencies used only in dev paths" failures="1">
-    <testcase name="misplaced/package">
-      <failure></failure>
-    </testcase>
+    <testcase name="misplaced/package"></testcase>
   </testsuite>
   <testsuite name="unused dependencies" failures="1">
-    <testcase name="dead/package">
-      <failure></failure>
-    </testcase>
+    <testcase name="dead/package"></testcase>
   </testsuite>
+  <!-- showing only first example failure usage -->
 </testsuites>
 OUT;
         $expectedVerboseOutput = <<<'OUT'
@@ -135,46 +130,34 @@ OUT;
   </testsuite>
   <testsuite name="shadow dependencies" failures="2">
     <testcase name="shadow/another">
-      <failure>Another\Controller\n  src/bootstrap.php:173</failure>
+      <failure message="Another\Controller">src/bootstrap.php:173</failure>
     </testcase>
     <testcase name="shadow/package">
-      <failure>Forth\Provider\n  src/bootstrap.php:873\nShadow\Comparator\n  src/Printer.php:25\nShadow\Utils\n  src/Utils.php:19\n  src/Utils.php:22\n  src/Application.php:128\n  + 1 more\n  + 1 more symbol</failure>
+      <failure message="Forth\Provider">src/bootstrap.php:873</failure>
+      <failure message="Shadow\Comparator">src/Printer.php:25</failure>
+      <failure message="Shadow\Utils">src/Utils.php:19
+src/Utils.php:22
+src/Application.php:128</failure>
     </testcase>
   </testsuite>
   <testsuite name="dev dependencies in production code" failures="1">
     <testcase name="some/package">
-      <failure>Another\Command\n  src/ProductGenerator.php:28</failure>
+      <failure message="Another\Command">src/ProductGenerator.php:28</failure>
     </testcase>
   </testsuite>
   <testsuite name="prod dependencies used only in dev paths" failures="1">
-    <testcase name="misplaced/package">
-      <failure></failure>
-    </testcase>
+    <testcase name="misplaced/package"></testcase>
   </testsuite>
   <testsuite name="unused dependencies" failures="1">
-    <testcase name="dead/package">
-      <failure></failure>
-    </testcase>
+    <testcase name="dead/package"></testcase>
   </testsuite>
+  <!-- showing only first 3 example failure usages -->
 </testsuites>
 OUT;
 
-        self::assertSame($this->normalizeEol($expectedRegularOutput), $this->prettyPrintXml($regularOutput));
-        self::assertSame($this->normalizeEol($expectedVerboseOutput), $this->prettyPrintXml($verboseOutput));
+        self::assertSame($this->normalizeEol($expectedRegularOutput), $regularOutput);
+        self::assertSame($this->normalizeEol($expectedVerboseOutput), $verboseOutput);
         // editorconfig-checker-enable
-    }
-
-    private function prettyPrintXml(string $inputXml): string
-    {
-        $dom = new DOMDocument();
-        $dom->preserveWhiteSpace = false;
-        $dom->formatOutput = true;
-        $dom->loadXML($inputXml);
-
-        $outputXml = $dom->saveXML(null, LIBXML_NOEMPTYTAG);
-        self::assertNotFalse($outputXml);
-
-        return trim($outputXml);
     }
 
     protected function createFormatter(Printer $printer): ResultFormatter
