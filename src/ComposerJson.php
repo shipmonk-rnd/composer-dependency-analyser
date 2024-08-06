@@ -128,7 +128,11 @@ class ComposerJson
             }
 
             foreach ($paths as $path) {
-                $absolutePath = $basePath . '/' . $path;
+                if (Path::isAbsolute($path)) {
+                    $absolutePath = $path;
+                } else {
+                    $absolutePath = $basePath . '/' . $path;
+                }
 
                 if (strpos($path, '*') !== false) { // https://getcomposer.org/doc/04-schema.md#classmap
                     $globPaths = glob($absolutePath);
