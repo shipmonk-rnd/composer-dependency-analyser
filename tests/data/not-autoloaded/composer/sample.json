@@ -8,7 +8,8 @@
     },
     "autoload": {
         "classmap": [
-            "dir*"
+            "dir*",
+            "/absolute/dir"
         ],
         "files": [
             "dir2/file1.php"
