@@ -11,11 +11,13 @@ jobs:
                     -
                         repo: phpstan/phpstan-src
                         name: phpstan
-                        args: --config=build/composer-dependency-analyser.php
+                        cdaArgs: --config=build/composer-dependency-analyser.php
+                        composerArgs: ''
                     -
                         repo: shipmonk-rnd/phpstan-rules
                         name: shipmonk-rules
-                        args: ''
+                        cdaArgs: ''
+                        composerArgs: ''
                     -
                         repo: vincentlanglet/twig-cs-fixer
                         name: twig-cs-fixer
@@ -23,24 +25,33 @@ jobs:
                     -
                         repo: qossmic/deptrac-src
                         name: deptrac
-                        args: ''
+                        cdaArgs: ''
+                        composerArgs: ''
                     -
                         repo: kreait/firebase-php
                         name: firebase
-                        args: ''
+                        cdaArgs: ''
+                        composerArgs: ''
+                    -
+                        repo: oveleon/contao-cookiebar
+                        name: contao-cookiebar
+                        cdaArgs: --config=depcheck.php
+                        composerArgs: --no-plugins
                     -
                         repo: rectorphp/rector-src
                         name: rector
-                        args: ''
+                        cdaArgs: ''
+                        composerArgs: ''
                     -
                         repo: inspirum/balikobot-php
                         name: balikobot
-                        args: ''
-
+                        cdaArgs: ''
+                        composerArgs: ''
                     -
                         repo: tomasvotruba/unused-public
                         name: unused-public
-                        args: ''
+                        cdaArgs: ''
+                        composerArgs: ''
             fail-fast: false
         steps:
             -
@@ -69,7 +80,7 @@ jobs:
             -
                 name: Install analyser dependencies
                 working-directory: analyser
-                run: composer install --no-progress --prefer-dist --no-interaction
+                run: composer install --no-progress --no-interaction
 
             -
                 name: Disable autoloader prepend
@@ -80,9 +91,9 @@ jobs:
             -
                 name: Install ${{ matrix.name }} dependencies
                 working-directory: ${{ matrix.name }}
-                run: composer install --no-progress --prefer-dist --no-interaction --ignore-platform-reqs
+                run: composer install --no-progress --no-interaction --ignore-platform-reqs ${{ matrix.composerArgs }}
 
             -
                 name: Run analyser
                 working-directory: ${{ matrix.name }}
-                run: php ../analyser/bin/composer-dependency-analyser ${{ matrix.args }}
+                run: php ../analyser/bin/composer-dependency-analyser ${{ matrix.cdaArgs }}
