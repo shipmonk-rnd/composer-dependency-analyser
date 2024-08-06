@@ -17,6 +17,10 @@ jobs:
                         name: shipmonk-rules
                         args: ''
                     -
+                        repo: vincentlanglet/twig-cs-fixer
+                        name: twig-cs-fixer
+                        args: ''
+                    -
                         repo: qossmic/deptrac-src
                         name: deptrac
                         args: ''
