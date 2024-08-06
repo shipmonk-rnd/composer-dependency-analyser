@@ -83,7 +83,7 @@ OUT;
 
         $expectedRegularOutput = <<<'OUT'
 
-Unknown classes!
+Found 1 unknown class!
 (unable to autoload those, so we cannot check them)
 
   • Unknown\Thing
@@ -91,7 +91,7 @@ Unknown classes!
 
 
 
-Unknown functions!
+Found 1 unknown function!
 (those are not declared, so we cannot check them)
 
   • Unknown\function
@@ -99,7 +99,7 @@ Unknown functions!
 
 
 
-Found shadow dependencies!
+Found 2 shadow dependencies!
 (those are used, but not listed as dependency in composer.json)
 
   • shadow/another
@@ -110,7 +110,7 @@ Found shadow dependencies!
 
 
 
-Found dev dependencies in production code!
+Found 1 dev dependency in production code!
 (those should probably be moved to "require" section in composer.json)
 
   • some/package
@@ -118,13 +118,13 @@ Found dev dependencies in production code!
 
 
 
-Found prod dependencies used only in dev paths!
+Found 1 prod dependency used only in dev paths!
 (those should probably be moved to "require-dev" section in composer.json)
 
   • misplaced/package
 
 
-Found unused dependencies!
+Found 1 unused dependency!
 (those are listed in composer.json, but no usage was found in scanned paths)
 
   • dead/package
@@ -135,7 +135,7 @@ Found unused dependencies!
 OUT;
         $expectedVerboseOutput = <<<'OUT'
 
-Unknown classes!
+Found 1 unknown class!
 (unable to autoload those, so we cannot check them)
 
   • Unknown\Thing
@@ -143,7 +143,7 @@ Unknown classes!
 
 
 
-Unknown functions!
+Found 1 unknown function!
 (those are not declared, so we cannot check them)
 
   • Unknown\function
@@ -151,7 +151,7 @@ Unknown functions!
 
 
 
-Found shadow dependencies!
+Found 2 shadow dependencies!
 (those are used, but not listed as dependency in composer.json)
 
   • shadow/another
@@ -170,7 +170,7 @@ Found shadow dependencies!
       + 1 more symbol
 
 
-Found dev dependencies in production code!
+Found 1 dev dependency in production code!
 (those should probably be moved to "require" section in composer.json)
 
   • some/package
@@ -178,13 +178,13 @@ Found dev dependencies in production code!
         src/ProductGenerator.php:28
 
 
-Found prod dependencies used only in dev paths!
+Found 1 prod dependency used only in dev paths!
 (those should probably be moved to "require-dev" section in composer.json)
 
   • misplaced/package
 
 
-Found unused dependencies!
+Found 1 unused dependency!
 (those are listed in composer.json, but no usage was found in scanned paths)
 
   • dead/package

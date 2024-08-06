@@ -12,6 +12,7 @@ use function array_fill_keys;
 use function array_reduce;
 use function count;
 use function fnmatch;
+use function in_array;
 use function round;
 use function strlen;
 use function strpos;
@@ -123,60 +124,73 @@ class ConsoleFormatter implements ResultFormatter
         $prodDependencyOnlyInDevErrors = $result->getProdDependencyOnlyInDevErrors();
         $unusedDependencyErrors = $result->getUnusedDependencyErrors();
 
-        if (count($unknownClassErrors) > 0) {
+        $unknownClassErrorsCount = count($unknownClassErrors);
+        $unknownFunctionErrorsCount = count($unknownFunctionErrors);
+        $shadowDependencyErrorsCount = count($shadowDependencyErrors);
+        $devDependencyInProductionErrorsCount = count($devDependencyInProductionErrors);
+        $prodDependencyOnlyInDevErrorsCount = count($prodDependencyOnlyInDevErrors);
+        $unusedDependencyErrorsCount = count($unusedDependencyErrors);
+
+        if ($unknownClassErrorsCount > 0) {
             $hasError = true;
+            $classes = $this->pluralize($unknownClassErrorsCount, 'class');
             $this->printSymbolBasedErrors(
-                'Unknown classes!',
+                "Found $unknownClassErrorsCount unknown $classes!",
                 'unable to autoload those, so we cannot check them',
                 $unknownClassErrors,
                 $maxShownUsages
             );
         }
 
-        if (count($unknownFunctionErrors) > 0) {
+        if ($unknownFunctionErrorsCount > 0) {
             $hasError = true;
+            $functions = $this->pluralize($unknownFunctionErrorsCount, 'function');
             $this->printSymbolBasedErrors(
-                'Unknown functions!',
+                "Found $unknownFunctionErrorsCount unknown $functions!",
                 'those are not declared, so we cannot check them',
                 $unknownFunctionErrors,
                 $maxShownUsages
             );
         }
 
-        if (count($shadowDependencyErrors) > 0) {
+        if ($shadowDependencyErrorsCount > 0) {
             $hasError = true;
+            $dependencies = $this->pluralize($shadowDependencyErrorsCount, 'dependency');
             $this->printPackageBasedErrors(
-                'Found shadow dependencies!',
+                "Found $shadowDependencyErrorsCount shadow $dependencies!",
                 'those are used, but not listed as dependency in composer.json',
                 $shadowDependencyErrors,
                 $maxShownUsages
             );
         }
 
-        if (count($devDependencyInProductionErrors) > 0) {
+        if ($devDependencyInProductionErrorsCount > 0) {
             $hasError = true;
+            $dependencies = $this->pluralize($devDependencyInProductionErrorsCount, 'dependency');
             $this->printPackageBasedErrors(
-                'Found dev dependencies in production code!',
+                "Found $devDependencyInProductionErrorsCount dev $dependencies in production code!",
                 'those should probably be moved to "require" section in composer.json',
                 $devDependencyInProductionErrors,
                 $maxShownUsages
             );
         }
 
-        if (count($prodDependencyOnlyInDevErrors) > 0) {
+        if ($prodDependencyOnlyInDevErrorsCount > 0) {
             $hasError = true;
+            $dependencies = $this->pluralize($prodDependencyOnlyInDevErrorsCount, 'dependency');
             $this->printPackageBasedErrors(
-                'Found prod dependencies used only in dev paths!',
+                "Found $prodDependencyOnlyInDevErrorsCount prod $dependencies used only in dev paths!",
                 'those should probably be moved to "require-dev" section in composer.json',
                 array_fill_keys($prodDependencyOnlyInDevErrors, []),
                 $maxShownUsages
             );
         }
 
-        if (count($unusedDependencyErrors) > 0) {
+        if ($unusedDependencyErrorsCount > 0) {
             $hasError = true;
+            $dependencies = $this->pluralize($unusedDependencyErrorsCount, 'dependency');
             $this->printPackageBasedErrors(
-                'Found unused dependencies!',
+                "Found $unusedDependencyErrorsCount unused $dependencies!",
                 'those are listed in composer.json, but no usage was found in scanned paths',
                 array_fill_keys($unusedDependencyErrors, []),
                 $maxShownUsages
@@ -431,6 +445,23 @@ class ConsoleFormatter implements ResultFormatter
         }
 
         return false;
+    }
+
+    private function pluralize(int $count, string $singular): string
+    {
+        if ($count === 1) {
+            return $singular;
+        }
+
+        if (substr($singular, -1) === 's' || substr($singular, -1) === 'x' || substr($singular, -2) === 'sh' || substr($singular, -2) === 'ch') {
+            return $singular . 'es';
+        }
+
+        if (substr($singular, -1) === 'y' && !in_array($singular[strlen($singular) - 2], ['a', 'e', 'i', 'o', 'u'], true)) {
+            return substr($singular, 0, -1) . 'ies';
+        }
+
+        return $singular . 's';
     }
 
 }
