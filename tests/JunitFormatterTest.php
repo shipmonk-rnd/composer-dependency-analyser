@@ -47,7 +47,10 @@ OUT;
             10,
             0.123,
             [],
-            ['Unknown\\Thing' => [new SymbolUsage('/app/app/init.php', 1093, SymbolKind::CLASSLIKE)]],
+            ['Unknown\\Thing' => [
+                new SymbolUsage('/app/app/init.php', 1091, SymbolKind::CLASSLIKE),
+                new SymbolUsage('/app/app/init.php', 1093, SymbolKind::CLASSLIKE),
+            ]],
             ['Unknown\\function' => [new SymbolUsage('/app/app/foo.php', 51, SymbolKind::FUNCTION)]],
             [
                 'shadow/package' => [
@@ -76,7 +79,7 @@ OUT;
         });
         $verboseOutput = $this->getFormatterNormalizedOutput(static function ($formatter) use ($analysisResult): void {
             $options = new CliOptions();
-            $options->verbose = true;
+            $options->showAllUsages = true;
             $formatter->format($analysisResult, $options, new Configuration());
         });
 
@@ -85,7 +88,7 @@ OUT;
 <testsuites>
   <testsuite name="unknown classes" failures="1">
     <testcase name="Unknown\Thing">
-      <failure>app/init.php:1093</failure>
+      <failure>app/init.php:1091</failure>
     </testcase>
   </testsuite>
   <testsuite name="unknown functions" failures="1">
@@ -120,6 +123,7 @@ OUT;
 <testsuites>
   <testsuite name="unknown classes" failures="1">
     <testcase name="Unknown\Thing">
+      <failure>app/init.php:1091</failure>
       <failure>app/init.php:1093</failure>
     </testcase>
   </testsuite>
@@ -135,9 +139,11 @@ OUT;
     <testcase name="shadow/package">
       <failure message="Forth\Provider">src/bootstrap.php:873</failure>
       <failure message="Shadow\Comparator">src/Printer.php:25</failure>
-      <failure message="Shadow\Utils">src/Utils.php:19
-src/Utils.php:22
-src/Application.php:128</failure>
+      <failure message="Shadow\Utils">src/Utils.php:19</failure>
+      <failure message="Shadow\Utils">src/Utils.php:22</failure>
+      <failure message="Shadow\Utils">src/Application.php:128</failure>
+      <failure message="Shadow\Utils">src/Controller.php:229</failure>
+      <failure message="Third\Parser">src/bootstrap.php:317</failure>
     </testcase>
   </testsuite>
   <testsuite name="dev dependencies in production code" failures="1">
@@ -151,7 +157,7 @@ src/Application.php:128</failure>
   <testsuite name="unused dependencies" failures="1">
     <testcase name="dead/package"></testcase>
   </testsuite>
-  <!-- showing only first 3 example failure usages -->
+  <!-- showing all failure usages -->
 </testsuites>
 OUT;
 

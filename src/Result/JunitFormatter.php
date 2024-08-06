@@ -13,7 +13,6 @@ use function array_fill_keys;
 use function count;
 use function extension_loaded;
 use function htmlspecialchars;
-use function implode;
 use function sprintf;
 use function strlen;
 use function strpos;
@@ -161,17 +160,13 @@ class JunitFormatter implements ResultFormatter
         foreach ($errors as $symbol => $usages) {
             $xml .= sprintf('<testcase name="%s">', $this->escape($symbol));
 
-            $failureUsage = [];
-
             foreach ($usages as $index => $usage) {
-                $failureUsage[] = $this->relativizeUsage($usage);
+                $xml .= sprintf('<failure>%s</failure>', $this->escape($this->relativizeUsage($usage)));
 
-                if ($index === $maxShownUsages) {
+                if ($index === $maxShownUsages - 1) {
                     break;
                 }
             }
-
-            $xml .= sprintf('<failure>%s</failure>', $this->escape(implode("\n", $failureUsage)));
 
             $xml .= '</testcase>';
         }
@@ -194,17 +189,17 @@ class JunitFormatter implements ResultFormatter
             $printedSymbols = 0;
 
             foreach ($usagesPerClassname as $symbol => $usages) {
-                $printedSymbols++;
-                $xml .= sprintf(
-                    '<failure message="%s">%s</failure>',
-                    $symbol,
-                    $this->escape(
-                        implode("\n", $this->createUsages($usages, $maxShownUsages))
-                    )
-                );
+                foreach ($this->createUsages($usages, $maxShownUsages) as $usage) {
+                    $printedSymbols++;
+                    $xml .= sprintf(
+                        '<failure message="%s">%s</failure>',
+                        $symbol,
+                        $this->escape($usage)
+                    );
 
-                if ($printedSymbols === $maxShownUsages) {
-                    break;
+                    if ($printedSymbols === $maxShownUsages) {
+                        break 2;
+                    }
                 }
             }
 
