@@ -8,6 +8,11 @@ class CliOptions
     /**
      * @var true|null
      */
+    public $version = null;
+
+    /**
+     * @var true|null
+     */
     public $help = null;
 
     /**
