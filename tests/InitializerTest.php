@@ -5,7 +5,7 @@ namespace ShipMonk\ComposerDependencyAnalyser;
 use PHPUnit\Framework\TestCase;
 use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
 use ShipMonk\ComposerDependencyAnalyser\Config\PathToScan;
-use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidCliException;
+use ShipMonk\ComposerDependencyAnalyser\Exception\AbortException;
 use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidConfigException;
 use ShipMonk\ComposerDependencyAnalyser\Result\ConsoleFormatter;
 use ShipMonk\ComposerDependencyAnalyser\Result\JunitFormatter;
@@ -114,7 +114,7 @@ class InitializerTest extends TestCase
 
         $initializer = new Initializer(__DIR__, $printer, $printer);
 
-        $this->expectException(InvalidCliException::class);
+        $this->expectException(AbortException::class);
         $initializer->initCliOptions(__DIR__, ['script.php', '--help']);
     }
 

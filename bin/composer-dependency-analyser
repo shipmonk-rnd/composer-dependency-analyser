@@ -2,6 +2,7 @@
 <?php declare(strict_types=1);
 
 use ShipMonk\ComposerDependencyAnalyser\Analyser;
+use ShipMonk\ComposerDependencyAnalyser\Exception\AbortException;
 use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidCliException;
 use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidConfigException;
 use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidPathException;
@@ -52,6 +53,9 @@ try {
 ) {
     $stdErrPrinter->printLine("\n<red>{$e->getMessage()}</red>" . PHP_EOL);
     exit(255);
+
+} catch (AbortException $e) {
+    exit(0);
 }
 
 exit($exitCode);

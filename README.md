@@ -79,6 +79,7 @@ This tool reads your `composer.json` and scans all paths listed in `autoload` & 
 - `--composer-json path/to/composer.json` for custom path to composer.json
 - `--dump-usages symfony/console` to show usages of certain package(s), `*` placeholder is supported
 - `--config path/to/config.php` for custom path to config file
+- `--version` display version
 - `--help` display usage & cli options
 - `--verbose` to see more example classes & usages
 - `--show-all-usages` to see all usages
