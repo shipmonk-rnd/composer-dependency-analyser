@@ -128,7 +128,7 @@ class ComposerJson
             }
 
             foreach ($paths as $path) {
-                if (strpos($path, '/') === 0) {
+                if (Path::isAbsolute($path)) {
                     $absolutePath = $path;
                 } else {
                     $absolutePath = $basePath . '/' . $path;
