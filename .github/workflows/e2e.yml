@@ -12,26 +12,18 @@ jobs:
                         repo: phpstan/phpstan-src
                         name: phpstan
                         cdaArgs: --config=build/composer-dependency-analyser.php
-                        composerArgs: ''
                     -
                         repo: shipmonk-rnd/phpstan-rules
                         name: shipmonk-rules
-                        cdaArgs: ''
-                        composerArgs: ''
                     -
                         repo: vincentlanglet/twig-cs-fixer
                         name: twig-cs-fixer
-                        args: ''
                     -
                         repo: qossmic/deptrac-src
                         name: deptrac
-                        cdaArgs: ''
-                        composerArgs: ''
                     -
                         repo: kreait/firebase-php
                         name: firebase
-                        cdaArgs: ''
-                        composerArgs: ''
                     -
                         repo: oveleon/contao-cookiebar
                         name: contao-cookiebar
@@ -40,18 +32,12 @@ jobs:
                     -
                         repo: rectorphp/rector-src
                         name: rector
-                        cdaArgs: ''
-                        composerArgs: ''
                     -
                         repo: inspirum/balikobot-php
                         name: balikobot
-                        cdaArgs: ''
-                        composerArgs: ''
                     -
                         repo: tomasvotruba/unused-public
                         name: unused-public
-                        cdaArgs: ''
-                        composerArgs: ''
             fail-fast: false
         steps:
             -
