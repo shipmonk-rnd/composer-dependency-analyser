@@ -10,7 +10,7 @@ use ShipMonk\ComposerDependencyAnalyser\Result\ConsoleFormatter;
 use ShipMonk\ComposerDependencyAnalyser\Result\ResultFormatter;
 use ShipMonk\ComposerDependencyAnalyser\Result\SymbolUsage;
 
-class ConsoleFormatterTest extends FormatterTest
+class ConsoleFormatterTest extends FormatterTestCase
 {
 
     public function testPrintResult(): void

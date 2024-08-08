@@ -10,7 +10,7 @@ use function preg_replace;
 use function str_replace;
 use function stream_get_contents;
 
-abstract class FormatterTest extends TestCase
+abstract class FormatterTestCase extends TestCase
 {
 
     abstract protected function createFormatter(Printer $printer): ResultFormatter;
