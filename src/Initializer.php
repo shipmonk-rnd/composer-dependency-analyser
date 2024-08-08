@@ -19,6 +19,7 @@ use function class_exists;
 use function count;
 use function get_class;
 use function is_file;
+use function sprintf;
 
 class Initializer
 {
@@ -238,7 +239,7 @@ EOD;
         }
 
         if ($cliOptions->version !== null) {
-            $this->stdOutPrinter->printLine($this->deduceVersion());
+            $this->stdOutPrinter->printLine('Composer Dependency Analyser ' . $this->deduceVersion());
             throw new AbortException();
         }
 
@@ -270,16 +271,26 @@ EOD;
     private function deduceVersion(): string
     {
         try {
+            if (isset($GLOBALS['_composer_autoload_path'])) {
+                require $GLOBALS['_composer_autoload_path'];
+            }
+
             /** @throws OutOfBoundsException */
-            $version = class_exists(InstalledVersions::class)
-                ? InstalledVersions::getPrettyVersion('shipmonk/composer-dependency-analyser')
-                : 'unknown';
+            if (!class_exists(InstalledVersions::class)) {
+                return 'unknown';
+            }
+
+            $package = 'shipmonk/composer-dependency-analyser';
+
+            return sprintf(
+                '%s (%s)',
+                InstalledVersions::getPrettyVersion($package),
+                InstalledVersions::getReference($package)
+            );
 
         } catch (OutOfBoundsException $e) {
-            $version = 'not found';
+            return 'not found';
         }
-
-        return "Version: $version";
     }
 
 }
