@@ -239,7 +239,7 @@ EOD;
         }
 
         if ($cliOptions->version !== null) {
-            $this->stdOutPrinter->printLine('Version: ' . $this->deduceVersion());
+            $this->stdOutPrinter->printLine('Composer Dependency Analyser ' . $this->deduceVersion());
             throw new AbortException();
         }
 

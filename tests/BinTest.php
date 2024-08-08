@@ -24,7 +24,7 @@ class BinTest extends TestCase
         $okOutput = 'No composer issues found';
         $dumpingOutput = 'Dumping sample usages of';
         $helpOutput = 'Usage:';
-        $versionOutput = 'Version:';
+        $versionOutput = 'Composer Dependency Analyser';
 
         $usingConfig = 'Using config';
 
