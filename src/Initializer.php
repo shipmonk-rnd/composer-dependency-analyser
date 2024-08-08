@@ -271,6 +271,10 @@ EOD;
     private function deduceVersion(): string
     {
         try {
+            if (isset($GLOBALS['_composer_autoload_path'])) {
+                require $GLOBALS['_composer_autoload_path'];
+            }
+
             /** @throws OutOfBoundsException */
             if (!class_exists(InstalledVersions::class)) {
                 return 'unknown';
