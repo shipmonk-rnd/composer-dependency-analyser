@@ -10,7 +10,7 @@ use ShipMonk\ComposerDependencyAnalyser\Result\JunitFormatter;
 use ShipMonk\ComposerDependencyAnalyser\Result\ResultFormatter;
 use ShipMonk\ComposerDependencyAnalyser\Result\SymbolUsage;
 
-class JunitFormatterTest extends FormatterTest
+class JunitFormatterTestCase extends FormatterTestCase
 {
 
     public function testPrintResult(): void
