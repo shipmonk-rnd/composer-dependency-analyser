@@ -36,6 +36,9 @@ jobs:
                         repo: inspirum/balikobot-php
                         name: balikobot
                     -
+                        repo: wallabag/wallabag
+                        name: wallabag
+                    -
                         repo: tomasvotruba/unused-public
                         name: unused-public
             fail-fast: false
