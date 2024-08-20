@@ -2,6 +2,7 @@
 
 namespace ShipMonk\ComposerDependencyAnalyser\Result;
 
+use DOMDocument;
 use ShipMonk\ComposerDependencyAnalyser\CliOptions;
 use ShipMonk\ComposerDependencyAnalyser\Config\Configuration;
 use ShipMonk\ComposerDependencyAnalyser\Config\Ignore\UnusedErrorIgnore;
@@ -9,16 +10,17 @@ use ShipMonk\ComposerDependencyAnalyser\Config\Ignore\UnusedSymbolIgnore;
 use ShipMonk\ComposerDependencyAnalyser\Printer;
 use ShipMonk\ComposerDependencyAnalyser\SymbolKind;
 use function array_fill_keys;
-use function array_reduce;
 use function count;
+use function extension_loaded;
 use function htmlspecialchars;
-use function implode;
 use function sprintf;
 use function strlen;
 use function strpos;
 use function substr;
+use function trim;
 use const ENT_COMPAT;
 use const ENT_XML1;
+use const LIBXML_NOEMPTYTAG;
 use const PHP_INT_MAX;
 
 class JunitFormatter implements ResultFormatter
@@ -120,9 +122,13 @@ class JunitFormatter implements ResultFormatter
             $xml .= $this->createUnusedIgnoresTestSuite($unusedIgnores);
         }
 
+        if ($hasError) {
+            $xml .= sprintf('<!-- %s -->', $this->getUsagesComment($maxShownUsages));
+        }
+
         $xml .= '</testsuites>';
 
-        $this->printer->print($xml);
+        $this->printer->print($this->prettyPrintXml($xml));
 
         if ($hasError) {
             return 255;
@@ -154,28 +160,12 @@ class JunitFormatter implements ResultFormatter
         foreach ($errors as $symbol => $usages) {
             $xml .= sprintf('<testcase name="%s">', $this->escape($symbol));
 
-            if ($maxShownUsages > 1) {
-                $failureUsage = [];
+            foreach ($usages as $index => $usage) {
+                $xml .= sprintf('<failure>%s</failure>', $this->escape($this->relativizeUsage($usage)));
 
-                foreach ($usages as $index => $usage) {
-                    $failureUsage[] = $this->relativizeUsage($usage);
-
-                    if ($index === $maxShownUsages - 1) {
-                        $restUsagesCount = count($usages) - $index - 1;
-
-                        if ($restUsagesCount > 0) {
-                            $failureUsage[] = "+ {$restUsagesCount} more";
-                            break;
-                        }
-                    }
+                if ($index === $maxShownUsages - 1) {
+                    break;
                 }
-
-                $xml .= sprintf('<failure>%s</failure>', $this->escape(implode('\n', $failureUsage)));
-            } else {
-                $firstUsage = $usages[0];
-                $restUsagesCount = count($usages) - 1;
-                $rest = $restUsagesCount > 0 ? " (+ {$restUsagesCount} more)" : '';
-                $xml .= sprintf('<failure>in %s%s</failure>', $this->escape($this->relativizeUsage($firstUsage)), $rest);
             }
 
             $xml .= '</testcase>';
@@ -195,7 +185,24 @@ class JunitFormatter implements ResultFormatter
 
         foreach ($errors as $packageName => $usagesPerClassname) {
             $xml .= sprintf('<testcase name="%s">', $this->escape($packageName));
-            $xml .= sprintf('<failure>%s</failure>', $this->escape(implode('\n', $this->createUsages($usagesPerClassname, $maxShownUsages))));
+
+            $printedSymbols = 0;
+
+            foreach ($usagesPerClassname as $symbol => $usages) {
+                foreach ($this->createUsages($usages, $maxShownUsages) as $usage) {
+                    $printedSymbols++;
+                    $xml .= sprintf(
+                        '<failure message="%s">%s</failure>',
+                        $symbol,
+                        $this->escape($usage)
+                    );
+
+                    if ($printedSymbols === $maxShownUsages) {
+                        break 2;
+                    }
+                }
+            }
+
             $xml .= '</testcase>';
         }
 
@@ -205,58 +212,18 @@ class JunitFormatter implements ResultFormatter
     }
 
     /**
-     * @param array<string, list<SymbolUsage>> $usagesPerSymbol
+     * @param list<SymbolUsage> $usages
      * @return list<string>
      */
-    private function createUsages(array $usagesPerSymbol, int $maxShownUsages): array
+    private function createUsages(array $usages, int $maxShownUsages): array
     {
         $usageMessages = [];
 
-        if ($maxShownUsages === 1) {
-            $countOfAllUsages = array_reduce(
-                $usagesPerSymbol,
-                static function (int $carry, array $usages): int {
-                    return $carry + count($usages);
-                },
-                0
-            );
+        foreach ($usages as $index => $usage) {
+            $usageMessages[] = $this->relativizeUsage($usage);
 
-            foreach ($usagesPerSymbol as $symbol => $usages) {
-                $firstUsage = $usages[0];
-                $restUsagesCount = $countOfAllUsages - 1;
-                $rest = $countOfAllUsages > 1 ? " (+ {$restUsagesCount} more)" : '';
-                $usageMessages[] = "e.g. {$symbol} in {$this->relativizeUsage($firstUsage)}$rest";
+            if ($index === $maxShownUsages - 1) {
                 break;
-            }
-        } else {
-            $classnamesPrinted = 0;
-
-            foreach ($usagesPerSymbol as $symbol => $usages) {
-                $classnamesPrinted++;
-
-                $usageMessages[] = $symbol;
-
-                foreach ($usages as $index => $usage) {
-                    $usageMessages[] = "  {$this->relativizeUsage($usage)}";
-
-                    if ($index === $maxShownUsages - 1) {
-                        $restUsagesCount = count($usages) - $index - 1;
-
-                        if ($restUsagesCount > 0) {
-                            $usageMessages[] = "  + {$restUsagesCount} more";
-                            break;
-                        }
-                    }
-                }
-
-                if ($classnamesPrinted === $maxShownUsages) {
-                    $restSymbolsCount = count($usagesPerSymbol) - $classnamesPrinted;
-
-                    if ($restSymbolsCount > 0) {
-                        $usageMessages[] = "  + {$restSymbolsCount} more symbol" . ($restSymbolsCount > 1 ? 's' : '');
-                        break;
-                    }
-                }
             }
         }
 
@@ -321,6 +288,39 @@ class JunitFormatter implements ResultFormatter
     private function escape(string $string): string
     {
         return htmlspecialchars($string, ENT_XML1 | ENT_COMPAT, 'UTF-8');
+    }
+
+    private function prettyPrintXml(string $inputXml): string
+    {
+        if (!extension_loaded('dom') || !extension_loaded('libxml')) {
+            return $inputXml;
+        }
+
+        $dom = new DOMDocument();
+        $dom->preserveWhiteSpace = false;
+        $dom->formatOutput = true;
+        $dom->loadXML($inputXml);
+
+        $outputXml = $dom->saveXML(null, LIBXML_NOEMPTYTAG);
+
+        if ($outputXml === false) {
+            return $inputXml;
+        }
+
+        return trim($outputXml);
+    }
+
+    private function getUsagesComment(int $maxShownUsages): string
+    {
+        if ($maxShownUsages === PHP_INT_MAX) {
+            return 'showing all failure usages';
+        }
+
+        if ($maxShownUsages === 1) {
+            return 'showing only first example failure usage';
+        }
+
+        return sprintf('showing only first %d example failure usages', $maxShownUsages);
     }
 
 }

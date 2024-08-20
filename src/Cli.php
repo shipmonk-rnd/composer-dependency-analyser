@@ -13,6 +13,7 @@ class Cli
 {
 
     private const OPTIONS = [
+        'version' => false,
         'help' => false,
         'verbose' => false,
         'ignore-shadow-deps' => false,
@@ -125,6 +126,10 @@ class Cli
     public function getProvidedOptions(): CliOptions
     {
         $options = new CliOptions();
+
+        if (isset($this->providedOptions['version'])) {
+            $options->version = true;
+        }
 
         if (isset($this->providedOptions['help'])) {
             $options->help = true;

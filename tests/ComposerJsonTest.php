@@ -41,6 +41,7 @@ class ComposerJsonTest extends TestCase
                 realpath(__DIR__ . '/data/not-autoloaded/composer/dir2/file1.php') => false,
                 realpath(__DIR__ . '/data/not-autoloaded/composer/dir1') => false,
                 realpath(__DIR__ . '/data/not-autoloaded/composer/dir2') => false,
+                DIRECTORY_SEPARATOR . 'absolute' . DIRECTORY_SEPARATOR . 'dir' => false,
             ],
             $composerJson->autoloadPaths
         );

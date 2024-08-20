@@ -3,8 +3,11 @@
 namespace ShipMonk\ComposerDependencyAnalyser;
 
 use Composer\Autoload\ClassLoader;
+use Composer\InstalledVersions;
+use OutOfBoundsException;
 use ShipMonk\ComposerDependencyAnalyser\Config\Configuration;
 use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
+use ShipMonk\ComposerDependencyAnalyser\Exception\AbortException;
 use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidCliException;
 use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidConfigException;
 use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidPathException;
@@ -12,9 +15,11 @@ use ShipMonk\ComposerDependencyAnalyser\Result\ConsoleFormatter;
 use ShipMonk\ComposerDependencyAnalyser\Result\JunitFormatter;
 use ShipMonk\ComposerDependencyAnalyser\Result\ResultFormatter;
 use Throwable;
+use function class_exists;
 use function count;
 use function get_class;
 use function is_file;
+use function sprintf;
 
 class Initializer
 {
@@ -28,6 +33,7 @@ Usage:
     vendor/bin/composer-dependency-analyser
 
 Options:
+    --version                   Print analyser version.
     --help                      Print this help text and exit.
     --verbose                   Print more usage examples
     --show-all-usages           Removes the limit of showing only few usages
@@ -220,6 +226,7 @@ EOD;
 
     /**
      * @param list<string> $argv
+     * @throws AbortException
      * @throws InvalidCliException
      */
     public function initCliOptions(string $cwd, array $argv): CliOptions
@@ -228,7 +235,12 @@ EOD;
 
         if ($cliOptions->help !== null) {
             $this->stdOutPrinter->printLine(self::$help);
-            throw new InvalidCliException(''); // just exit
+            throw new AbortException();
+        }
+
+        if ($cliOptions->version !== null) {
+            $this->stdOutPrinter->printLine('Composer Dependency Analyser ' . $this->deduceVersion());
+            throw new AbortException();
         }
 
         return $cliOptions;
@@ -254,6 +266,31 @@ EOD;
         }
 
         throw new InvalidConfigException("Invalid format option provided, allowed are 'console' or 'junit'.");
+    }
+
+    private function deduceVersion(): string
+    {
+        try {
+            if (isset($GLOBALS['_composer_autoload_path'])) {
+                require $GLOBALS['_composer_autoload_path'];
+            }
+
+            /** @throws OutOfBoundsException */
+            if (!class_exists(InstalledVersions::class)) {
+                return 'unknown';
+            }
+
+            $package = 'shipmonk/composer-dependency-analyser';
+
+            return sprintf(
+                '%s (%s)',
+                InstalledVersions::getPrettyVersion($package),
+                InstalledVersions::getReference($package)
+            );
+
+        } catch (OutOfBoundsException $e) {
+            return 'not found';
+        }
     }
 
 }

@@ -24,16 +24,18 @@ class BinTest extends TestCase
         $okOutput = 'No composer issues found';
         $dumpingOutput = 'Dumping sample usages of';
         $helpOutput = 'Usage:';
+        $versionOutput = 'Composer Dependency Analyser';
 
         $usingConfig = 'Using config';
 
-        $junitOutput = '<?xml version="1.0" encoding="UTF-8"?><testsuites></testsuites>';
+        $junitOutput = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<testsuites></testsuites>";
 
         $this->runCommand('php bin/composer-dependency-analyser', $rootDir, 0, $okOutput, $usingConfig);
         $this->runCommand('php bin/composer-dependency-analyser --verbose', $rootDir, 0, $okOutput, $usingConfig);
         $this->runCommand('php ../bin/composer-dependency-analyser', $testsDir, 255, null, $noComposerJsonError);
-        $this->runCommand('php bin/composer-dependency-analyser --help', $rootDir, 255, $helpOutput);
-        $this->runCommand('php ../bin/composer-dependency-analyser --help', $testsDir, 255, $helpOutput);
+        $this->runCommand('php bin/composer-dependency-analyser --help', $rootDir, 0, $helpOutput);
+        $this->runCommand('php ../bin/composer-dependency-analyser --help', $testsDir, 0, $helpOutput);
+        $this->runCommand('php ../bin/composer-dependency-analyser --version', $testsDir, 0, $versionOutput);
         $this->runCommand('php bin/composer-dependency-analyser --composer-json=composer.json', $rootDir, 0, $okOutput, $usingConfig);
         $this->runCommand('php bin/composer-dependency-analyser --composer-json=composer.lock', $rootDir, 255, null, $noPackagesError);
         $this->runCommand('php bin/composer-dependency-analyser --composer-json=README.md', $rootDir, 255, null, $parseError);
