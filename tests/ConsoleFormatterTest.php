@@ -41,8 +41,8 @@ Some ignored issues never occurred:
 
 OUT;
 
-        self::assertSame($this->normalizeEol($expectedNoIssuesOutput), $this->removeColors($noIssuesOutput));
-        self::assertSame($this->normalizeEol($expectedNoIssuesButWarningsOutput), $this->removeColors($noIssuesButUnusedIgnores));
+        self::assertSame($this->normalizeEol($expectedNoIssuesOutput), $noIssuesOutput);
+        self::assertSame($this->normalizeEol($expectedNoIssuesButWarningsOutput), $noIssuesButUnusedIgnores);
 
         $analysisResult = new AnalysisResult(
             10,
@@ -194,8 +194,8 @@ Found 1 unused dependency!
 
 OUT;
 
-        self::assertSame($this->normalizeEol($expectedRegularOutput), $this->removeColors($regularOutput));
-        self::assertSame($this->normalizeEol($expectedVerboseOutput), $this->removeColors($verboseOutput));
+        self::assertSame($this->normalizeEol($expectedRegularOutput), $regularOutput);
+        self::assertSame($this->normalizeEol($expectedVerboseOutput), $verboseOutput);
         // editorconfig-checker-enable
     }
 

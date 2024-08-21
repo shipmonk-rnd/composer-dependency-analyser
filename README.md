@@ -160,6 +160,12 @@ Another approach for DIC-only usages is to scan the generated php file, but that
 ### Scanning codebase located elsewhere:
 - This can be done by pointing `--composer-json` to `composer.json` of the other codebase
 
+### Disable colored output:
+- Set `NO_COLOR` environment variable to disable colored output:
+```
+NO_COLOR=1 vendor/bin/composer-dependency-analyser
+```
+
 ## Limitations:
 - Extension dependencies are not analysed (e.g. `ext-json`)
 
