@@ -6,7 +6,6 @@ use Closure;
 use PHPUnit\Framework\TestCase;
 use ShipMonk\ComposerDependencyAnalyser\Result\ResultFormatter;
 use function fopen;
-use function preg_replace;
 use function str_replace;
 use function stream_get_contents;
 
@@ -23,7 +22,7 @@ abstract class FormatterTestCase extends TestCase
         $stream = fopen('php://memory', 'w');
         self::assertNotFalse($stream);
 
-        $printer = new Printer($stream);
+        $printer = new Printer($stream, true);
         $formatter = $this->createFormatter($printer);
 
         $closure($formatter);
@@ -33,11 +32,6 @@ abstract class FormatterTestCase extends TestCase
     protected function normalizeEol(string $string): string
     {
         return str_replace("\r\n", "\n", $string);
-    }
-
-    protected function removeColors(string $output): string
-    {
-        return (string) preg_replace('#\\x1b[[][^A-Za-z]*[A-Za-z]#', '', $output);
     }
 
 }

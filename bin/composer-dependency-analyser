@@ -27,9 +27,10 @@ spl_autoload_register(static function (string $class) use ($psr4Prefix): void {
 
 /** @var non-empty-string $cwd */
 $cwd = getcwd();
+$noColor = getenv('NO_COLOR') !== false;
 
-$stdOutPrinter = new Printer(STDOUT);
-$stdErrPrinter = new Printer(STDERR);
+$stdOutPrinter = new Printer(STDOUT, $noColor);
+$stdErrPrinter = new Printer(STDERR, $noColor);
 $initializer = new Initializer($cwd, $stdOutPrinter, $stdErrPrinter);
 $stopwatch = new Stopwatch();
 

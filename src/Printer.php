@@ -29,11 +29,17 @@ class Printer
     private $resource;
 
     /**
+     * @var bool
+     */
+    private $noColor;
+
+    /**
      * @param resource $resource
      */
-    public function __construct($resource)
+    public function __construct($resource, bool $noColor)
     {
         $this->resource = $resource;
+        $this->noColor = $noColor;
     }
 
     public function printLine(string $string): void
@@ -52,7 +58,11 @@ class Printer
 
     private function colorize(string $string): string
     {
-        return str_replace(array_keys(self::COLORS), array_values(self::COLORS), $string);
+        return str_replace(
+            array_keys(self::COLORS),
+            $this->noColor ? '' : array_values(self::COLORS),
+            $string
+        );
     }
 
 }
