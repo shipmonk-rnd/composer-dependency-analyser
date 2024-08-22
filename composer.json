@@ -70,7 +70,10 @@
             "@check:collisions"
         ],
         "check:collisions": "detect-collisions src tests",
-        "check:composer": "composer normalize --dry-run --no-check-lock --no-update-lock",
+        "check:composer": [
+            "composer normalize --dry-run --no-check-lock --no-update-lock",
+            "composer validate --strict"
+        ],
         "check:cs": "phpcs",
         "check:ec": "ec src tests",
         "check:self": "bin/composer-dependency-analyser",
