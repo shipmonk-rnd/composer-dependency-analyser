@@ -98,6 +98,10 @@ class Cli
                     $this->providedOptions[$optionName] = $optionArgument;
                 }
             } else {
+                if ($this->getOptionArgumentAfterAssign($arg) !== null) {
+                    throw new InvalidCliException("Option --$optionName does not accept arguments, see --help");
+                }
+
                 $this->providedOptions[$optionName] = true;
             }
         }
@@ -122,7 +126,10 @@ class Cli
     private function getKnownOptionName(string $option): ?string
     {
         foreach (self::OPTIONS as $knownOption => $needsArgument) {
-            if (strpos($option, $knownOption) === 0) {
+            if (
+                strpos($option, $knownOption) === 0
+                && (strlen($option) === strlen($knownOption) || $option[strlen($knownOption)] === '=')
+            ) {
                 return $knownOption;
             }
         }
