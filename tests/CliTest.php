@@ -114,6 +114,51 @@ class CliTest extends TestCase
             'Missing argument value in --composer-json=, see --help',
             ['bin/script.php', '--composer-json='],
         ];
+
+        yield 'suggestion #1' => [
+            'Unknown option --hep, did you mean --help?',
+            ['bin/script.php', '--hep'],
+        ];
+
+        yield 'suggestion #2' => [
+            'Unknown option --ignore-shadow-dependencies, did you mean --ignore-shadow-deps?',
+            ['bin/script.php', '--ignore-shadow-dependencies'],
+        ];
+
+        yield 'suggestion #3' => [
+            'Unknown option --composer-lock, did you mean --composer-json?',
+            ['bin/script.php', '--composer-lock'],
+        ];
+
+        yield 'suggestion #4' => [
+            'Unknown option --ignore-prod-in-dev-deps, did you mean --ignore-prod-only-in-dev-deps?',
+            ['bin/script.php', '--ignore-prod-in-dev-deps'],
+        ];
+
+        yield 'suggestion #5' => [
+            'Unknown option --ignore-dev-prod-deps, did you mean --ignore-dev-in-prod-deps?',
+            ['bin/script.php', '--ignore-dev-prod-deps'],
+        ];
+
+        yield 'no suggestion #1' => [
+            'Unknown option --vvv, see --help',
+            ['bin/script.php', '--vvv'],
+        ];
+
+        yield 'no suggestion #2' => [
+            'Unknown option --v, see --help',
+            ['bin/script.php', '--v'],
+        ];
+
+        yield 'no suggestion #3' => [
+            'Unknown option --nonsense, see --help',
+            ['bin/script.php', '--nonsense'],
+        ];
+
+        yield 'no suggestion #4' => [
+            'Unknown option --four, see --help',
+            ['bin/script.php', '--four'],
+        ];
     }
 
 }
