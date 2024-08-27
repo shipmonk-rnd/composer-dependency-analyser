@@ -115,6 +115,16 @@ class CliTest extends TestCase
             ['bin/script.php', '--composer-json='],
         ];
 
+        yield 'valid option is substring of provided option' => [
+            'Unknown option --configuration=foo, see --help',
+            ['bin/script.php', '--configuration=foo'],
+        ];
+
+        yield 'argument-less option with argument' => [
+            'Option --verbose does not accept arguments, see --help',
+            ['bin/script.php', '--verbose=foo'],
+        ];
+
         yield 'suggestion #1' => [
             'Unknown option --hep, did you mean --help?',
             ['bin/script.php', '--hep'],
