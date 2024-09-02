@@ -78,7 +78,7 @@
         "check:ec": "ec src tests",
         "check:self": "bin/composer-dependency-analyser",
         "check:tests": "phpunit -vvv tests",
-        "check:types": "phpstan analyse -vvv --ansi",
+        "check:types": "phpstan analyse -vv --ansi",
         "fix:cs": "phpcbf"
     }
 }

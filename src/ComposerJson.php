@@ -196,10 +196,8 @@ class ComposerJson
         $path = preg_replace_callback(
             '{^((?:(?:\\\\\\.){1,2}+/)+)}',
             static function ($matches) use (&$updir): string {
-                if (isset($matches[1]) && $matches[1] !== '') {
-                    // undo preg_quote for the matched string
-                    $updir = str_replace('\\.', '.', $matches[1]);
-                }
+                // undo preg_quote for the matched string
+                $updir = str_replace('\\.', '.', $matches[1]);
 
                 return '';
             },
