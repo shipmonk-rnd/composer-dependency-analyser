@@ -1,5 +1,3 @@
 {
-    "excludePaths": [
-        "tests/data/not-autoloaded/builtin/native-symbols.php"
-    ]
+    "ignoreParseFailures": true
 }

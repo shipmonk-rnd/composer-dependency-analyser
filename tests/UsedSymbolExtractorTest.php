@@ -130,6 +130,13 @@ class UsedSymbolExtractorTest extends TestCase
                 ],
             ];
         }
+
+        if (PHP_VERSION_ID >= 80400) {
+            yield 'property hooks' => [
+                __DIR__ . '/data/not-autoloaded/used-symbols/property-hooks.php',
+                [],
+            ];
+        }
     }
 
 }
