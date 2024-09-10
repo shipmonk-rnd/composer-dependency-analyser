@@ -175,5 +175,5 @@ NO_COLOR=1 vendor/bin/composer-dependency-analyser
 - All functionality must be tested
 
 ## Supported PHP versions
-- Runtime requires PHP 7.2 - 8.3
+- Runtime requires PHP 7.2 - 8.4
 - Scanned codebase should use PHP >= 5.3
