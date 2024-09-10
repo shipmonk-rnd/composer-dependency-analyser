@@ -26,15 +26,15 @@
     "require-dev": {
         "ext-dom": "*",
         "ext-libxml": "*",
-        "editorconfig-checker/editorconfig-checker": "^10.3.0",
-        "ergebnis/composer-normalize": "^2.19",
-        "phpcompatibility/php-compatibility": "^9.3",
-        "phpstan/phpstan": "^1.10.63",
-        "phpstan/phpstan-phpunit": "^1.1.1",
-        "phpstan/phpstan-strict-rules": "^1.2.3",
-        "phpunit/phpunit": "^8.5.28 || ^9.5.20",
-        "shipmonk/name-collision-detector": "^2.0.0",
-        "slevomat/coding-standard": "^8.0.1"
+        "editorconfig-checker/editorconfig-checker": "^10.6.0",
+        "ergebnis/composer-normalize": "^2.19.0",
+        "phpcompatibility/php-compatibility": "^9.3.5",
+        "phpstan/phpstan": "^1.12.3",
+        "phpstan/phpstan-phpunit": "^1.4.0",
+        "phpstan/phpstan-strict-rules": "^1.6.0",
+        "phpunit/phpunit": "^8.5.39 || ^9.6.20",
+        "shipmonk/name-collision-detector": "^2.1.1",
+        "slevomat/coding-standard": "^8.15.0"
     },
     "autoload": {
         "psr-4": {
