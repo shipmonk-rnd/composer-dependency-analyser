@@ -27,7 +27,7 @@
         "ext-dom": "*",
         "ext-libxml": "*",
         "editorconfig-checker/editorconfig-checker": "^10.6.0",
-        "ergebnis/composer-normalize": "^2.43.0",
+        "ergebnis/composer-normalize": "^2.19.0",
         "phpcompatibility/php-compatibility": "^9.3.5",
         "phpstan/phpstan": "^1.12.3",
         "phpstan/phpstan-phpunit": "^1.4.0",
