@@ -5,7 +5,7 @@
 - ⚙️ **Configurable:** Fine-grained ignores via PHP config
 - 🕸️ **Lightweight:** No composer dependencies
 - 🍰 **Easy-to-use:** No config needed for first try
-- ✨ **Compatible:** PHP 7.2 - 8.3
+- ✨ **Compatible:** PHP 7.2 - 8.4
 
 ## Comparison:
 
