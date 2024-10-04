@@ -119,6 +119,11 @@ jobs:
                 uses: shivammathur/setup-php@v2
                 with:
                     php-version: 8.3
+                    ini-file: development
+
+            -
+                name: List enabled extensions
+                run: php -m
 
             -
                 name: Install analyser dependencies
