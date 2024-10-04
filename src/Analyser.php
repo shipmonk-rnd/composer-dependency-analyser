@@ -46,6 +46,24 @@ class Analyser
 {
 
     /**
+     * Those are core PHP extensions, that can never be disabled
+     * There are more PHP "core" extensions, that are bundled by default, but PHP can be compiled without them
+     * You can check which are added conditionally in https://github.com/php/php-src/tree/master/ext (see config.w32 files)
+     */
+    private const CORE_EXTENSIONS = [
+        'ext-core',
+        'ext-date',
+        'ext-json',
+        'ext-hash',
+        'ext-pcre',
+        'ext-phar',
+        'ext-reflection',
+        'ext-spl',
+        'ext-random',
+        'ext-standard',
+    ];
+
+    /**
      * @var Stopwatch
      */
     private $stopwatch;
@@ -73,7 +91,7 @@ class Analyser
     private $classmap = [];
 
     /**
-     * package name => is dev dependency
+     * package or ext-* => is dev dependency
      *
      * @var array<string, bool>
      */
@@ -87,15 +105,22 @@ class Analyser
     private $ignoredSymbols;
 
     /**
-     * function name => path
+     * custom function name => path
      *
      * @var array<string, string>
      */
     private $definedFunctions = [];
 
     /**
+     * kind => [symbol name => ext-*]
+     *
+     * @var array<SymbolKind::*, array<string, string>>
+     */
+    private $extensionSymbols;
+
+    /**
      * @param array<string, ClassLoader> $classLoaders vendorDir => ClassLoader (e.g. result of \Composer\Autoload\ClassLoader::getRegisteredLoaders())
-     * @param array<string, bool> $composerJsonDependencies package name => is dev dependency
+     * @param array<string, bool> $composerJsonDependencies package or ext-* => is dev dependency
      */
     public function __construct(
         Stopwatch $stopwatch,
@@ -129,7 +154,7 @@ class Analyser
         $prodOnlyInDevErrors = [];
         $unusedErrors = [];
 
-        $usedPackages = [];
+        $usedDependencies = [];
         $prodPackagesUsedInProdPath = [];
 
         $usages = [];
@@ -149,60 +174,65 @@ class Analyser
                         continue;
                     }
 
-                    $symbolPath = $this->getSymbolPath($usedSymbol, $kind);
+                    if (isset($this->extensionSymbols[$kind][$usedSymbol])) {
+                        $dependencyName = $this->extensionSymbols[$kind][$usedSymbol];
 
-                    if ($symbolPath === null) {
-                        if ($kind === SymbolKind::CLASSLIKE && !$ignoreList->shouldIgnoreUnknownClass($usedSymbol, $filePath)) {
-                            foreach ($lineNumbers as $lineNumber) {
-                                $unknownClassErrors[$usedSymbol][] = new SymbolUsage($filePath, $lineNumber, $kind);
+                    } else {
+                        $symbolPath = $this->getSymbolPath($usedSymbol, $kind);
+
+                        if ($symbolPath === null) {
+                            if ($kind === SymbolKind::CLASSLIKE && !$ignoreList->shouldIgnoreUnknownClass($usedSymbol, $filePath)) {
+                                foreach ($lineNumbers as $lineNumber) {
+                                    $unknownClassErrors[$usedSymbol][] = new SymbolUsage($filePath, $lineNumber, $kind);
+                                }
                             }
+
+                            if ($kind === SymbolKind::FUNCTION && !$ignoreList->shouldIgnoreUnknownFunction($usedSymbol, $filePath)) {
+                                foreach ($lineNumbers as $lineNumber) {
+                                    $unknownFunctionErrors[$usedSymbol][] = new SymbolUsage($filePath, $lineNumber, $kind);
+                                }
+                            }
+
+                            continue;
                         }
 
-                        if ($kind === SymbolKind::FUNCTION && !$ignoreList->shouldIgnoreUnknownFunction($usedSymbol, $filePath)) {
-                            foreach ($lineNumbers as $lineNumber) {
-                                $unknownFunctionErrors[$usedSymbol][] = new SymbolUsage($filePath, $lineNumber, $kind);
-                            }
+                        if (!$this->isVendorPath($symbolPath)) {
+                            continue; // local class
                         }
 
-                        continue;
+                        $dependencyName = $this->getPackageNameFromVendorPath($symbolPath);
                     }
-
-                    if (!$this->isVendorPath($symbolPath)) {
-                        continue; // local class
-                    }
-
-                    $packageName = $this->getPackageNameFromVendorPath($symbolPath);
 
                     if (
-                        $this->isShadowDependency($packageName)
-                        && !$ignoreList->shouldIgnoreError(ErrorType::SHADOW_DEPENDENCY, $filePath, $packageName)
+                        $this->isShadowDependency($dependencyName)
+                        && !$ignoreList->shouldIgnoreError(ErrorType::SHADOW_DEPENDENCY, $filePath, $dependencyName)
                     ) {
                         foreach ($lineNumbers as $lineNumber) {
-                            $shadowErrors[$packageName][$usedSymbol][] = new SymbolUsage($filePath, $lineNumber, $kind);
+                            $shadowErrors[$dependencyName][$usedSymbol][] = new SymbolUsage($filePath, $lineNumber, $kind);
                         }
                     }
 
                     if (
                         !$isDevFilePath
-                        && $this->isDevDependency($packageName)
-                        && !$ignoreList->shouldIgnoreError(ErrorType::DEV_DEPENDENCY_IN_PROD, $filePath, $packageName)
+                        && $this->isDevDependency($dependencyName)
+                        && !$ignoreList->shouldIgnoreError(ErrorType::DEV_DEPENDENCY_IN_PROD, $filePath, $dependencyName)
                     ) {
                         foreach ($lineNumbers as $lineNumber) {
-                            $devInProdErrors[$packageName][$usedSymbol][] = new SymbolUsage($filePath, $lineNumber, $kind);
+                            $devInProdErrors[$dependencyName][$usedSymbol][] = new SymbolUsage($filePath, $lineNumber, $kind);
                         }
                     }
 
                     if (
                         !$isDevFilePath
-                        && !$this->isDevDependency($packageName)
+                        && !$this->isDevDependency($dependencyName)
                     ) {
-                        $prodPackagesUsedInProdPath[$packageName] = true;
+                        $prodPackagesUsedInProdPath[$dependencyName] = true;
                     }
 
-                    $usedPackages[$packageName] = true;
+                    $usedDependencies[$dependencyName] = true;
 
                     foreach ($lineNumbers as $lineNumber) {
-                        $usages[$packageName][$usedSymbol][] = new SymbolUsage($filePath, $lineNumber, $kind);
+                        $usages[$dependencyName][$usedSymbol][] = new SymbolUsage($filePath, $lineNumber, $kind);
                     }
                 }
             }
@@ -215,19 +245,31 @@ class Analyser
                 continue;
             }
 
-            $symbolPath = $this->getSymbolPath($forceUsedSymbol, null);
+            if (
+                isset($this->extensionSymbols[SymbolKind::FUNCTION][$forceUsedSymbol])
+                || isset($this->extensionSymbols[SymbolKind::CONSTANT][$forceUsedSymbol])
+                || isset($this->extensionSymbols[SymbolKind::CLASSLIKE][$forceUsedSymbol])
+            ) {
+                $forceUsedDependency = $this->extensionSymbols[SymbolKind::FUNCTION][$forceUsedSymbol]
+                    ?? $this->extensionSymbols[SymbolKind::CONSTANT][$forceUsedSymbol]
+                    ?? $this->extensionSymbols[SymbolKind::CLASSLIKE][$forceUsedSymbol];
+            } else {
+                $symbolPath = $this->getSymbolPath($forceUsedSymbol, null);
 
-            if ($symbolPath === null || !$this->isVendorPath($symbolPath)) {
-                continue;
+                if ($symbolPath === null || !$this->isVendorPath($symbolPath)) {
+                    continue;
+                }
+
+                $forceUsedDependency = $this->getPackageNameFromVendorPath($symbolPath);
             }
 
-            $forceUsedPackage = $this->getPackageNameFromVendorPath($symbolPath);
-            $usedPackages[$forceUsedPackage] = true;
-            $forceUsedPackages[$forceUsedPackage] = true;
+            $usedDependencies[$forceUsedDependency] = true;
+            $forceUsedPackages[$forceUsedDependency] = true;
         }
 
         if ($this->config->shouldReportUnusedDevDependencies()) {
             $dependenciesForUnusedAnalysis = array_keys($this->composerJsonDependencies);
+
         } else {
             $dependenciesForUnusedAnalysis = array_keys(array_filter($this->composerJsonDependencies, static function (bool $devDependency) {
                 return !$devDependency; // dev deps are typically used only in CI
@@ -236,7 +278,8 @@ class Analyser
 
         $unusedDependencies = array_diff(
             $dependenciesForUnusedAnalysis,
-            array_keys($usedPackages)
+            array_keys($usedDependencies),
+            self::CORE_EXTENSIONS
         );
 
         foreach ($unusedDependencies as $unusedDependency) {
@@ -252,7 +295,8 @@ class Analyser
             $prodDependencies,
             array_keys($prodPackagesUsedInProdPath),
             array_keys($forceUsedPackages), // we dont know where are those used, lets not report them
-            $unusedDependencies
+            $unusedDependencies,
+            self::CORE_EXTENSIONS
         );
 
         foreach ($prodPackagesUsedOnlyInDev as $prodPackageUsedOnlyInDev) {
@@ -340,7 +384,11 @@ class Analyser
             throw new InvalidPathException("Unable to get contents of '$filePath'");
         }
 
-        return (new UsedSymbolExtractor($code))->parseUsedSymbols();
+        return (new UsedSymbolExtractor($code))->parseUsedSymbols(
+            array_keys($this->extensionSymbols[SymbolKind::CLASSLIKE]),
+            array_keys($this->extensionSymbols[SymbolKind::FUNCTION]),
+            array_keys($this->extensionSymbols[SymbolKind::CONSTANT])
+        );
     }
 
     /**
@@ -485,9 +533,22 @@ class Analyser
             'Composer\\Autoload\\ClassLoader' => true,
         ];
 
-        /** @var string $constantName */
-        foreach (get_defined_constants() as $constantName => $constantValue) {
-            $this->ignoredSymbols[$constantName] = true;
+        /** @var array<string, array<string, mixed>> $definedConstants */
+        $definedConstants = get_defined_constants(true);
+        foreach ($definedConstants as $constantExtension => $constants) {
+            foreach ($constants as $constantName => $_) {
+                if ($constantExtension === 'user') {
+                    $this->ignoredSymbols[$constantName] = true;
+                } else {
+                    $extensionName = $this->getNormalizedExtensionName($constantExtension);
+
+                    if (in_array($extensionName, self::CORE_EXTENSIONS, true)) {
+                        $this->ignoredSymbols[$constantName] = true;
+                    } else {
+                        $this->extensionSymbols[SymbolKind::CONSTANT][$constantName] = $extensionName;
+                    }
+                }
+            }
         }
 
         foreach (get_defined_functions() as $functionNames) {
@@ -495,10 +556,18 @@ class Analyser
                 $reflectionFunction = new ReflectionFunction($functionName);
                 $functionFilePath = $reflectionFunction->getFileName();
 
-                if ($reflectionFunction->getExtension() === null && is_string($functionFilePath)) {
-                    $this->definedFunctions[$functionName] = Path::normalize($functionFilePath);
+                if ($reflectionFunction->getExtension() === null) {
+                    if (is_string($functionFilePath)) {
+                        $this->definedFunctions[$functionName] = Path::normalize($functionFilePath);
+                    }
                 } else {
-                    $this->ignoredSymbols[$functionName] = true;
+                    $extensionName = $this->getNormalizedExtensionName($reflectionFunction->getExtension()->name);
+
+                    if (in_array($extensionName, self::CORE_EXTENSIONS, true)) {
+                        $this->ignoredSymbols[$functionName] = true;
+                    } else {
+                        $this->extensionSymbols[SymbolKind::FUNCTION][$functionName] = $extensionName;
+                    }
                 }
             }
         }
@@ -511,11 +580,24 @@ class Analyser
 
         foreach ($classLikes as $classLikeNames) {
             foreach ($classLikeNames as $classLikeName) {
-                if ((new ReflectionClass($classLikeName))->getExtension() !== null) {
-                    $this->ignoredSymbols[$classLikeName] = true;
+                $classReflection = new ReflectionClass($classLikeName);
+
+                if ($classReflection->getExtension() !== null) {
+                    $extensionName = $this->getNormalizedExtensionName($classReflection->getExtension()->name);
+
+                    if (in_array($extensionName, self::CORE_EXTENSIONS, true)) {
+                        $this->ignoredSymbols[$classLikeName] = true;
+                    } else {
+                        $this->extensionSymbols[SymbolKind::CLASSLIKE][$classLikeName] = $extensionName;
+                    }
                 }
             }
         }
+    }
+
+    private function getNormalizedExtensionName(string $extension): string
+    {
+        return 'ext-' . ComposerJson::normalizeExtensionName($extension);
     }
 
 }
