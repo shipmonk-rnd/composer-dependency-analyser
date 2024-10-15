@@ -1,8 +1,8 @@
 <?php
 
-namespace Extensions;
 
-use DDTrace;
+
+
 use function DDTrace\active_span;
 
 json_encode('');

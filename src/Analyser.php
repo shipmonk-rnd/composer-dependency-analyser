@@ -535,6 +535,7 @@ class Analyser
 
         /** @var array<string, array<string, mixed>> $definedConstants */
         $definedConstants = get_defined_constants(true);
+
         foreach ($definedConstants as $constantExtension => $constants) {
             foreach ($constants as $constantName => $_) {
                 if ($constantExtension === 'user') {

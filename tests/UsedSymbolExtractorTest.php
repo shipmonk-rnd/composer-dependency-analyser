@@ -3,6 +3,7 @@
 namespace ShipMonk\ComposerDependencyAnalyser;
 
 use PHPUnit\Framework\TestCase;
+use function array_map;
 use function file_get_contents;
 use const PHP_VERSION_ID;
 
@@ -20,7 +21,14 @@ class UsedSymbolExtractorTest extends TestCase
 
         $extractor = new UsedSymbolExtractor($code);
 
-        self::assertSame($expectedUsages, $extractor->parseUsedSymbols(['PDO'], ['json_encode'], ['LIBXML_ERR_FATAL']));
+        self::assertSame(
+            $expectedUsages,
+            $extractor->parseUsedSymbols(
+                ['PDO'],
+                array_map('strtolower', ['json_encode', 'DDTrace\active_span', 'DDTrace\root_span']),
+                ['LIBXML_ERR_FATAL', 'LIBXML_ERR_ERROR', 'DDTrace\DBM_PROPAGATION_FULL']
+            )
+        );
     }
 
     /**
@@ -47,6 +55,11 @@ class UsedSymbolExtractorTest extends TestCase
                     'PHPUnit\Framework\assertEquals' => [38],
                 ],
             ],
+        ];
+
+        yield 'T_STRING issues' => [
+            __DIR__ . '/data/not-autoloaded/used-symbols/t-string-issues.php',
+            [],
         ];
 
         yield 'various usages' => [
@@ -122,15 +135,40 @@ class UsedSymbolExtractorTest extends TestCase
             __DIR__ . '/data/not-autoloaded/used-symbols/extensions.php',
             [
                 SymbolKind::FUNCTION => [
-                    'json_encode' => [5],
-                    'json_decode' => [12],
+                    'json_encode' => [8],
+                    'DDTrace\active_span' => [12],
+                    'DDTrace\root_span' => [13],
+                    'json_decode' => [21],
                 ],
                 SymbolKind::CONSTANT => [
-                    'LIBXML_ERR_FATAL' => [6],
+                    'LIBXML_ERR_FATAL' => [9],
+                    'LIBXML_ERR_ERROR' => [10],
+                    'DDTrace\DBM_PROPAGATION_FULL' => [14],
                 ],
                 SymbolKind::CLASSLIKE => [
-                    'PDO' => [7],
-                    'CURLOPT_SSL_VERIFYHOST' => [10],
+                    'PDO' => [11],
+                    'CURLOPT_SSL_VERIFYHOST' => [19],
+                ],
+            ],
+        ];
+
+        yield 'extensions global' => [
+            __DIR__ . '/data/not-autoloaded/used-symbols/extensions-global.php',
+            [
+                SymbolKind::FUNCTION => [
+                    'json_encode' => [8],
+                    'DDTrace\active_span' => [12],
+                    'DDTrace\root_span' => [13],
+                    'json_decode' => [21],
+                ],
+                SymbolKind::CONSTANT => [
+                    'LIBXML_ERR_FATAL' => [9],
+                    'LIBXML_ERR_ERROR' => [10],
+                    'DDTrace\DBM_PROPAGATION_FULL' => [14],
+                ],
+                SymbolKind::CLASSLIKE => [
+                    'PDO' => [11],
+                    'CURLOPT_SSL_VERIFYHOST' => [19],
                 ],
             ],
         ];
