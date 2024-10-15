@@ -2,9 +2,6 @@
 
 namespace ShipMonk\ComposerDependencyAnalyser;
 
-use function array_fill_keys;
-use function array_map;
-use function array_merge;
 use function count;
 use function explode;
 use function is_array;
@@ -70,24 +67,15 @@ class UsedSymbolExtractor
      * It does not produce any local names in current namespace
      * - this results in very limited functionality in files without namespace
      *
-     * @param list<string> $extClasses
-     * @param list<string> $extFunctions
-     * @param list<string> $extConstants
+     * @param array<string, SymbolKind::*> $extensionSymbols
      * @return array<SymbolKind::*, array<string, list<int>>>
      * @license Inspired by https://github.com/doctrine/annotations/blob/2.0.0/lib/Doctrine/Common/Annotations/TokenParser.php
      */
     public function parseUsedSymbols(
-        array $extClasses,
-        array $extFunctions,
-        array $extConstants
+        array $extensionSymbols
     ): array
     {
         $usedSymbols = [];
-        $extensionSymbols = array_merge(
-            array_fill_keys(array_map('strtolower', $extClasses), SymbolKind::CLASSLIKE),
-            array_fill_keys(array_map('strtolower', $extFunctions), SymbolKind::FUNCTION),
-            array_fill_keys(array_map('strtolower', $extConstants), SymbolKind::CONSTANT)
-        );
         $useStatements = [];
         $useStatementKinds = [];
 

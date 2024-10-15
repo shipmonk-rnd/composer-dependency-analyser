@@ -119,6 +119,13 @@ class Analyser
     private $extensionSymbols;
 
     /**
+     * lowercase symbol name => kind
+     *
+     * @var array<string, SymbolKind::*>
+     */
+    private $extensionSymbolKinds;
+
+    /**
      * @param array<string, ClassLoader> $classLoaders vendorDir => ClassLoader (e.g. result of \Composer\Autoload\ClassLoader::getRegisteredLoaders())
      * @param array<string, bool> $composerJsonDependencies package or ext-* => is dev dependency
      */
@@ -385,9 +392,7 @@ class Analyser
         }
 
         return (new UsedSymbolExtractor($code))->parseUsedSymbols(
-            array_keys($this->extensionSymbols[SymbolKind::CLASSLIKE]),
-            array_keys($this->extensionSymbols[SymbolKind::FUNCTION]),
-            array_keys($this->extensionSymbols[SymbolKind::CONSTANT])
+            $this->extensionSymbolKinds
         );
     }
 
@@ -547,6 +552,7 @@ class Analyser
                         $this->ignoredSymbols[$constantName] = true;
                     } else {
                         $this->extensionSymbols[SymbolKind::CONSTANT][$constantName] = $extensionName;
+                        $this->extensionSymbolKinds[strtolower($constantName)] = SymbolKind::CONSTANT;
                     }
                 }
             }
@@ -568,6 +574,7 @@ class Analyser
                         $this->ignoredSymbols[$functionName] = true;
                     } else {
                         $this->extensionSymbols[SymbolKind::FUNCTION][$functionName] = $extensionName;
+                        $this->extensionSymbolKinds[$functionName] = SymbolKind::FUNCTION;
                     }
                 }
             }
@@ -590,6 +597,7 @@ class Analyser
                         $this->ignoredSymbols[$classLikeName] = true;
                     } else {
                         $this->extensionSymbols[SymbolKind::CLASSLIKE][$classLikeName] = $extensionName;
+                        $this->extensionSymbolKinds[strtolower($classLikeName)] = SymbolKind::CLASSLIKE;
                     }
                 }
             }

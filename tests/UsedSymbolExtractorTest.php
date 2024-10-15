@@ -3,8 +3,8 @@
 namespace ShipMonk\ComposerDependencyAnalyser;
 
 use PHPUnit\Framework\TestCase;
-use function array_map;
 use function file_get_contents;
+use function strtolower;
 use const PHP_VERSION_ID;
 
 class UsedSymbolExtractorTest extends TestCase
@@ -24,9 +24,15 @@ class UsedSymbolExtractorTest extends TestCase
         self::assertSame(
             $expectedUsages,
             $extractor->parseUsedSymbols(
-                ['PDO'],
-                array_map('strtolower', ['json_encode', 'DDTrace\active_span', 'DDTrace\root_span']),
-                ['LIBXML_ERR_FATAL', 'LIBXML_ERR_ERROR', 'DDTrace\DBM_PROPAGATION_FULL']
+                [
+                    strtolower('PDO') => SymbolKind::CLASSLIKE,
+                    strtolower('json_encode') => SymbolKind::FUNCTION,
+                    strtolower('DDTrace\active_span') => SymbolKind::FUNCTION,
+                    strtolower('DDTrace\root_span') => SymbolKind::FUNCTION,
+                    strtolower('LIBXML_ERR_FATAL') => SymbolKind::CONSTANT,
+                    strtolower('LIBXML_ERR_ERROR') => SymbolKind::CONSTANT,
+                    strtolower('DDTrace\DBM_PROPAGATION_FULL') => SymbolKind::CONSTANT,
+                ]
             )
         );
     }
