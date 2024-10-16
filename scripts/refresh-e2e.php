@@ -27,10 +27,11 @@ function filterDependents(array $dependents): array {
         if ($packageData) {
             $repository = $packageData['source']['url'] ?? '';
 
-            $name = str_replace('/', '-', $packageName);
+            preg_match('/github\.com\/([^\/]+)\/([^\/]+).git/', $repository, $matches);
+            [$_, $owner, $repo] = $matches;
+
             $result[] = [
-                'repo' => $repository,
-                'name' => $name,
+                'repo' => "$owner/$repo",
             ];
         }
     }
@@ -41,7 +42,6 @@ function outputYaml(array $items): void {
     foreach ($items as $item) {
         echo "  -\n";
         echo "    repo: {$item['repo']}\n";
-        echo "    name: {$item['name']}\n";
     }
 }
 

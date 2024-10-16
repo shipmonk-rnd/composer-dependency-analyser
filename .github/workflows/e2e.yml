@@ -8,68 +8,37 @@ jobs:
         strategy:
             matrix:
                 include:
-                    -   repo: https://github.com/contao-thememanager/core.git
-                        name: contao-thememanager-core
-                    -   repo: https://github.com/contao/contao.git
-                        name: contao-contao
-                    -   repo: https://github.com/idleberg/php-vite-manifest.git
-                        name: idleberg-vite-manifest
-                    -   repo: https://github.com/idleberg/php-wordpress-vite-assets.git
-                        name: idleberg-wordpress-vite-assets
-                    -   repo: https://github.com/inspirum/balikobot-php.git
-                        name: inspirum-balikobot
-                    -   repo: https://github.com/inspirum/xml-php.git
-                        name: inspirum-xml
-                    -   repo: https://github.com/janborg/contao-h4a_tabellen.git
-                        name: janborg-contao-h4a_tabellen
-                    -   repo: https://github.com/kreait/firebase-php.git
-                        name: kreait-firebase-php
-                    -   repo: https://github.com/numero2/contao-marketing-suite.git
-                        name: numero2-contao-marketing-suite
-                    -   repo: https://github.com/numero2/contao-opengraph3.git
-                        name: numero2-contao-opengraph3
-                    -   repo: https://github.com/numero2/contao-storelocator.git
-                        name: numero2-contao-storelocator
-                    -   repo: https://github.com/oveleon/contao-company-bundle.git
-                        name: oveleon-contao-company-bundle
-                    -   repo: https://github.com/oveleon/contao-cookiebar.git
-                        name: oveleon-contao-cookiebar
-                    -   repo: https://github.com/oveleon/contao-recommendation-bundle.git
-                        name: oveleon-contao-recommendation-bundle
-                    -   repo: https://github.com/rectorphp/rector-src.git
-                        name: rector-rector-src
-                    -   repo: https://github.com/rectorphp/swiss-knife.git
-                        name: rector-swiss-knife
-                    -   repo: https://github.com/sensiolabs/GotenbergBundle.git
-                        name: sensiolabs-gotenberg-bundle
-                    -   repo: https://github.com/Setono/deployer-cron.git
-                        name: setono-deployer-cron
-                    -   repo: https://github.com/Setono/deployer-dotenv.git
-                        name: setono-deployer-dotenv
-                    -   repo: https://github.com/shipmonk-rnd/dead-code-detector.git
-                        name: shipmonk-dead-code-detector
-                    -   repo: https://github.com/shipmonk-rnd/doctrine-mysql-index-hints.git
-                        name: shipmonk-doctrine-mysql-index-hints
-                    -   repo: https://github.com/shipmonk-rnd/doctrine-mysql-optimizer-hints.git
-                        name: shipmonk-doctrine-mysql-optimizer-hints
-                    -   repo: https://github.com/shipmonk-rnd/doctrine-two-phase-migrations.git
-                        name: shipmonk-doctrine-two-phase-migrations
-                    -   repo: https://github.com/shipmonk-rnd/input-mapper.git
-                        name: shipmonk-input-mapper
-                    -   repo: https://github.com/shipmonk-rnd/name-collision-detector.git
-                        name: shipmonk-name-collision-detector
-                    -   repo: https://github.com/shipmonk-rnd/phpstan-baseline-per-identifier.git
-                        name: shipmonk-phpstan-baseline-per-identifier
-                    -   repo: https://github.com/shipmonk-rnd/phpstan-rules.git
-                        name: shipmonk-phpstan-rules
-                    -   repo: https://github.com/teamneusta/pimcore-testing-framework.git
-                        name: teamneusta-pimcore-testing-framework
-                    -   repo: https://github.com/TomasVotruba/unused-public.git
-                        name: tomasvotruba-unused-public
-                    -   repo: https://github.com/VincentLanglet/Twig-CS-Fixer.git
-                        name: vincentlanglet-twig-cs-fixer
-                    -   repo: https://github.com/wallabag/wallabag.git
-                        name: wallabag-wallabag
+                    -   repo: contao-thememanager/core
+                    -   repo: contao/contao
+                    -   repo: idleberg/php-vite-manifest
+                    -   repo: idleberg/php-wordpress-vite-assets
+                    -   repo: inspirum/balikobot-php
+                    -   repo: inspirum/xml-php
+                    -   repo: janborg/contao-h4a_tabellen
+                    -   repo: kreait/firebase-php
+                    -   repo: numero2/contao-marketing-suite
+                    -   repo: numero2/contao-opengraph3
+                    -   repo: numero2/contao-storelocator
+                    -   repo: oveleon/contao-company-bundle
+                    -   repo: oveleon/contao-cookiebar
+                    -   repo: oveleon/contao-recommendation-bundle
+                    -   repo: rectorphp/rector-src
+                    -   repo: rectorphp/swiss-knife
+                    -   repo: sensiolabs/GotenbergBundle
+                    -   repo: Setono/deployer-cron
+                    -   repo: Setono/deployer-dotenv
+                    -   repo: shipmonk-rnd/dead-code-detector
+                    -   repo: shipmonk-rnd/doctrine-mysql-index-hints
+                    -   repo: shipmonk-rnd/doctrine-mysql-optimizer-hints
+                    -   repo: shipmonk-rnd/doctrine-two-phase-migrations
+                    -   repo: shipmonk-rnd/input-mapper
+                    -   repo: shipmonk-rnd/name-collision-detector
+                    -   repo: shipmonk-rnd/phpstan-baseline-per-identifier
+                    -   repo: shipmonk-rnd/phpstan-rules
+                    -   repo: teamneusta/pimcore-testing-framework
+                    -   repo: TomasVotruba/unused-public
+                    -   repo: VincentLanglet/Twig-CS-Fixer
+                    -   repo: wallabag/wallabag
 
             fail-fast: false
         steps:
@@ -87,7 +56,7 @@ jobs:
                 name: Clone ${{ matrix.repo }}
                 uses: actions/checkout@v4
                 with:
-                    path: ${{ matrix.name }}
+                    path: ${{ matrix.repo }}
                     repository: ${{ matrix.repo }}
 
             -
@@ -103,16 +72,16 @@ jobs:
 
             -
                 name: Disable autoloader prepend
-                working-directory: ${{ matrix.name }}
+                working-directory: ${{ matrix.repo }}
                 run: |
                     echo "$(jq --indent 4 '.config += {"prepend-autoloader": false}' composer.json)" > composer.json
 
             -
-                name: Install ${{ matrix.name }} dependencies
-                working-directory: ${{ matrix.name }}
+                name: Install ${{ matrix.repo }} dependencies
+                working-directory: ${{ matrix.repo }}
                 run: composer install --no-progress --no-interaction --ignore-platform-reqs ${{ matrix.composerArgs }}
 
             -
                 name: Run analyser
-                working-directory: ${{ matrix.name }}
+                working-directory: ${{ matrix.repo }}
                 run: php ../analyser/bin/composer-dependency-analyser ${{ matrix.cdaArgs }}
