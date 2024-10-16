@@ -175,14 +175,14 @@ class Analyser
 
             foreach ($usedSymbolsByKind as $kind => $usedSymbols) {
                 foreach ($usedSymbols as $usedSymbol => $lineNumbers) {
-                    $usedSymbolNameForIgnoreCheck = $kind === SymbolKind::FUNCTION ? strtolower($usedSymbol) : $usedSymbol;
+                    $normalizedUsedSymbolName = $kind === SymbolKind::FUNCTION ? strtolower($usedSymbol) : $usedSymbol;
 
-                    if (isset($this->ignoredSymbols[$usedSymbolNameForIgnoreCheck])) {
+                    if (isset($this->ignoredSymbols[$normalizedUsedSymbolName])) {
                         continue;
                     }
 
-                    if (isset($this->extensionSymbols[$kind][$usedSymbol])) {
-                        $dependencyName = $this->extensionSymbols[$kind][$usedSymbol];
+                    if (isset($this->extensionSymbols[$kind][$normalizedUsedSymbolName])) {
+                        $dependencyName = $this->extensionSymbols[$kind][$normalizedUsedSymbolName];
 
                     } else {
                         $symbolPath = $this->getSymbolPath($usedSymbol, $kind);

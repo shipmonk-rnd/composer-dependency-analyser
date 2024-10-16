@@ -834,6 +834,7 @@ class AnalyserTest extends TestCase
         self::assertSame($expectedResult->getScannedFilesCount(), $result->getScannedFilesCount(), 'Scanned files count mismatch');
         self::assertEquals($expectedResult->getUnusedIgnores(), $result->getUnusedIgnores(), 'Unused ignores mismatch');
         self::assertEquals($expectedResult->getUnknownClassErrors(), $result->getUnknownClassErrors(), 'Unknown class mismatch');
+        self::assertEquals($expectedResult->getUnknownFunctionErrors(), $result->getUnknownFunctionErrors(), 'Unknown functions mismatch');
         self::assertEquals($expectedResult->getShadowDependencyErrors(), $result->getShadowDependencyErrors(), 'Shadow dependency mismatch');
         self::assertEquals($expectedResult->getDevDependencyInProductionErrors(), $result->getDevDependencyInProductionErrors(), 'Dev dependency in production mismatch');
         self::assertEquals($expectedResult->getProdDependencyOnlyInDevErrors(), $result->getProdDependencyOnlyInDevErrors(), 'Prod dependency only in dev mismatch');
