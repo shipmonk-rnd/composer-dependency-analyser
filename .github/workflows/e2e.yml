@@ -16,6 +16,9 @@ jobs:
                         repo: shipmonk-rnd/phpstan-rules
                         name: shipmonk-rules
                     -
+                        repo: shipmonk-rnd/doctrine-mysql-index-hints
+                        name: doctrine-mysql-index-hints
+                    -
                         repo: vincentlanglet/twig-cs-fixer
                         name: twig-cs-fixer
                     -
@@ -30,17 +33,40 @@ jobs:
                         cdaArgs: --config=depcheck.php
                         composerArgs: --no-plugins
                     -
+                        repo: numero2/contao-marketing-suite
+                        name: contao-marketing-suite
+                        cdaArgs: --config=depcheck.php
+                    -
                         repo: rectorphp/rector-src
                         name: rector
                     -
+                        repo: rectorphp/swiss-knife
+                        name: swiss-knife
+                    -
                         repo: inspirum/balikobot-php
                         name: balikobot
+                    -
+                        repo: inspirum/arrayable-php
+                        name: arrayable
                     -
                         repo: wallabag/wallabag
                         name: wallabag
                     -
                         repo: tomasvotruba/unused-public
                         name: unused-public
+                    -
+                        repo: cdn77/PhpFunctions
+                        name: cdn77-functions
+                    -
+                        repo: cdn77/RabbitMQBundle
+                        name: cdn77-rabbitmq
+                    -
+                        repo: idleberg/php-vite-manifest
+                        name: vite-manifest
+                    -
+                        repo: Setono/SyliusGoogleAdsPlugin
+                        name: google-ads-plugin
+
             fail-fast: false
         steps:
             -
