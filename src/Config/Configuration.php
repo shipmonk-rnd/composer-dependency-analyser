@@ -17,6 +17,11 @@ class Configuration
     /**
      * @var bool
      */
+    private $extensionsAnalysis = true;
+
+    /**
+     * @var bool
+     */
     private $scanComposerAutoloadPaths = true;
 
     /**
@@ -95,6 +100,17 @@ class Configuration
     private $ignoredUnknownFunctionsRegexes = [];
 
     /**
+     * Disable analysis of ext-* dependencies
+     *
+     * @return $this
+     */
+    public function disableExtensionsAnalysis(): self
+    {
+        $this->extensionsAnalysis = false;
+        return $this;
+    }
+
+    /**
      * @return $this
      */
     public function disableComposerAutoloadPathScan(): self
@@ -103,6 +119,9 @@ class Configuration
         return $this;
     }
 
+    /**
+     * @return $this
+     */
     public function disableReportingUnmatchedIgnores(): self
     {
         $this->reportUnmatchedIgnores = false;
@@ -437,6 +456,11 @@ class Configuration
     public function getPathsToScan(): array
     {
         return $this->pathsToScan;
+    }
+
+    public function shouldAnalyseExtensions(): bool
+    {
+        return $this->extensionsAnalysis;
     }
 
     public function shouldScanComposerAutoloadPaths(): bool

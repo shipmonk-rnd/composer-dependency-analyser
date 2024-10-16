@@ -116,14 +116,14 @@ class Analyser
      *
      * @var array<SymbolKind::*, array<string, string>>
      */
-    private $extensionSymbols;
+    private $extensionSymbols = [];
 
     /**
      * lowercase symbol name => kind
      *
      * @var array<string, SymbolKind::*>
      */
-    private $extensionSymbolKinds;
+    private $extensionSymbolKinds = [];
 
     /**
      * @param array<string, ClassLoader> $classLoaders vendorDir => ClassLoader (e.g. result of \Composer\Autoload\ClassLoader::getRegisteredLoaders())
@@ -139,11 +139,11 @@ class Analyser
     {
         $this->stopwatch = $stopwatch;
         $this->config = $config;
-        $this->composerJsonDependencies = $composerJsonDependencies;
+        $this->composerJsonDependencies = $this->filterDependencies($composerJsonDependencies, $config);
         $this->vendorDirs = array_keys($classLoaders + [$defaultVendorDir => null]);
         $this->classLoaders = array_values($classLoaders);
 
-        $this->initExistingSymbols();
+        $this->initExistingSymbols($config);
     }
 
     /**
@@ -503,7 +503,7 @@ class Analyser
         return Path::normalize($filePath);
     }
 
-    private function initExistingSymbols(): void
+    private function initExistingSymbols(Configuration $config): void
     {
         $this->ignoredSymbols = [
             // built-in types
@@ -543,8 +543,9 @@ class Analyser
 
         foreach ($definedConstants as $constantExtension => $constants) {
             foreach ($constants as $constantName => $_) {
-                if ($constantExtension === 'user') {
+                if ($constantExtension === 'user' || !$config->shouldAnalyseExtensions()) {
                     $this->ignoredSymbols[$constantName] = true;
+
                 } else {
                     $extensionName = $this->getNormalizedExtensionName($constantExtension);
 
@@ -570,7 +571,7 @@ class Analyser
                 } else {
                     $extensionName = $this->getNormalizedExtensionName($reflectionFunction->getExtension()->name);
 
-                    if (in_array($extensionName, self::CORE_EXTENSIONS, true)) {
+                    if (in_array($extensionName, self::CORE_EXTENSIONS, true) || !$config->shouldAnalyseExtensions()) {
                         $this->ignoredSymbols[$functionName] = true;
                     } else {
                         $this->extensionSymbols[SymbolKind::FUNCTION][$functionName] = $extensionName;
@@ -593,7 +594,7 @@ class Analyser
                 if ($classReflection->getExtension() !== null) {
                     $extensionName = $this->getNormalizedExtensionName($classReflection->getExtension()->name);
 
-                    if (in_array($extensionName, self::CORE_EXTENSIONS, true)) {
+                    if (in_array($extensionName, self::CORE_EXTENSIONS, true) || !$config->shouldAnalyseExtensions()) {
                         $this->ignoredSymbols[$classLikeName] = true;
                     } else {
                         $this->extensionSymbols[SymbolKind::CLASSLIKE][$classLikeName] = $extensionName;
@@ -607,6 +608,25 @@ class Analyser
     private function getNormalizedExtensionName(string $extension): string
     {
         return 'ext-' . ComposerJson::normalizeExtensionName($extension);
+    }
+
+    /**
+     * @param array<string, bool> $dependencies
+     * @return array<string, bool>
+     */
+    private function filterDependencies(array $dependencies, Configuration $config): array
+    {
+        $filtered = [];
+
+        foreach ($dependencies as $dependency => $isDevDependency) {
+            if (!$config->shouldAnalyseExtensions() && strpos($dependency, 'ext-') === 0) {
+                continue;
+            }
+
+            $filtered[$dependency] = $isDevDependency;
+        }
+
+        return $filtered;
     }
 
 }

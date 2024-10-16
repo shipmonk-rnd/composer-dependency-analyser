@@ -99,6 +99,7 @@ class InitializerTest extends TestCase
 
         self::assertNull($options->showAllUsages);
         self::assertNull($options->composerJson);
+        self::assertNull($options->disableExtAnalysis);
         self::assertNull($options->ignoreProdOnlyInDevDeps);
         self::assertNull($options->ignoreUnknownClasses);
         self::assertNull($options->ignoreUnknownFunctions);

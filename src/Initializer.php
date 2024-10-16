@@ -52,6 +52,8 @@ Ignore options:
     --ignore-shadow-deps                Ignore all shadow dependency issues
     --ignore-dev-in-prod-deps           Ignore all dev dependency in production code issues
     --ignore-prod-only-in-dev-deps      Ignore all prod dependency used only in dev paths issues
+
+    --disable-ext-analysis              Disable analysis of php extensions (e.g. ext-xml)
 EOD;
 
     /**
@@ -116,12 +118,17 @@ EOD;
             $config = new Configuration();
         }
 
+        $disableExtAnalysis = $options->disableExtAnalysis === true;
         $ignoreUnknownClasses = $options->ignoreUnknownClasses === true;
         $ignoreUnknownFunctions = $options->ignoreUnknownFunctions === true;
         $ignoreUnused = $options->ignoreUnusedDeps === true;
         $ignoreShadow = $options->ignoreShadowDeps === true;
         $ignoreDevInProd = $options->ignoreDevInProdDeps === true;
         $ignoreProdOnlyInDev = $options->ignoreProdOnlyInDevDeps === true;
+
+        if ($disableExtAnalysis) {
+            $config->disableExtensionsAnalysis();
+        }
 
         if ($ignoreUnknownClasses) {
             $config->ignoreErrors([ErrorType::UNKNOWN_CLASS]);

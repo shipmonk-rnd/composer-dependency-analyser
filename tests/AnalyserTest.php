@@ -651,6 +651,36 @@ class AnalyserTest extends TestCase
         ]), $result);
     }
 
+    public function testDisabledExtensionAnalysis(): void
+    {
+        $vendorDir = realpath(__DIR__ . '/../vendor');
+        $prodPath = realpath(__DIR__ . '/data/not-autoloaded/extensions/ext-prod-usages.php');
+        $devPath = realpath(__DIR__ . '/data/not-autoloaded/extensions/ext-dev-usages.php');
+        self::assertNotFalse($vendorDir);
+        self::assertNotFalse($prodPath);
+        self::assertNotFalse($devPath);
+
+        $config = new Configuration();
+        $config->disableExtensionsAnalysis();
+        $config->addPathToScan($prodPath, false);
+        $config->addPathToScan($devPath, true);
+
+        $detector = new Analyser(
+            $this->getStopwatchMock(),
+            $vendorDir,
+            [$vendorDir => $this->getClassLoaderMock()],
+            $config,
+            [
+                'ext-dom' => false,
+                'ext-libxml' => true,
+                'ext-mbstring' => false,
+            ]
+        );
+        $result = $detector->run();
+
+        $this->assertResultsWithoutUsages($this->createAnalysisResult(2, []), $result);
+    }
+
     public function testPharSupport(): void
     {
         $canCreatePhar = ini_set('phar.readonly', '0');
