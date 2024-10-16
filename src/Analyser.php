@@ -162,7 +162,7 @@ class Analyser
         $unusedErrors = [];
 
         $usedDependencies = [];
-        $prodPackagesUsedInProdPath = [];
+        $prodDependenciesUsedInProdPath = [];
 
         $usages = [];
 
@@ -233,7 +233,7 @@ class Analyser
                         !$isDevFilePath
                         && !$this->isDevDependency($dependencyName)
                     ) {
-                        $prodPackagesUsedInProdPath[$dependencyName] = true;
+                        $prodDependenciesUsedInProdPath[$dependencyName] = true;
                     }
 
                     $usedDependencies[$dependencyName] = true;
@@ -300,7 +300,7 @@ class Analyser
         }));
         $prodPackagesUsedOnlyInDev = array_diff(
             $prodDependencies,
-            array_keys($prodPackagesUsedInProdPath),
+            array_keys($prodDependenciesUsedInProdPath),
             array_keys($forceUsedPackages), // we dont know where are those used, lets not report them
             $unusedDependencies,
             self::CORE_EXTENSIONS
