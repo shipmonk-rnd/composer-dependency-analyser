@@ -1,7 +1,7 @@
 <?php
 
 
-
+use { DDTrace\Integrations };
 use My\App\XMLReader;
 use function DDTrace\active_span;
 
@@ -13,7 +13,7 @@ active_span();
 DDTrace\root_span();
 DDTrace\DBM_PROPAGATION_FULL;
 XMLReader::class;
-
+Integrations\Exec\proc_get_pid();
 
 // those are not provided as known ext symbols in the test
 \CURLOPT_SSL_VERIFYHOST;

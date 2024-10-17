@@ -33,6 +33,7 @@ class UsedSymbolExtractorTest extends TestCase
                     strtolower('LIBXML_ERR_FATAL') => SymbolKind::CONSTANT,
                     strtolower('LIBXML_ERR_ERROR') => SymbolKind::CONSTANT,
                     strtolower('DDTrace\DBM_PROPAGATION_FULL') => SymbolKind::CONSTANT,
+                    strtolower('DDTrace\Integrations\Exec\proc_get_pid') => SymbolKind::FUNCTION,
                 ]
             )
         );
@@ -145,6 +146,7 @@ class UsedSymbolExtractorTest extends TestCase
                     'json_encode' => [8],
                     'DDTrace\active_span' => [12],
                     'DDTrace\root_span' => [13],
+                    'DDTrace\Integrations\Exec\proc_get_pid' => [16],
                     'json_decode' => [21],
                 ],
                 SymbolKind::CONSTANT => [
@@ -167,6 +169,7 @@ class UsedSymbolExtractorTest extends TestCase
                     'json_encode' => [8],
                     'DDTrace\active_span' => [12],
                     'DDTrace\root_span' => [13],
+                    'DDTrace\Integrations\Exec\proc_get_pid' => [16],
                     'json_decode' => [21],
                 ],
                 SymbolKind::CONSTANT => [
