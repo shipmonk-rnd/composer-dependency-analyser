@@ -49,7 +49,7 @@ Found unused dependencies!
 ```
 
 ## Detected issues:
-This tool reads your `composer.json` and scans all paths listed in `autoload` & `autoload-dev` sections while analysing:
+This tool reads your `composer.json` and scans all paths listed in `autoload` & `autoload-dev` sections while analysing you dependencies (both **packages and PHP extensions**).
 
 ### Shadowed dependencies
   - Those are dependencies of your dependencies, which are not listed in `composer.json`
@@ -168,8 +168,8 @@ Another approach for DIC-only usages is to scan the generated php file, but that
 NO_COLOR=1 vendor/bin/composer-dependency-analyser
 ```
 
-## Limitations:
-- For precise `ext-x` analysis, your enabled extentions of your php runtime should be superset of those used in the scanned project
+## Recommendations:
+- For precise `ext-*` analysis, your enabled extensions of your php runtime should be superset of those used in the scanned project
 
 ## Contributing:
 - Check your code by `composer check`
