@@ -1,6 +1,6 @@
 <?php
 
-namespace TString;
+namespace PDO;
 
 use function _; // e.g. https://www.php.net/manual/en/function.-.php
 use function array_filter;

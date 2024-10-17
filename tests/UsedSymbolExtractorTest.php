@@ -12,9 +12,10 @@ class UsedSymbolExtractorTest extends TestCase
 
     /**
      * @param array<SymbolKind::*, array<string, list<int>>> $expectedUsages
+     * @param array<string, SymbolKind::*> $extensionSymbols
      * @dataProvider provideVariants
      */
-    public function test(string $path, array $expectedUsages): void
+    public function test(string $path, array $expectedUsages, array $extensionSymbols = []): void
     {
         $code = file_get_contents($path);
         self::assertNotFalse($code);
@@ -23,24 +24,12 @@ class UsedSymbolExtractorTest extends TestCase
 
         self::assertSame(
             $expectedUsages,
-            $extractor->parseUsedSymbols(
-                [
-                    strtolower('XMLReader') => SymbolKind::CLASSLIKE,
-                    strtolower('PDO') => SymbolKind::CLASSLIKE,
-                    strtolower('json_encode') => SymbolKind::FUNCTION,
-                    strtolower('DDTrace\active_span') => SymbolKind::FUNCTION,
-                    strtolower('DDTrace\root_span') => SymbolKind::FUNCTION,
-                    strtolower('LIBXML_ERR_FATAL') => SymbolKind::CONSTANT,
-                    strtolower('LIBXML_ERR_ERROR') => SymbolKind::CONSTANT,
-                    strtolower('DDTrace\DBM_PROPAGATION_FULL') => SymbolKind::CONSTANT,
-                    strtolower('DDTrace\Integrations\Exec\proc_get_pid') => SymbolKind::FUNCTION,
-                ]
-            )
+            $extractor->parseUsedSymbols($extensionSymbols)
         );
     }
 
     /**
-     * @return iterable<array{string, array<SymbolKind::*, array<string, list<int>>>}>
+     * @return iterable<array{0: string, 1: array<SymbolKind::*, array<string, list<int>>>, 2?: array<string, SymbolKind::*>}>
      */
     public function provideVariants(): iterable
     {
@@ -68,6 +57,9 @@ class UsedSymbolExtractorTest extends TestCase
         yield 'T_STRING issues' => [
             __DIR__ . '/data/not-autoloaded/used-symbols/t-string-issues.php',
             [],
+            [
+                strtolower('PDO') => SymbolKind::CLASSLIKE,
+            ],
         ];
 
         yield 'various usages' => [
@@ -160,6 +152,7 @@ class UsedSymbolExtractorTest extends TestCase
                     'CURLOPT_SSL_VERIFYHOST' => [19],
                 ],
             ],
+            self::extensionSymbolsForExtensionsTestCases(),
         ];
 
         yield 'extensions global' => [
@@ -183,6 +176,7 @@ class UsedSymbolExtractorTest extends TestCase
                     'CURLOPT_SSL_VERIFYHOST' => [19],
                 ],
             ],
+            self::extensionSymbolsForExtensionsTestCases(),
         ];
 
         if (PHP_VERSION_ID >= 80000) {
@@ -204,6 +198,24 @@ class UsedSymbolExtractorTest extends TestCase
                 [],
             ];
         }
+    }
+
+    /**
+     * @return array<string, SymbolKind::*>
+     */
+    private static function extensionSymbolsForExtensionsTestCases(): array
+    {
+        return [
+            strtolower('XMLReader') => SymbolKind::CLASSLIKE,
+            strtolower('PDO') => SymbolKind::CLASSLIKE,
+            strtolower('json_encode') => SymbolKind::FUNCTION,
+            strtolower('DDTrace\active_span') => SymbolKind::FUNCTION,
+            strtolower('DDTrace\root_span') => SymbolKind::FUNCTION,
+            strtolower('LIBXML_ERR_FATAL') => SymbolKind::CONSTANT,
+            strtolower('LIBXML_ERR_ERROR') => SymbolKind::CONSTANT,
+            strtolower('DDTrace\DBM_PROPAGATION_FULL') => SymbolKind::CONSTANT,
+            strtolower('DDTrace\Integrations\Exec\proc_get_pid') => SymbolKind::FUNCTION,
+        ];
     }
 
 }
