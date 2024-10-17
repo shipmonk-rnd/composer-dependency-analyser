@@ -19,6 +19,7 @@
     <file>bin/composer-dependency-analyser</file>
     <file>src/</file>
     <file>tests/</file>
+    <file>scripts/</file>
 
     <exclude-pattern>tests/data/*</exclude-pattern>
 

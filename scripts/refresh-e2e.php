@@ -1,59 +1,107 @@
-<?php declare(strict_types=1);
+<?php declare(strict_types = 1);
 
-function fetchDependents(string $packageName, int $page = 1): array {
-    $url = "https://packagist.org/packages/{$packageName}/dependents.json?page={$page}";
+// phpcs:disable PSR1.Files.SideEffects.FoundWithSymbols
+// phpcs:disable Squiz.Functions.GlobalFunction.Found
+
+/**
+ * https://github.com/composer/packagist/blob/main/src/Controller/PackageController.php#L1282
+ *
+ * @return list<string>
+ */
+function fetchDependents(string $packageName, int $page = 1): array
+{
+    $url = "https://packagist.org/packages/{$packageName}/dependents.json?page={$page}&requires=require-dev";
     $data = json_decode(file_get_contents($url), true);
-    return $data['packages'] ?? [];
-}
+    $packages = $data['packages'] ?? [];
 
-function fetchPackageData(string $packageName): ?array {
-    $url = "https://repo.packagist.org/p2/{$packageName}.json";
-    $data = json_decode(file_get_contents($url), true);
-    return $data['packages'][$packageName][0] ?? null;
-}
-
-function filterDependents(array $dependents): array {
     $result = [];
-    foreach ($dependents as $dependent) {
-        $packageName = $dependent['name'];
-        $downloads = $dependent['downloads'] ?? 0;
-        $stars = $dependent['favers'] ?? 0;
 
-        if ($downloads < 100 || $stars < 5) {
+    foreach ($packages as $package) {
+        $packageName = $package['name'];
+        $downloads = $package['downloads'] ?? 0;
+
+        if ($downloads < 2000) {
             continue;
         }
 
-        $packageData = fetchPackageData($packageName);
-        if ($packageData) {
-            $repository = $packageData['source']['url'] ?? '';
-
-            preg_match('/github\.com\/([^\/]+)\/([^\/]+).git/', $repository, $matches);
-            [$_, $owner, $repo] = $matches;
-
-            $result[] = [
-                'repo' => "$owner/$repo",
-            ];
-        }
+        $result[] = $packageName;
     }
+
     return $result;
 }
 
-function outputYaml(array $items): void {
+function fetchRepository(string $packageName): string
+{
+    $url = "https://repo.packagist.org/p2/{$packageName}.json";
+    $data = json_decode(file_get_contents($url), true);
+    $packageData = $data['packages'][$packageName][0] ?? null;
+
+    preg_match('/github\.com\/([^\/]+)\/([^\/]+).git/', $packageData['source']['url'], $matches);
+    [, $owner, $repo] = $matches;
+
+    return "$owner/$repo";
+}
+
+/**
+ * @param list<array{repo: string, cdaArgs?: string, composerArgs?: string}> $items
+ */
+function outputYaml(array $items): void
+{
     foreach ($items as $item) {
         echo "  -\n";
-        echo "    repo: {$item['repo']}\n";
+
+        foreach ($item as $key => $value) {
+            echo "    $key: $value\n";
+        }
     }
 }
 
 $packageName = 'shipmonk/composer-dependency-analyser';
-$allDependents = [];
 $page = 1;
+$result = [];
 
 do {
     $dependents = fetchDependents($packageName, $page);
-    $allDependents = array_merge($allDependents, $dependents);
+
+    foreach ($dependents as $dependent) {
+        $repository = fetchRepository($dependent);
+        $result[] = [
+            'repo' => $repository,
+        ];
+    }
+
     $page++;
 } while (count($dependents) > 0);
 
-$filteredDependents = filterDependents($allDependents);
-outputYaml($filteredDependents);
+// manual adjustments for some repositories
+$result[] = [
+    'repo' => 'phpstan/phpstan-src',
+    'cdaArgs' => '--config=build/composer-dependency-analyser.php',
+];
+$result[] = [
+    'repo' => 'qossmic/deptrac-src',
+];
+
+foreach ($result as $index => &$item) {
+    if (strpos($item['repo'], 'oveleon') === 0) {
+        $item['composerArgs'] = '--no-plugins';
+    }
+
+    if (
+        strpos($item['repo'], 'oveleon') === 0
+        || strpos($item['repo'], 'contao') === 0
+        || strpos($item['repo'], 'numero2') === 0
+    ) {
+        $item['cdaArgs'] = '--config=depcheck.php';
+    }
+
+    if ($item['repo'] === 'Setono/deployer-cron') { // failing
+        unset($result[$index]);
+    }
+}
+
+usort($result, static function (array $a, array $b): int {
+    return $a['repo'] <=> $b['repo'];
+});
+
+outputYaml($result);

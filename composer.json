@@ -67,7 +67,8 @@
             "@check:types",
             "@check:tests",
             "@check:self",
-            "@check:collisions"
+            "@check:collisions",
+            "@check:scripts"
         ],
         "check:collisions": "detect-collisions src tests",
         "check:composer": [
@@ -76,6 +77,7 @@
         ],
         "check:cs": "phpcs",
         "check:ec": "ec src tests",
+        "check:scripts": "phpstan analyse -vv --ansi --level=6 scripts/*.php",
         "check:self": "bin/composer-dependency-analyser",
         "check:tests": "phpunit -vvv tests",
         "check:types": "phpstan analyse -vv --ansi",
