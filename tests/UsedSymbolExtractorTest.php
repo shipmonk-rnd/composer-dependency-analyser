@@ -25,6 +25,7 @@ class UsedSymbolExtractorTest extends TestCase
             $expectedUsages,
             $extractor->parseUsedSymbols(
                 [
+                    strtolower('XMLReader') => SymbolKind::CLASSLIKE,
                     strtolower('PDO') => SymbolKind::CLASSLIKE,
                     strtolower('json_encode') => SymbolKind::FUNCTION,
                     strtolower('DDTrace\active_span') => SymbolKind::FUNCTION,
@@ -153,6 +154,7 @@ class UsedSymbolExtractorTest extends TestCase
                 ],
                 SymbolKind::CLASSLIKE => [
                     'PDO' => [11],
+                    'My\App\XMLReader' => [15],
                     'CURLOPT_SSL_VERIFYHOST' => [19],
                 ],
             ],
@@ -174,6 +176,7 @@ class UsedSymbolExtractorTest extends TestCase
                 ],
                 SymbolKind::CLASSLIKE => [
                     'PDO' => [11],
+                    'My\App\XMLReader' => [15],
                     'CURLOPT_SSL_VERIFYHOST' => [19],
                 ],
             ],

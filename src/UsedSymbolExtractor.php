@@ -155,14 +155,14 @@ class UsedSymbolExtractor
                             break;
                         }
 
-                        if (isset($extensionSymbols[$lowerName])) {
-                            $symbolName = $name;
-                            $kind = $extensionSymbols[$lowerName];
-                            $usedSymbols[$kind][$symbolName][] = $token[2];
-
-                        } elseif (isset($useStatements[$name])) {
+                        if (isset($useStatements[$name])) {
                             $symbolName = $useStatements[$name];
                             $kind = $useStatementKinds[$name];
+                            $usedSymbols[$kind][$symbolName][] = $token[2];
+
+                        } elseif (isset($extensionSymbols[$lowerName])) {
+                            $symbolName = $name;
+                            $kind = $extensionSymbols[$lowerName];
                             $usedSymbols[$kind][$symbolName][] = $token[2];
                         }
 

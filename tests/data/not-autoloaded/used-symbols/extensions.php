@@ -1,9 +1,9 @@
 <?php
-
 namespace Extensions;
 
 use DDTrace;
 use function DDTrace\active_span;
+use My\App\XMLReader;
 
 json_encode('');
 LIBXML_ERR_FATAL;
@@ -12,7 +12,7 @@ PDO::class;
 active_span();
 DDTrace\root_span();
 DDTrace\DBM_PROPAGATION_FULL;
-
+XMLReader::class;
 
 
 // those are not provided as known ext symbols in the test
