@@ -17,6 +17,11 @@ class Configuration
     /**
      * @var bool
      */
+    private $extensionsAnalysis = true;
+
+    /**
+     * @var bool
+     */
     private $scanComposerAutoloadPaths = true;
 
     /**
@@ -67,12 +72,12 @@ class Configuration
     /**
      * @var array<string, list<ErrorType::*>>
      */
-    private $ignoredErrorsOnPackage = [];
+    private $ignoredErrorsOnDependency = [];
 
     /**
      * @var array<string, array<string, list<ErrorType::*>>>
      */
-    private $ignoredErrorsOnPackageAndPath = [];
+    private $ignoredErrorsOnDependencyAndPath = [];
 
     /**
      * @var list<string>
@@ -95,6 +100,17 @@ class Configuration
     private $ignoredUnknownFunctionsRegexes = [];
 
     /**
+     * Disable analysis of ext-* dependencies
+     *
+     * @return $this
+     */
+    public function disableExtensionsAnalysis(): self
+    {
+        $this->extensionsAnalysis = false;
+        return $this;
+    }
+
+    /**
      * @return $this
      */
     public function disableComposerAutoloadPathScan(): self
@@ -103,6 +119,9 @@ class Configuration
         return $this;
     }
 
+    /**
+     * @return $this
+     */
     public function disableReportingUnmatchedIgnores(): self
     {
         $this->reportUnmatchedIgnores = false;
@@ -277,11 +296,32 @@ class Configuration
     public function ignoreErrorsOnPackage(string $packageName, array $errorTypes): self
     {
         $this->checkPackageName($packageName);
+        $this->ignoreErrorsOnDependency($packageName, $errorTypes);
+        return $this;
+    }
+
+    /**
+     * @param list<ErrorType::*> $errorTypes
+     * @return $this
+     * @throws InvalidConfigException
+     */
+    public function ignoreErrorsOnExtension(string $extension, array $errorTypes): self
+    {
+        $this->checkExtensionName($extension);
+        $this->ignoreErrorsOnDependency($extension, $errorTypes);
+        return $this;
+    }
+
+    /**
+     * @param list<ErrorType::*> $errorTypes
+     * @throws InvalidConfigException
+     */
+    private function ignoreErrorsOnDependency(string $dependency, array $errorTypes): void
+    {
         $this->checkAllowedErrorTypeForPackageIgnore($errorTypes);
 
-        $previousErrorTypes = $this->ignoredErrorsOnPackage[$packageName] ?? [];
-        $this->ignoredErrorsOnPackage[$packageName] = array_merge($previousErrorTypes, $errorTypes);
-        return $this;
+        $previousErrorTypes = $this->ignoredErrorsOnDependency[$dependency] ?? [];
+        $this->ignoredErrorsOnDependency[$dependency] = array_merge($previousErrorTypes, $errorTypes);
     }
 
     /**
@@ -300,6 +340,21 @@ class Configuration
     }
 
     /**
+     * @param list<string> $extensions
+     * @param list<ErrorType::*> $errorTypes
+     * @return $this
+     * @throws InvalidConfigException
+     */
+    public function ignoreErrorsOnExtensions(array $extensions, array $errorTypes): self
+    {
+        foreach ($extensions as $extension) {
+            $this->ignoreErrorsOnExtension($extension, $errorTypes);
+        }
+
+        return $this;
+    }
+
+    /**
      * @param list<ErrorType::*> $errorTypes
      * @return $this
      * @throws InvalidPathException
@@ -308,14 +363,37 @@ class Configuration
     public function ignoreErrorsOnPackageAndPath(string $packageName, string $path, array $errorTypes): self
     {
         $this->checkPackageName($packageName);
+        $this->ignoreErrorsOnDependencyAndPath($packageName, $path, $errorTypes);
+        return $this;
+    }
+
+    /**
+     * @param list<ErrorType::*> $errorTypes
+     * @return $this
+     * @throws InvalidPathException
+     * @throws InvalidConfigException
+     */
+    public function ignoreErrorsOnExtensionAndPath(string $extension, string $path, array $errorTypes): self
+    {
+        $this->checkExtensionName($extension);
+        $this->ignoreErrorsOnDependencyAndPath($extension, $path, $errorTypes);
+        return $this;
+    }
+
+    /**
+     * @param list<ErrorType::*> $errorTypes
+     * @throws InvalidPathException
+     * @throws InvalidConfigException
+     */
+    private function ignoreErrorsOnDependencyAndPath(string $dependency, string $path, array $errorTypes): void
+    {
         $this->checkAllowedErrorTypeForPathIgnore($errorTypes);
         $this->checkAllowedErrorTypeForPackageIgnore($errorTypes);
 
         $realpath = Path::realpath($path);
 
-        $previousErrorTypes = $this->ignoredErrorsOnPackageAndPath[$packageName][$realpath] ?? [];
-        $this->ignoredErrorsOnPackageAndPath[$packageName][$realpath] = array_merge($previousErrorTypes, $errorTypes);
-        return $this;
+        $previousErrorTypes = $this->ignoredErrorsOnDependencyAndPath[$dependency][$realpath] ?? [];
+        $this->ignoredErrorsOnDependencyAndPath[$dependency][$realpath] = array_merge($previousErrorTypes, $errorTypes);
     }
 
     /**
@@ -335,6 +413,22 @@ class Configuration
     }
 
     /**
+     * @param list<string> $paths
+     * @param list<ErrorType::*> $errorTypes
+     * @return $this
+     * @throws InvalidPathException
+     * @throws InvalidConfigException
+     */
+    public function ignoreErrorsOnExtensionAndPaths(string $extension, array $paths, array $errorTypes): self
+    {
+        foreach ($paths as $path) {
+            $this->ignoreErrorsOnExtensionAndPath($extension, $path, $errorTypes);
+        }
+
+        return $this;
+    }
+
+    /**
      * @param list<string> $packages
      * @param list<string> $paths
      * @param list<ErrorType::*> $errorTypes
@@ -346,6 +440,23 @@ class Configuration
     {
         foreach ($packages as $package) {
             $this->ignoreErrorsOnPackageAndPaths($package, $paths, $errorTypes);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param list<string> $extensions
+     * @param list<string> $paths
+     * @param list<ErrorType::*> $errorTypes
+     * @return $this
+     * @throws InvalidPathException
+     * @throws InvalidConfigException
+     */
+    public function ignoreErrorsOnExtensionsAndPaths(array $extensions, array $paths, array $errorTypes): self
+    {
+        foreach ($extensions as $extension) {
+            $this->ignoreErrorsOnExtensionAndPaths($extension, $paths, $errorTypes);
         }
 
         return $this;
@@ -406,8 +517,8 @@ class Configuration
         return new IgnoreList(
             $this->ignoredErrors,
             $this->ignoredErrorsOnPath,
-            $this->ignoredErrorsOnPackage,
-            $this->ignoredErrorsOnPackageAndPath,
+            $this->ignoredErrorsOnDependency,
+            $this->ignoredErrorsOnDependencyAndPath,
             $this->ignoredUnknownClasses,
             $this->ignoredUnknownClassesRegexes,
             $this->ignoredUnknownFunctions,
@@ -437,6 +548,11 @@ class Configuration
     public function getPathsToScan(): array
     {
         return $this->pathsToScan;
+    }
+
+    public function shouldAnalyseExtensions(): bool
+    {
+        return $this->extensionsAnalysis;
     }
 
     public function shouldScanComposerAutoloadPaths(): bool
@@ -474,6 +590,16 @@ class Configuration
     private function isFilepathWithinPath(string $filePath, string $path): bool
     {
         return strpos($filePath, $path) === 0;
+    }
+
+    /**
+     * @throws InvalidConfigException
+     */
+    private function checkExtensionName(string $extension): void
+    {
+        if (strpos($extension, 'ext-') !== 0) {
+            throw new InvalidConfigException("Invalid php extension dependency name '$extension', it is expected to start with ext-");
+        }
     }
 
     /**

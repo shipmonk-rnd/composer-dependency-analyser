@@ -53,11 +53,12 @@ class CliTest extends TestCase
 
         yield 'valid bool options' => [
             null,
-            ['bin/script.php', '--help', '--verbose', '--ignore-shadow-deps', '--ignore-unused-deps', '--ignore-dev-in-prod-deps', '--ignore-unknown-classes', '--ignore-unknown-functions'],
+            ['bin/script.php', '--help', '--verbose', '--ignore-shadow-deps', '--ignore-unused-deps', '--ignore-dev-in-prod-deps', '--ignore-unknown-classes', '--ignore-unknown-functions', '--disable-ext-analysis'],
             (static function (): CliOptions {
                 $options = new CliOptions();
                 $options->help = true;
                 $options->verbose = true;
+                $options->disableExtAnalysis = true;
                 $options->ignoreShadowDeps = true;
                 $options->ignoreUnusedDeps = true;
                 $options->ignoreDevInProdDeps = true;

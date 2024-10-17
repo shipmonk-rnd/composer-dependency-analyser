@@ -25,12 +25,12 @@ class IgnoreList
     /**
      * @var array<string, array<ErrorType::*, bool>>
      */
-    private $ignoredErrorsOnPackage = [];
+    private $ignoredErrorsOnDependency = [];
 
     /**
      * @var array<string, array<string, array<ErrorType::*, bool>>>
      */
-    private $ignoredErrorsOnPackageAndPath = [];
+    private $ignoredErrorsOnDependencyAndPath = [];
 
     /**
      * @var array<string, bool>
@@ -55,8 +55,8 @@ class IgnoreList
     /**
      * @param list<ErrorType::*> $ignoredErrors
      * @param array<string, list<ErrorType::*>> $ignoredErrorsOnPath
-     * @param array<string, list<ErrorType::*>> $ignoredErrorsOnPackage
-     * @param array<string, array<string, list<ErrorType::*>>> $ignoredErrorsOnPackageAndPath
+     * @param array<string, list<ErrorType::*>> $ignoredErrorsOnDependency
+     * @param array<string, array<string, list<ErrorType::*>>> $ignoredErrorsOnDependencyAndPath
      * @param list<string> $ignoredUnknownClasses
      * @param list<string> $ignoredUnknownClassesRegexes
      * @param list<string> $ignoredUnknownFunctions
@@ -65,8 +65,8 @@ class IgnoreList
     public function __construct(
         array $ignoredErrors,
         array $ignoredErrorsOnPath,
-        array $ignoredErrorsOnPackage,
-        array $ignoredErrorsOnPackageAndPath,
+        array $ignoredErrorsOnDependency,
+        array $ignoredErrorsOnDependencyAndPath,
         array $ignoredUnknownClasses,
         array $ignoredUnknownClassesRegexes,
         array $ignoredUnknownFunctions,
@@ -79,13 +79,13 @@ class IgnoreList
             $this->ignoredErrorsOnPath[$path] = array_fill_keys($errorTypes, false);
         }
 
-        foreach ($ignoredErrorsOnPackage as $packageName => $errorTypes) {
-            $this->ignoredErrorsOnPackage[$packageName] = array_fill_keys($errorTypes, false);
+        foreach ($ignoredErrorsOnDependency as $dependency => $errorTypes) {
+            $this->ignoredErrorsOnDependency[$dependency] = array_fill_keys($errorTypes, false);
         }
 
-        foreach ($ignoredErrorsOnPackageAndPath as $packageName => $paths) {
+        foreach ($ignoredErrorsOnDependencyAndPath as $dependency => $paths) {
             foreach ($paths as $path => $errorTypes) {
-                $this->ignoredErrorsOnPackageAndPath[$packageName][$path] = array_fill_keys($errorTypes, false);
+                $this->ignoredErrorsOnDependencyAndPath[$dependency][$path] = array_fill_keys($errorTypes, false);
             }
         }
 
@@ -116,7 +116,7 @@ class IgnoreList
             }
         }
 
-        foreach ($this->ignoredErrorsOnPackage as $packageName => $errorTypes) {
+        foreach ($this->ignoredErrorsOnDependency as $packageName => $errorTypes) {
             foreach ($errorTypes as $errorType => $ignored) {
                 if (!$ignored) {
                     $unused[] = new UnusedErrorIgnore($errorType, null, $packageName);
@@ -124,7 +124,7 @@ class IgnoreList
             }
         }
 
-        foreach ($this->ignoredErrorsOnPackageAndPath as $packageName => $paths) {
+        foreach ($this->ignoredErrorsOnDependencyAndPath as $packageName => $paths) {
             foreach ($paths as $path => $errorTypes) {
                 foreach ($errorTypes as $errorType => $ignored) {
                     if (!$ignored) {
@@ -240,12 +240,12 @@ class IgnoreList
     /**
      * @param ErrorType::SHADOW_DEPENDENCY|ErrorType::UNUSED_DEPENDENCY|ErrorType::DEV_DEPENDENCY_IN_PROD|ErrorType::PROD_DEPENDENCY_ONLY_IN_DEV $errorType
      */
-    public function shouldIgnoreError(string $errorType, ?string $realPath, ?string $packageName): bool
+    public function shouldIgnoreError(string $errorType, ?string $realPath, ?string $dependency): bool
     {
         $ignoredGlobally = $this->shouldIgnoreErrorGlobally($errorType);
         $ignoredByPath = $realPath !== null && $this->shouldIgnoreErrorOnPath($errorType, $realPath);
-        $ignoredByPackage = $packageName !== null && $this->shouldIgnoreErrorOnPackage($errorType, $packageName);
-        $ignoredByPackageAndPath = $realPath !== null && $packageName !== null && $this->shouldIgnoreErrorOnPackageAndPath($errorType, $packageName, $realPath);
+        $ignoredByPackage = $dependency !== null && $this->shouldIgnoreErrorOnDependency($errorType, $dependency);
+        $ignoredByPackageAndPath = $realPath !== null && $dependency !== null && $this->shouldIgnoreErrorOnDependencyAndPath($errorType, $dependency, $realPath);
 
         return $ignoredGlobally || $ignoredByPackageAndPath || $ignoredByPath || $ignoredByPackage;
     }
@@ -281,10 +281,10 @@ class IgnoreList
     /**
      * @param ErrorType::* $errorType
      */
-    private function shouldIgnoreErrorOnPackage(string $errorType, string $packageName): bool
+    private function shouldIgnoreErrorOnDependency(string $errorType, string $dependency): bool
     {
-        if (isset($this->ignoredErrorsOnPackage[$packageName][$errorType])) {
-            $this->ignoredErrorsOnPackage[$packageName][$errorType] = true;
+        if (isset($this->ignoredErrorsOnDependency[$dependency][$errorType])) {
+            $this->ignoredErrorsOnDependency[$dependency][$errorType] = true;
             return true;
         }
 
@@ -294,12 +294,12 @@ class IgnoreList
     /**
      * @param ErrorType::* $errorType
      */
-    private function shouldIgnoreErrorOnPackageAndPath(string $errorType, string $packageName, string $filePath): bool
+    private function shouldIgnoreErrorOnDependencyAndPath(string $errorType, string $packageName, string $filePath): bool
     {
-        if (isset($this->ignoredErrorsOnPackageAndPath[$packageName])) {
-            foreach ($this->ignoredErrorsOnPackageAndPath[$packageName] as $path => $errorTypes) {
+        if (isset($this->ignoredErrorsOnDependencyAndPath[$packageName])) {
+            foreach ($this->ignoredErrorsOnDependencyAndPath[$packageName] as $path => $errorTypes) {
                 if ($this->isFilepathWithinPath($filePath, $path) && isset($errorTypes[$errorType])) {
-                    $this->ignoredErrorsOnPackageAndPath[$packageName][$path][$errorType] = true;
+                    $this->ignoredErrorsOnDependencyAndPath[$packageName][$path][$errorType] = true;
                     return true;
                 }
             }

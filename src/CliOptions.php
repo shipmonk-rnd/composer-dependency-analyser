@@ -23,6 +23,11 @@ class CliOptions
     /**
      * @var true|null
      */
+    public $disableExtAnalysis = null;
+
+    /**
+     * @var true|null
+     */
     public $ignoreShadowDeps = null;
 
     /**

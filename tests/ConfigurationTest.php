@@ -21,6 +21,7 @@ class ConfigurationTest extends TestCase
         $configuration->ignoreUnknownClasses(['Unknown\Clazz']);
         $configuration->ignoreErrors([ErrorType::UNUSED_DEPENDENCY, ErrorType::UNKNOWN_CLASS]);
         $configuration->ignoreErrorsOnPath(__DIR__ . '/data/../', [ErrorType::SHADOW_DEPENDENCY]);
+        $configuration->ignoreErrorsOnExtension('ext-xml', [ErrorType::PROD_DEPENDENCY_ONLY_IN_DEV]);
         $configuration->ignoreErrorsOnPackage('my/package', [ErrorType::PROD_DEPENDENCY_ONLY_IN_DEV]);
         $configuration->ignoreErrorsOnPackageAndPath('vendor/package', __DIR__ . '/../tests/data', [ErrorType::DEV_DEPENDENCY_IN_PROD]);
 
@@ -41,6 +42,13 @@ class ConfigurationTest extends TestCase
         self::assertTrue($ignoreList->shouldIgnoreError(ErrorType::SHADOW_DEPENDENCY, __DIR__, 'some/package'));
         self::assertTrue($ignoreList->shouldIgnoreError(ErrorType::SHADOW_DEPENDENCY, __DIR__ . DIRECTORY_SEPARATOR . 'app', null));
         self::assertTrue($ignoreList->shouldIgnoreError(ErrorType::SHADOW_DEPENDENCY, __DIR__ . DIRECTORY_SEPARATOR . 'app', 'some/package'));
+
+        self::assertFalse($ignoreList->shouldIgnoreError(ErrorType::PROD_DEPENDENCY_ONLY_IN_DEV, null, null));
+        self::assertFalse($ignoreList->shouldIgnoreError(ErrorType::PROD_DEPENDENCY_ONLY_IN_DEV, null, 'ext-simplexml'));
+        self::assertTrue($ignoreList->shouldIgnoreError(ErrorType::PROD_DEPENDENCY_ONLY_IN_DEV, null, 'ext-xml'));
+        self::assertFalse($ignoreList->shouldIgnoreError(ErrorType::PROD_DEPENDENCY_ONLY_IN_DEV, __DIR__, null));
+        self::assertFalse($ignoreList->shouldIgnoreError(ErrorType::PROD_DEPENDENCY_ONLY_IN_DEV, __DIR__, 'ext-simplexml'));
+        self::assertTrue($ignoreList->shouldIgnoreError(ErrorType::PROD_DEPENDENCY_ONLY_IN_DEV, __DIR__, 'ext-xml'));
 
         self::assertFalse($ignoreList->shouldIgnoreError(ErrorType::PROD_DEPENDENCY_ONLY_IN_DEV, null, null));
         self::assertFalse($ignoreList->shouldIgnoreError(ErrorType::PROD_DEPENDENCY_ONLY_IN_DEV, null, 'some/package'));

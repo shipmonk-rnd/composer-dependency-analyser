@@ -17,7 +17,7 @@ class BinTest extends TestCase
         $testsDir = __DIR__;
 
         $noComposerJsonError = 'File composer.json not found';
-        $noPackagesError = 'No packages found';
+        $noPackagesError = 'No dependencies found';
         $parseError = 'Failure while parsing';
         $junitDumpError = "Cannot use 'junit' format with '--dump-usages' option";
 
