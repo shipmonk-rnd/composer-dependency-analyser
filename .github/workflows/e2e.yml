@@ -9,12 +9,6 @@ jobs:
             matrix:
                 include:
                     -
-                        repo: Setono/SyliusAbandonedCartPlugin
-                    -
-                        repo: Setono/SyliusGoogleAdsPlugin
-                    -
-                        repo: Setono/deployer-dotenv
-                    -
                         repo: TomasVotruba/unused-public
                     -
                         repo: VincentLanglet/Twig-CS-Fixer
@@ -28,9 +22,6 @@ jobs:
                         repo: cdn77/PhpFunctions
                     -
                         repo: cdn77/RabbitMQBundle
-                    -
-                        repo: contao-thememanager/core
-                        cdaArgs: --config=depcheck.php
                     -
                         repo: contao/contao
                         cdaArgs: --config=depcheck.php
@@ -68,10 +59,6 @@ jobs:
                         cdaArgs: --config=depcheck.php
                     -
                         repo: oveleon/contao-glossary-bundle
-                        composerArgs: --no-plugins
-                        cdaArgs: --config=depcheck.php
-                    -
-                        repo: oveleon/contao-recommendation-bundle
                         composerArgs: --no-plugins
                         cdaArgs: --config=depcheck.php
                     -

@@ -95,8 +95,12 @@ foreach ($result as $index => &$item) {
         $item['cdaArgs'] = '--config=depcheck.php';
     }
 
-    if ($item['repo'] === 'Setono/deployer-cron') { // failing
-        unset($result[$index]);
+    if (
+        strpos($item['repo'], 'Setono') === 0
+        || $item['repo'] === 'contao-thememanager/core'
+        || $item['repo'] === 'oveleon/contao-recommendation-bundle'
+    ) {
+        unset($result[$index]); // failing builds
     }
 }
 
