@@ -142,6 +142,11 @@ jobs:
                 run: composer install --no-progress --no-interaction --ignore-platform-reqs ${{ matrix.composerArgs }}
 
             -
+                name: Run analyser (--disable-ext-analysis)
+                working-directory: ${{ matrix.repo }}
+                run: php ../../analyser/bin/composer-dependency-analyser --show-all-usages --disable-ext-analysis ${{ matrix.cdaArgs }}
+
+            -
                 name: Run analyser
                 working-directory: ${{ matrix.repo }}
                 run: php ../../analyser/bin/composer-dependency-analyser --show-all-usages ${{ matrix.cdaArgs }}
