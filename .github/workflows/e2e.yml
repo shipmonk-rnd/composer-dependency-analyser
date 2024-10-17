@@ -144,4 +144,4 @@ jobs:
             -
                 name: Run analyser
                 working-directory: ${{ matrix.repo }}
-                run: php ../../analyser/bin/composer-dependency-analyser ${{ matrix.cdaArgs }}
+                run: php ../../analyser/bin/composer-dependency-analyser --show-all-usages ${{ matrix.cdaArgs }}
