@@ -1,11 +1,11 @@
 includes:
-    - phar://phpstan.phar/conf/config.levelmax.neon
     - phar://phpstan.phar/conf/bleedingEdge.neon
     - ./vendor/phpstan/phpstan-strict-rules/rules.neon
     - ./vendor/phpstan/phpstan-phpunit/extension.neon
     - ./vendor/phpstan/phpstan-phpunit/rules.neon
 
 parameters:
+    level: max
     phpVersion: 70200
     paths:
         - bin/composer-dependency-analyser

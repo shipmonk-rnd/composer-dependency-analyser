@@ -9,38 +9,92 @@ jobs:
             matrix:
                 include:
                     -
-                        repo: phpstan/phpstan-src
-                        name: phpstan
-                        cdaArgs: --config=build/composer-dependency-analyser.php
+                        repo: TomasVotruba/unused-public
                     -
-                        repo: shipmonk-rnd/phpstan-rules
-                        name: shipmonk-rules
+                        repo: VincentLanglet/Twig-CS-Fixer
                     -
-                        repo: vincentlanglet/twig-cs-fixer
-                        name: twig-cs-fixer
+                        repo: alex-kalanis/kw_files
                     -
-                        repo: qossmic/deptrac-src
-                        name: deptrac
+                        repo: alex-kalanis/kw_paths
                     -
-                        repo: kreait/firebase-php
-                        name: firebase
+                        repo: alex-kalanis/kw_storage
                     -
-                        repo: oveleon/contao-cookiebar
-                        name: contao-cookiebar
+                        repo: cdn77/PhpFunctions
+                    -
+                        repo: cdn77/RabbitMQBundle
+                    -
+                        repo: contao/contao
                         cdaArgs: --config=depcheck.php
-                        composerArgs: --no-plugins
                     -
-                        repo: rectorphp/rector-src
-                        name: rector
+                        repo: idleberg/php-vite-manifest
+                    -
+                        repo: idleberg/php-wordpress-vite-assets
+                    -
+                        repo: inspirum/arrayable-php
                     -
                         repo: inspirum/balikobot-php
-                        name: balikobot
+                    -
+                        repo: inspirum/balikobot-php-symfony
+                    -
+                        repo: inspirum/xml-php
+                    -
+                        repo: kreait/firebase-php
+                    -
+                        repo: numero2/contao-marketing-suite
+                        cdaArgs: --config=depcheck.php
+                    -
+                        repo: numero2/contao-opengraph3
+                        cdaArgs: --config=depcheck.php
+                    -
+                        repo: oveleon/contao-company-bundle
+                        composerArgs: --no-plugins
+                        cdaArgs: --config=depcheck.php
+                    -
+                        repo: oveleon/contao-config-driver-bundle
+                        composerArgs: --no-plugins
+                        cdaArgs: --config=depcheck.php
+                    -
+                        repo: oveleon/contao-cookiebar
+                        composerArgs: --no-plugins
+                        cdaArgs: --config=depcheck.php
+                    -
+                        repo: oveleon/contao-glossary-bundle
+                        composerArgs: --no-plugins
+                        cdaArgs: --config=depcheck.php
+                    -
+                        repo: oveleon/contao-theme-compiler-bundle
+                        composerArgs: --no-plugins
+                        cdaArgs: --config=depcheck.php
+                    -
+                        repo: phpstan/phpstan-src
+                        cdaArgs: --config=build/composer-dependency-analyser.php
+                    -
+                        repo: qossmic/deptrac-src
+                    -
+                        repo: rectorphp/rector-src
+                    -
+                        repo: rectorphp/swiss-knife
+                    -
+                        repo: shipmonk-rnd/dead-code-detector
+                    -
+                        repo: shipmonk-rnd/doctrine-hint-driven-sql-walker
+                    -
+                        repo: shipmonk-rnd/doctrine-mysql-index-hints
+                    -
+                        repo: shipmonk-rnd/doctrine-mysql-optimizer-hints
+                    -
+                        repo: shipmonk-rnd/doctrine-two-phase-migrations
+                    -
+                        repo: shipmonk-rnd/input-mapper
+                    -
+                        repo: shipmonk-rnd/name-collision-detector
+                    -
+                        repo: shipmonk-rnd/phpstan-rules
+                    -
+                        repo: teamneusta/pimcore-testing-framework
                     -
                         repo: wallabag/wallabag
-                        name: wallabag
-                    -
-                        repo: tomasvotruba/unused-public
-                        name: unused-public
+
             fail-fast: false
         steps:
             -
@@ -57,7 +111,7 @@ jobs:
                 name: Clone ${{ matrix.repo }}
                 uses: actions/checkout@v4
                 with:
-                    path: ${{ matrix.name }}
+                    path: ${{ matrix.repo }}
                     repository: ${{ matrix.repo }}
 
             -
@@ -73,16 +127,16 @@ jobs:
 
             -
                 name: Disable autoloader prepend
-                working-directory: ${{ matrix.name }}
+                working-directory: ${{ matrix.repo }}
                 run: |
                     echo "$(jq --indent 4 '.config += {"prepend-autoloader": false}' composer.json)" > composer.json
 
             -
-                name: Install ${{ matrix.name }} dependencies
-                working-directory: ${{ matrix.name }}
+                name: Install ${{ matrix.repo }} dependencies
+                working-directory: ${{ matrix.repo }}
                 run: composer install --no-progress --no-interaction --ignore-platform-reqs ${{ matrix.composerArgs }}
 
             -
                 name: Run analyser
-                working-directory: ${{ matrix.name }}
-                run: php ../analyser/bin/composer-dependency-analyser ${{ matrix.cdaArgs }}
+                working-directory: ${{ matrix.repo }}
+                run: php ../../analyser/bin/composer-dependency-analyser ${{ matrix.cdaArgs }}
