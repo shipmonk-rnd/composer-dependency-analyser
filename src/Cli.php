@@ -20,6 +20,7 @@ class Cli
         'version' => false,
         'help' => false,
         'verbose' => false,
+        'disable-ext-analysis' => false,
         'ignore-shadow-deps' => false,
         'ignore-unused-deps' => false,
         'ignore-dev-in-prod-deps' => false,
@@ -151,6 +152,10 @@ class Cli
 
         if (isset($this->providedOptions['verbose'])) {
             $options->verbose = true;
+        }
+
+        if (isset($this->providedOptions['disable-ext-analysis'])) {
+            $options->disableExtAnalysis = true;
         }
 
         if (isset($this->providedOptions['ignore-shadow-deps'])) {
