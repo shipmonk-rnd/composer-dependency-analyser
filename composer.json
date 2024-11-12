@@ -29,9 +29,9 @@
         "editorconfig-checker/editorconfig-checker": "^10.6.0",
         "ergebnis/composer-normalize": "^2.19.0",
         "phpcompatibility/php-compatibility": "^9.3.5",
-        "phpstan/phpstan": "^1.12.3",
-        "phpstan/phpstan-phpunit": "^1.4.0",
-        "phpstan/phpstan-strict-rules": "^1.6.0",
+        "phpstan/phpstan": "^2.0.1",
+        "phpstan/phpstan-phpunit": "^2.0.0",
+        "phpstan/phpstan-strict-rules": "^2.0.0",
         "phpunit/phpunit": "^8.5.39 || ^9.6.20",
         "shipmonk/name-collision-detector": "^2.1.1",
         "slevomat/coding-standard": "^8.15.0"
