@@ -3,7 +3,7 @@ namespace Extensions;
 
 use { DDTrace, DDTrace\Integrations };
 use function DDTrace\active_span;
-use My\App\XMLReader;
+use My\App\XMLReader, PDO;
 
 json_encode('');
 LIBXML_ERR_FATAL;
@@ -23,3 +23,5 @@ ZipArchive::class;
 
 function foo($normalizer) {}
 foo(normalizer: 1);
+
+class Normalizer {}
