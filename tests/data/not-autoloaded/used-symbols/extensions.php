@@ -20,3 +20,6 @@ Integrations\Exec\proc_get_pid();
 CURLOPT_SSL_VERIFYPEER;
 \json_decode('');
 ZipArchive::class;
+
+function foo($normalizer) {}
+foo(normalizer: 1);
