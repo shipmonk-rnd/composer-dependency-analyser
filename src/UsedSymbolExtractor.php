@@ -163,6 +163,11 @@ class UsedSymbolExtractor
                         } elseif (isset($extensionSymbols[$lowerName])) {
                             $symbolName = $name;
                             $kind = $extensionSymbols[$lowerName];
+
+                            if (!$inGlobalScope && $kind === SymbolKind::CLASSLIKE) {
+                                break; // cannot use class-like symbols in non-global scope when not imported
+                            }
+
                             $usedSymbols[$kind][$symbolName][] = $token[2];
                         }
 
@@ -211,6 +216,11 @@ class UsedSymbolExtractor
                         } elseif (isset($extensionSymbols[$lowerName])) {
                             $symbolName = $name;
                             $kind = $extensionSymbols[$lowerName];
+
+                            if (!$inGlobalScope && $kind === SymbolKind::CLASSLIKE) {
+                                break; // cannot use class-like symbols in non-global scope when not imported
+                            }
+
                             $usedSymbols[$kind][$symbolName][] = $token[2];
 
                         } else {
