@@ -206,6 +206,7 @@ class UsedSymbolExtractorTest extends TestCase
     private static function extensionSymbolsForExtensionsTestCases(): array
     {
         return [
+            strtolower('Normalizer') => SymbolKind::CLASSLIKE, // https://www.php.net/manual/en/class.normalizer.php
             strtolower('XMLReader') => SymbolKind::CLASSLIKE,
             strtolower('PDO') => SymbolKind::CLASSLIKE,
             strtolower('json_encode') => SymbolKind::FUNCTION,

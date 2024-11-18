@@ -415,6 +415,7 @@ class UsedSymbolExtractor
             || $tokenBeforeName[0] === (PHP_VERSION_ID > 80000 ? T_NULLSAFE_OBJECT_OPERATOR : -1)
             || $tokenAfterName[0] === T_INSTEADOF
             || $tokenAfterName[0] === T_AS
+            || $tokenAfterName === ':'
         ) {
             return false;
         }
