@@ -24,24 +24,27 @@ jobs:
                         repo: cdn77/RabbitMQBundle
                     -
                         repo: contao/contao
-                        cdaArgs: --config=depcheck.php
+                        cdaArgs: --disable-ext-analysis --config=depcheck.php
                     -
                         repo: idleberg/php-vite-manifest
+                        cdaArgs: --disable-ext-analysis
                     -
                         repo: idleberg/php-wordpress-vite-assets
                     -
                         repo: inspirum/arrayable-php
                     -
                         repo: inspirum/balikobot-php
+                        cdaArgs: --disable-ext-analysis
                     -
                         repo: inspirum/balikobot-php-symfony
                     -
                         repo: inspirum/xml-php
+                        cdaArgs: --disable-ext-analysis
                     -
                         repo: kreait/firebase-php
                     -
                         repo: numero2/contao-marketing-suite
-                        cdaArgs: --config=depcheck.php
+                        cdaArgs: --disable-ext-analysis --config=depcheck.php
                     -
                         repo: numero2/contao-opengraph3
                         cdaArgs: --config=depcheck.php
@@ -56,26 +59,33 @@ jobs:
                     -
                         repo: oveleon/contao-cookiebar
                         composerArgs: --no-plugins
-                        cdaArgs: --config=depcheck.php
+                        cdaArgs: --disable-ext-analysis --config=depcheck.php
                     -
                         repo: oveleon/contao-glossary-bundle
                         composerArgs: --no-plugins
-                        cdaArgs: --config=depcheck.php
+                        cdaArgs: --disable-ext-analysis --config=depcheck.php
                     -
                         repo: oveleon/contao-theme-compiler-bundle
                         composerArgs: --no-plugins
-                        cdaArgs: --config=depcheck.php
+                        cdaArgs: --disable-ext-analysis --config=depcheck.php
                     -
                         repo: phpstan/phpstan-src
-                        cdaArgs: --config=build/composer-dependency-analyser.php
+                        cdaArgs: --disable-ext-analysis --config=build/composer-dependency-analyser.php
                     -
                         repo: qossmic/deptrac-src
+                        cdaArgs: --disable-ext-analysis
                     -
                         repo: rectorphp/rector-src
                     -
                         repo: rectorphp/swiss-knife
                     -
+                        repo: sensiolabs/GotenbergBundle
+                    -
+                        repo: shapecode/cron-bundle
+                    -
                         repo: shipmonk-rnd/dead-code-detector
+                    -
+                        repo: shipmonk-rnd/doctrine-entity-preloader
                     -
                         repo: shipmonk-rnd/doctrine-hint-driven-sql-walker
                     -
@@ -91,10 +101,12 @@ jobs:
                     -
                         repo: shipmonk-rnd/phpstan-rules
                     -
+                        repo: symplify/config-transformer
+                    -
                         repo: teamneusta/pimcore-testing-framework
                     -
                         repo: wallabag/wallabag
-
+                        cdaArgs: --disable-ext-analysis
             fail-fast: false
         steps:
             -
@@ -140,11 +152,6 @@ jobs:
                 name: Install ${{ matrix.repo }} dependencies
                 working-directory: ${{ matrix.repo }}
                 run: composer install --no-progress --no-interaction --ignore-platform-reqs ${{ matrix.composerArgs }}
-
-            -
-                name: Run analyser (--disable-ext-analysis)
-                working-directory: ${{ matrix.repo }}
-                run: php ../../analyser/bin/composer-dependency-analyser --show-all-usages --disable-ext-analysis ${{ matrix.cdaArgs }}
 
             -
                 name: Run analyser

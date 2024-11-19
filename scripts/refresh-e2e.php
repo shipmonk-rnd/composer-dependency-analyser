@@ -19,6 +19,11 @@ function fetchDependents(string $packageName, int $page = 1): array
     foreach ($packages as $package) {
         $packageName = $package['name'];
         $downloads = $package['downloads'] ?? 0;
+        $abandoned = (bool) ($package['abandoned'] ?? false);
+
+        if ($abandoned) {
+            continue;
+        }
 
         if ($downloads < 2000) {
             continue;
@@ -51,7 +56,7 @@ function outputYaml(array $items): void
         echo "  -\n";
 
         foreach ($item as $key => $value) {
-            echo "    $key: $value\n";
+            echo "    $key: " . trim($value) . "\n";
         }
     }
 }
@@ -101,6 +106,22 @@ foreach ($result as $index => &$item) {
         || $item['repo'] === 'oveleon/contao-recommendation-bundle'
     ) {
         unset($result[$index]); // failing builds
+    }
+
+    if (
+        $item['repo'] === 'wallabag/wallabag'
+        || $item['repo'] === 'oveleon/contao-theme-compiler-bundle'
+        || $item['repo'] === 'oveleon/contao-glossary-bundle'
+        || $item['repo'] === 'oveleon/contao-cookiebar'
+        || $item['repo'] === 'numero2/contao-marketing-suite'
+        || $item['repo'] === 'inspirum/xml-php'
+        || $item['repo'] === 'inspirum/balikobot-php'
+        || $item['repo'] === 'idleberg/php-vite-manifest'
+        || $item['repo'] === 'contao/contao'
+        || $item['repo'] === 'qossmic/deptrac-src'
+        || $item['repo'] === 'phpstan/phpstan-src'
+    ) {
+        $item['cdaArgs'] = '--disable-ext-analysis ' . ($item['cdaArgs'] ?? '');
     }
 }
 
