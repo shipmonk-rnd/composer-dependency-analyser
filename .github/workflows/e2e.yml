@@ -70,9 +70,10 @@ jobs:
                         cdaArgs: --disable-ext-analysis --config=depcheck.php
                     -
                         repo: phpstan/phpstan-src
-                        cdaArgs: --config=build/composer-dependency-analyser.php
+                        cdaArgs: --disable-ext-analysis --config=build/composer-dependency-analyser.php
                     -
                         repo: qossmic/deptrac-src
+                        cdaArgs: --disable-ext-analysis
                     -
                         repo: rectorphp/rector-src
                     -
