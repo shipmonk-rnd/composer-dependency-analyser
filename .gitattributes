@@ -1,5 +1,6 @@
 * text=auto
 
+/scripts export-ignore
 /tests export-ignore
 /cache export-ignore
 /.ecrc export-ignore
