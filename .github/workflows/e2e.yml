@@ -12,14 +12,19 @@ jobs:
                         repo: TomasVotruba/unused-public
                     -
                         repo: VasekPurchart/Console-Errors-Bundle
+                        cdaArgs: --config=build/composer-dependency-analyser.config.php
                     -
                         repo: VasekPurchart/Phing-Copy-Files-Task
+                        cdaArgs: --config=build/composer-dependency-analyser.config.php
                     -
                         repo: VasekPurchart/Phing-Symfony-Command-Task
+                        cdaArgs: --config=build/composer-dependency-analyser.config.php
                     -
                         repo: VasekPurchart/Rabbit-Mq-Consumer-Handler-Bundle
+                        cdaArgs: --config=build/composer-dependency-analyser.config.php
                     -
                         repo: VasekPurchart/Tracy-Blue-Screen-Bundle
+                        cdaArgs: --config=build/composer-dependency-analyser.config.php
                     -
                         repo: VincentLanglet/Twig-CS-Fixer
                     -
@@ -34,14 +39,22 @@ jobs:
                         repo: cdn77/RabbitMQBundle
                     -
                         repo: consistence/consistence
+                        cdaArgs: --config=build/composer-dependency-analyser.config.php
                     -
                         repo: consistence/consistence-doctrine
+                        cdaArgs: --config=build/composer-dependency-analyser.config.php
                     -
                         repo: consistence/consistence-doctrine-symfony
+                        cdaArgs: --config=build/composer-dependency-analyser.config.php
                     -
                         repo: consistence/consistence-jms-serializer
+                        cdaArgs: --config=build/composer-dependency-analyser.config.php
                     -
                         repo: consistence/consistence-jms-serializer-symfony
+                        cdaArgs: --config=build/composer-dependency-analyser.config.php
+                    -
+                        repo: consistence/consistence-robot-loader-class-finder
+                        cdaArgs: --config=build/composer-dependency-analyser.config.php
                     -
                         repo: contao/contao
                         cdaArgs: --disable-ext-analysis --config=depcheck.php
@@ -77,13 +90,21 @@ jobs:
                     -
                         repo: mimmi20/laminas-form-element-paragraph
                     -
+                        repo: mimmi20/laminas-module-errorhandling
+                    -
                         repo: mimmi20/laminas-router-hostname
                     -
                         repo: mimmi20/laminasviewrenderer-bootstrap-form
                     -
+                        repo: mimmi20/laminasviewrenderer-flash-message
+                    -
                         repo: mimmi20/laminasviewrenderer-helper-htmlelement
                     -
                         repo: mimmi20/laminasviewrenderer-helper-partialrenderer
+                    -
+                        repo: mimmi20/laminasviewrenderer-js-log
+                    -
+                        repo: mimmi20/laminasviewrenderer-revision
                     -
                         repo: mimmi20/laminasviewrenderer-vite-url
                     -
@@ -159,7 +180,6 @@ jobs:
                         cdaArgs: --disable-ext-analysis --config=build/composer-dependency-analyser.php
                     -
                         repo: qossmic/deptrac-src
-                        cdaArgs: --disable-ext-analysis
                     -
                         repo: rectorphp/rector-src
                     -
@@ -190,8 +210,6 @@ jobs:
                         repo: shipmonk-rnd/phpstan-rules
                     -
                         repo: symplify/config-transformer
-                    -
-                        repo: symplify/phpstan-rules
                     -
                         repo: teamneusta/pimcore-testing-framework
                     -

@@ -92,6 +92,10 @@ foreach ($result as $index => &$item) {
         $item['composerArgs'] = '--no-plugins';
     }
 
+    if (strpos($item['repo'], 'consistence') === 0 || strpos($item['repo'], 'VasekPurchart') === 0) {
+        $item['cdaArgs'] = '--config=build/composer-dependency-analyser.config.php';
+    }
+
     if (
         strpos($item['repo'], 'oveleon') === 0
         || strpos($item['repo'], 'contao') === 0
@@ -102,6 +106,7 @@ foreach ($result as $index => &$item) {
 
     if (
         strpos($item['repo'], 'Setono') === 0
+        || $item['repo'] === 'symplify/phpstan-rules'
         || $item['repo'] === 'contao-thememanager/core'
         || $item['repo'] === 'oveleon/contao-recommendation-bundle'
     ) {
@@ -118,7 +123,6 @@ foreach ($result as $index => &$item) {
         || $item['repo'] === 'inspirum/balikobot-php'
         || $item['repo'] === 'idleberg/php-vite-manifest'
         || $item['repo'] === 'contao/contao'
-        || $item['repo'] === 'qossmic/deptrac-src'
         || $item['repo'] === 'phpstan/phpstan-src'
     ) {
         $item['cdaArgs'] = '--disable-ext-analysis ' . ($item['cdaArgs'] ?? '');
