@@ -126,8 +126,6 @@ jobs:
                     -
                         repo: mimmi20/monolog-callbackfilterhandler
                     -
-                        repo: mimmi20/monolog-factory
-                    -
                         repo: mimmi20/monolog-streamformatter
                     -
                         repo: mimmi20/navigation-helper-acceptpage

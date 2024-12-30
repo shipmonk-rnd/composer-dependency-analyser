@@ -124,6 +124,7 @@ foreach ($result as $index => &$item) {
         || $item['repo'] === 'idleberg/php-vite-manifest'
         || $item['repo'] === 'contao/contao'
         || $item['repo'] === 'phpstan/phpstan-src'
+        || $item['repo'] === 'mimmi20/monolog-factory'
     ) {
         $item['cdaArgs'] = '--disable-ext-analysis ' . ($item['cdaArgs'] ?? '');
     }
