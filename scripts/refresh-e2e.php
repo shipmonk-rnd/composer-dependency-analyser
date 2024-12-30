@@ -110,6 +110,8 @@ foreach ($result as $index => &$item) {
         || $item['repo'] === 'symplify/phpstan-rules'
         || $item['repo'] === 'contao-thememanager/core'
         || $item['repo'] === 'oveleon/contao-recommendation-bundle'
+        || $item['repo'] === 'numero2/contao-marketing-suite' // since 1.8.2 (shadow symfony/contracts via trigger_deprecation)
+        || $item['repo'] === 'teamneusta/pimcore-testing-framework' // since 1.8.2 (shadow symfony/contracts via trigger_deprecation)
     ) {
         unset($result[$index]); // failing builds
     }
