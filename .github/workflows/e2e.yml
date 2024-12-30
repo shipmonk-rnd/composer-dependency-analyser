@@ -148,9 +148,6 @@ jobs:
                     -
                         repo: mimmi20/ua-normalizer
                     -
-                        repo: numero2/contao-marketing-suite
-                        cdaArgs: --disable-ext-analysis --config=depcheck.php
-                    -
                         repo: numero2/contao-opengraph3
                         cdaArgs: --config=depcheck.php
                     -
@@ -176,6 +173,7 @@ jobs:
                     -
                         repo: phpstan/phpstan-src
                         cdaArgs: --disable-ext-analysis --config=build/composer-dependency-analyser.php
+                        php: 8.4
                     -
                         repo: qossmic/deptrac-src
                     -
@@ -209,8 +207,6 @@ jobs:
                     -
                         repo: symplify/config-transformer
                     -
-                        repo: teamneusta/pimcore-testing-framework
-                    -
                         repo: wallabag/wallabag
                         cdaArgs: --disable-ext-analysis
             fail-fast: false
@@ -236,7 +232,7 @@ jobs:
                 name: Setup PHP
                 uses: shivammathur/setup-php@v2
                 with:
-                    php-version: 8.3
+                    php-version: ${{ matrix.php || '8.3' }}
                     ini-file: development
 
             -

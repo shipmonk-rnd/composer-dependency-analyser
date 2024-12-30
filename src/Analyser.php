@@ -123,7 +123,7 @@ class Analyser
      *
      * @var array<string, SymbolKind::*>
      */
-    private $extensionSymbolKinds = [];
+    private $knownSymbolKinds = [];
 
     /**
      * @param array<string, ClassLoader> $classLoaders vendorDir => ClassLoader (e.g. result of \Composer\Autoload\ClassLoader::getRegisteredLoaders())
@@ -392,7 +392,7 @@ class Analyser
         }
 
         return (new UsedSymbolExtractor($code))->parseUsedSymbols(
-            $this->extensionSymbolKinds
+            $this->knownSymbolKinds
         );
     }
 
@@ -553,7 +553,7 @@ class Analyser
                         $this->ignoredSymbols[$constantName] = true;
                     } else {
                         $this->extensionSymbols[SymbolKind::CONSTANT][$constantName] = $extensionName;
-                        $this->extensionSymbolKinds[strtolower($constantName)] = SymbolKind::CONSTANT;
+                        $this->knownSymbolKinds[strtolower($constantName)] = SymbolKind::CONSTANT;
                     }
                 }
             }
@@ -567,6 +567,7 @@ class Analyser
                 if ($reflectionFunction->getExtension() === null) {
                     if (is_string($functionFilePath)) {
                         $this->definedFunctions[$functionName] = Path::normalize($functionFilePath);
+                        $this->knownSymbolKinds[$functionName] = SymbolKind::FUNCTION;
                     }
                 } else {
                     $extensionName = $this->getNormalizedExtensionName($reflectionFunction->getExtension()->name);
@@ -575,7 +576,7 @@ class Analyser
                         $this->ignoredSymbols[$functionName] = true;
                     } else {
                         $this->extensionSymbols[SymbolKind::FUNCTION][$functionName] = $extensionName;
-                        $this->extensionSymbolKinds[$functionName] = SymbolKind::FUNCTION;
+                        $this->knownSymbolKinds[$functionName] = SymbolKind::FUNCTION;
                     }
                 }
             }
@@ -598,7 +599,7 @@ class Analyser
                         $this->ignoredSymbols[$classLikeName] = true;
                     } else {
                         $this->extensionSymbols[SymbolKind::CLASSLIKE][$classLikeName] = $extensionName;
-                        $this->extensionSymbolKinds[strtolower($classLikeName)] = SymbolKind::CLASSLIKE;
+                        $this->knownSymbolKinds[strtolower($classLikeName)] = SymbolKind::CLASSLIKE;
                     }
                 }
             }

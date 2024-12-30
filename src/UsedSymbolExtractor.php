@@ -67,12 +67,12 @@ class UsedSymbolExtractor
      * It does not produce any local names in current namespace
      * - this results in very limited functionality in files without namespace
      *
-     * @param array<string, SymbolKind::*> $extensionSymbols
+     * @param array<string, SymbolKind::*> $knownSymbols
      * @return array<SymbolKind::*, array<string, list<int>>>
      * @license Inspired by https://github.com/doctrine/annotations/blob/2.0.0/lib/Doctrine/Common/Annotations/TokenParser.php
      */
     public function parseUsedSymbols(
-        array $extensionSymbols
+        array $knownSymbols
     ): array
     {
         $usedSymbols = [];
@@ -124,7 +124,7 @@ class UsedSymbolExtractor
                     case PHP_VERSION_ID >= 80000 ? T_NAME_FULLY_QUALIFIED : -1:
                         $symbolName = $this->normalizeBackslash($token[1]);
                         $lowerSymbolName = strtolower($symbolName);
-                        $kind = $extensionSymbols[$lowerSymbolName] ?? $this->getFqnSymbolKind($this->pointer - 2, $this->pointer, $inAttributeSquareLevel !== null);
+                        $kind = $knownSymbols[$lowerSymbolName] ?? $this->getFqnSymbolKind($this->pointer - 2, $this->pointer, $inAttributeSquareLevel !== null);
                         $usedSymbols[$kind][$symbolName][] = $token[2];
                         break;
 
@@ -140,7 +140,7 @@ class UsedSymbolExtractor
                         }
 
                         $lowerSymbolName = strtolower($symbolName);
-                        $kind = $extensionSymbols[$lowerSymbolName] ?? $this->getFqnSymbolKind($this->pointer - 2, $this->pointer, $inAttributeSquareLevel !== null);
+                        $kind = $knownSymbols[$lowerSymbolName] ?? $this->getFqnSymbolKind($this->pointer - 2, $this->pointer, $inAttributeSquareLevel !== null);
                         $usedSymbols[$kind][$symbolName][] = $token[2];
 
                         break;
@@ -160,9 +160,9 @@ class UsedSymbolExtractor
                             $kind = $useStatementKinds[$name];
                             $usedSymbols[$kind][$symbolName][] = $token[2];
 
-                        } elseif (isset($extensionSymbols[$lowerName])) {
+                        } elseif (isset($knownSymbols[$lowerName])) {
                             $symbolName = $name;
-                            $kind = $extensionSymbols[$lowerName];
+                            $kind = $knownSymbols[$lowerName];
 
                             if (!$inGlobalScope && $kind === SymbolKind::CLASSLIKE) {
                                 break; // cannot use class-like symbols in non-global scope when not imported
@@ -192,7 +192,7 @@ class UsedSymbolExtractor
                         $lowerSymbolName = strtolower($symbolName);
 
                         if ($symbolName !== '') { // e.g. \array (NS separator followed by not-a-name)
-                            $kind = $extensionSymbols[$lowerSymbolName] ?? $this->getFqnSymbolKind($pointerBeforeName, $this->pointer - 1, false);
+                            $kind = $knownSymbols[$lowerSymbolName] ?? $this->getFqnSymbolKind($pointerBeforeName, $this->pointer - 1, false);
                             $usedSymbols[$kind][$symbolName][] = $token[2];
                         }
 
@@ -213,9 +213,9 @@ class UsedSymbolExtractor
                             $kind = $useStatementKinds[$name];
                             $usedSymbols[$kind][$symbolName][] = $token[2];
 
-                        } elseif (isset($extensionSymbols[$lowerName])) {
+                        } elseif (isset($knownSymbols[$lowerName])) {
                             $symbolName = $name;
-                            $kind = $extensionSymbols[$lowerName];
+                            $kind = $knownSymbols[$lowerName];
 
                             if (!$inGlobalScope && $kind === SymbolKind::CLASSLIKE) {
                                 break; // cannot use class-like symbols in non-global scope when not imported

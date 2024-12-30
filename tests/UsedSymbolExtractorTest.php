@@ -72,6 +72,12 @@ class UsedSymbolExtractorTest extends TestCase
                     'PHPUnit\Framework\Error' => [14],
                     'LogicException' => [15, 20],
                 ],
+                SymbolKind::FUNCTION => [
+                    'user_defined_function' => [38],
+                ],
+            ],
+            [
+                'user_defined_function' => SymbolKind::FUNCTION,
             ],
         ];
 
@@ -113,7 +119,6 @@ class UsedSymbolExtractorTest extends TestCase
         ];
 
         yield 'global namespace' => [
-
             __DIR__ . '/data/not-autoloaded/used-symbols/global-namespace.php',
             [
                 SymbolKind::CLASSLIKE => [
@@ -122,7 +127,11 @@ class UsedSymbolExtractorTest extends TestCase
                 ],
                 SymbolKind::FUNCTION => [
                     'PHPUnit\Framework\assertSame' => [7],
+                    'user_defined_function' => [12],
                 ],
+            ],
+            [
+                strtolower('user_defined_function') => SymbolKind::FUNCTION,
             ],
         ];
 
