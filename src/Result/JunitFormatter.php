@@ -131,7 +131,7 @@ class JunitFormatter implements ResultFormatter
         $this->printer->print($this->prettyPrintXml($xml));
 
         if ($hasError) {
-            return 255;
+            return 1;
         }
 
         return 0;

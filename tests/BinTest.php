@@ -32,19 +32,19 @@ class BinTest extends TestCase
 
         $this->runCommand('php bin/composer-dependency-analyser', $rootDir, 0, $okOutput, $usingConfig);
         $this->runCommand('php bin/composer-dependency-analyser --verbose', $rootDir, 0, $okOutput, $usingConfig);
-        $this->runCommand('php ../bin/composer-dependency-analyser', $testsDir, 255, null, $noComposerJsonError);
+        $this->runCommand('php ../bin/composer-dependency-analyser', $testsDir, 1, null, $noComposerJsonError);
         $this->runCommand('php bin/composer-dependency-analyser --help', $rootDir, 0, $helpOutput);
         $this->runCommand('php ../bin/composer-dependency-analyser --help', $testsDir, 0, $helpOutput);
         $this->runCommand('php ../bin/composer-dependency-analyser --version', $testsDir, 0, $versionOutput);
         $this->runCommand('php bin/composer-dependency-analyser --composer-json=composer.json', $rootDir, 0, $okOutput, $usingConfig);
-        $this->runCommand('php bin/composer-dependency-analyser --composer-json=composer.lock', $rootDir, 255, null, $noPackagesError);
-        $this->runCommand('php bin/composer-dependency-analyser --composer-json=README.md', $rootDir, 255, null, $parseError);
-        $this->runCommand('php ../bin/composer-dependency-analyser --composer-json=composer.json', $testsDir, 255, null, $noComposerJsonError);
+        $this->runCommand('php bin/composer-dependency-analyser --composer-json=composer.lock', $rootDir, 1, null, $noPackagesError);
+        $this->runCommand('php bin/composer-dependency-analyser --composer-json=README.md', $rootDir, 1, null, $parseError);
+        $this->runCommand('php ../bin/composer-dependency-analyser --composer-json=composer.json', $testsDir, 1, null, $noComposerJsonError);
         $this->runCommand('php ../bin/composer-dependency-analyser --composer-json=../composer.json --config=../composer-dependency-analyser.php', $testsDir, 0, $okOutput, $usingConfig);
         $this->runCommand('php bin/composer-dependency-analyser --composer-json=composer.json --format=console', $rootDir, 0, $okOutput, $usingConfig);
         $this->runCommand('php bin/composer-dependency-analyser --composer-json=composer.json --format=console --dump-usages=symfony/*', $rootDir, 1, $dumpingOutput, $usingConfig);
         $this->runCommand('php bin/composer-dependency-analyser --composer-json=composer.json --format=junit', $rootDir, 0, $junitOutput, $usingConfig);
-        $this->runCommand('php bin/composer-dependency-analyser --composer-json=composer.json --format=junit --dump-usages=symfony/*', $rootDir, 255, null, $junitDumpError);
+        $this->runCommand('php bin/composer-dependency-analyser --composer-json=composer.json --format=junit --dump-usages=symfony/*', $rootDir, 1, null, $junitDumpError);
     }
 
     private function runCommand(

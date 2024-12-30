@@ -211,7 +211,7 @@ class ConsoleFormatter implements ResultFormatter
 
         $this->printRunSummary($result);
 
-        return $hasError ? 255 : 0;
+        return $hasError ? 1 : 0;
     }
 
     /**

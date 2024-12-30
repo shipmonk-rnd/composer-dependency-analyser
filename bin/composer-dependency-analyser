@@ -53,7 +53,7 @@ try {
     InvalidCliException $e
 ) {
     $stdErrPrinter->printLine("\n<red>{$e->getMessage()}</red>" . PHP_EOL);
-    exit(255);
+    exit(1);
 
 } catch (AbortException $e) {
     exit(0);
