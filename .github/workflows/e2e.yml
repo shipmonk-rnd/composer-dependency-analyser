@@ -73,7 +73,6 @@ jobs:
                         cdaArgs: --disable-ext-analysis --config=build/composer-dependency-analyser.php
                     -
                         repo: qossmic/deptrac-src
-                        cdaArgs: --disable-ext-analysis
                     -
                         repo: rectorphp/rector-src
                     -
