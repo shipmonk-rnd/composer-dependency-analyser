@@ -11,6 +11,16 @@ jobs:
                     -
                         repo: TomasVotruba/unused-public
                     -
+                        repo: VasekPurchart/Console-Errors-Bundle
+                    -
+                        repo: VasekPurchart/Phing-Copy-Files-Task
+                    -
+                        repo: VasekPurchart/Phing-Symfony-Command-Task
+                    -
+                        repo: VasekPurchart/Rabbit-Mq-Consumer-Handler-Bundle
+                    -
+                        repo: VasekPurchart/Tracy-Blue-Screen-Bundle
+                    -
                         repo: VincentLanglet/Twig-CS-Fixer
                     -
                         repo: alex-kalanis/kw_files
@@ -22,6 +32,16 @@ jobs:
                         repo: cdn77/PhpFunctions
                     -
                         repo: cdn77/RabbitMQBundle
+                    -
+                        repo: consistence/consistence
+                    -
+                        repo: consistence/consistence-doctrine
+                    -
+                        repo: consistence/consistence-doctrine-symfony
+                    -
+                        repo: consistence/consistence-jms-serializer
+                    -
+                        repo: consistence/consistence-jms-serializer-symfony
                     -
                         repo: contao/contao
                         cdaArgs: --disable-ext-analysis --config=depcheck.php
@@ -42,6 +62,72 @@ jobs:
                         cdaArgs: --disable-ext-analysis
                     -
                         repo: kreait/firebase-php
+                    -
+                        repo: mimmi20/browser-detector
+                    -
+                        repo: mimmi20/browser-detector-version
+                    -
+                        repo: mimmi20/coding-standard
+                    -
+                        repo: mimmi20/ios-build
+                    -
+                        repo: mimmi20/laminas-form-element-group
+                    -
+                        repo: mimmi20/laminas-form-element-links
+                    -
+                        repo: mimmi20/laminas-form-element-paragraph
+                    -
+                        repo: mimmi20/laminas-router-hostname
+                    -
+                        repo: mimmi20/laminasviewrenderer-bootstrap-form
+                    -
+                        repo: mimmi20/laminasviewrenderer-helper-htmlelement
+                    -
+                        repo: mimmi20/laminasviewrenderer-helper-partialrenderer
+                    -
+                        repo: mimmi20/laminasviewrenderer-vite-url
+                    -
+                        repo: mimmi20/macos-build
+                    -
+                        repo: mimmi20/mezzio-generic-authorization
+                    -
+                        repo: mimmi20/mezzio-generic-authorization-acl
+                    -
+                        repo: mimmi20/mezzio-navigation
+                    -
+                        repo: mimmi20/mezzio-navigation-laminasviewrenderer
+                    -
+                        repo: mimmi20/mezzio-navigation-laminasviewrenderer-bootstrap
+                    -
+                        repo: mimmi20/mezzio-router-laminasrouter-factory
+                    -
+                        repo: mimmi20/mezzio-setlocale-middleware
+                    -
+                        repo: mimmi20/monolog-callbackfilterhandler
+                    -
+                        repo: mimmi20/monolog-factory
+                    -
+                        repo: mimmi20/monolog-streamformatter
+                    -
+                        repo: mimmi20/navigation-helper-acceptpage
+                    -
+                        repo: mimmi20/navigation-helper-containerparser
+                    -
+                        repo: mimmi20/navigation-helper-converttopages
+                    -
+                        repo: mimmi20/navigation-helper-findactive
+                    -
+                        repo: mimmi20/navigation-helper-findfromproperty
+                    -
+                        repo: mimmi20/navigation-helper-findroot
+                    -
+                        repo: mimmi20/navigation-helper-htmlify
+                    -
+                        repo: mimmi20/ua-browser-type
+                    -
+                        repo: mimmi20/ua-device-type
+                    -
+                        repo: mimmi20/ua-normalizer
                     -
                         repo: numero2/contao-marketing-suite
                         cdaArgs: --disable-ext-analysis --config=depcheck.php
@@ -73,6 +159,7 @@ jobs:
                         cdaArgs: --disable-ext-analysis --config=build/composer-dependency-analyser.php
                     -
                         repo: qossmic/deptrac-src
+                        cdaArgs: --disable-ext-analysis
                     -
                         repo: rectorphp/rector-src
                     -
@@ -98,9 +185,13 @@ jobs:
                     -
                         repo: shipmonk-rnd/name-collision-detector
                     -
+                        repo: shipmonk-rnd/phpstan-baseline-per-identifier
+                    -
                         repo: shipmonk-rnd/phpstan-rules
                     -
                         repo: symplify/config-transformer
+                    -
+                        repo: symplify/phpstan-rules
                     -
                         repo: teamneusta/pimcore-testing-framework
                     -
