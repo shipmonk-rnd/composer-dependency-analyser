@@ -113,7 +113,6 @@ class UsedSymbolExtractorTest extends TestCase
         ];
 
         yield 'global namespace' => [
-
             __DIR__ . '/data/not-autoloaded/used-symbols/global-namespace.php',
             [
                 SymbolKind::CLASSLIKE => [
@@ -122,7 +121,11 @@ class UsedSymbolExtractorTest extends TestCase
                 ],
                 SymbolKind::FUNCTION => [
                     'PHPUnit\Framework\assertSame' => [7],
+                    'user_defined_function' => [12],
                 ],
+            ],
+            [
+                strtolower('user_defined_function') => SymbolKind::FUNCTION,
             ],
         ];
 
