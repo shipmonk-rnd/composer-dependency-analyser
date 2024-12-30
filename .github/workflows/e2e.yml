@@ -11,6 +11,21 @@ jobs:
                     -
                         repo: TomasVotruba/unused-public
                     -
+                        repo: VasekPurchart/Console-Errors-Bundle
+                        cdaArgs: --config=build/composer-dependency-analyser.config.php
+                    -
+                        repo: VasekPurchart/Phing-Copy-Files-Task
+                        cdaArgs: --config=build/composer-dependency-analyser.config.php
+                    -
+                        repo: VasekPurchart/Phing-Symfony-Command-Task
+                        cdaArgs: --config=build/composer-dependency-analyser.config.php
+                    -
+                        repo: VasekPurchart/Rabbit-Mq-Consumer-Handler-Bundle
+                        cdaArgs: --config=build/composer-dependency-analyser.config.php
+                    -
+                        repo: VasekPurchart/Tracy-Blue-Screen-Bundle
+                        cdaArgs: --config=build/composer-dependency-analyser.config.php
+                    -
                         repo: VincentLanglet/Twig-CS-Fixer
                     -
                         repo: alex-kalanis/kw_files
@@ -22,6 +37,24 @@ jobs:
                         repo: cdn77/PhpFunctions
                     -
                         repo: cdn77/RabbitMQBundle
+                    -
+                        repo: consistence/consistence
+                        cdaArgs: --config=build/composer-dependency-analyser.config.php
+                    -
+                        repo: consistence/consistence-doctrine
+                        cdaArgs: --config=build/composer-dependency-analyser.config.php
+                    -
+                        repo: consistence/consistence-doctrine-symfony
+                        cdaArgs: --config=build/composer-dependency-analyser.config.php
+                    -
+                        repo: consistence/consistence-jms-serializer
+                        cdaArgs: --config=build/composer-dependency-analyser.config.php
+                    -
+                        repo: consistence/consistence-jms-serializer-symfony
+                        cdaArgs: --config=build/composer-dependency-analyser.config.php
+                    -
+                        repo: consistence/consistence-robot-loader-class-finder
+                        cdaArgs: --config=build/composer-dependency-analyser.config.php
                     -
                         repo: contao/contao
                         cdaArgs: --disable-ext-analysis --config=depcheck.php
@@ -42,6 +75,78 @@ jobs:
                         cdaArgs: --disable-ext-analysis
                     -
                         repo: kreait/firebase-php
+                    -
+                        repo: mimmi20/browser-detector
+                    -
+                        repo: mimmi20/browser-detector-version
+                    -
+                        repo: mimmi20/coding-standard
+                    -
+                        repo: mimmi20/ios-build
+                    -
+                        repo: mimmi20/laminas-form-element-group
+                    -
+                        repo: mimmi20/laminas-form-element-links
+                    -
+                        repo: mimmi20/laminas-form-element-paragraph
+                    -
+                        repo: mimmi20/laminas-module-errorhandling
+                    -
+                        repo: mimmi20/laminas-router-hostname
+                    -
+                        repo: mimmi20/laminasviewrenderer-bootstrap-form
+                    -
+                        repo: mimmi20/laminasviewrenderer-flash-message
+                    -
+                        repo: mimmi20/laminasviewrenderer-helper-htmlelement
+                    -
+                        repo: mimmi20/laminasviewrenderer-helper-partialrenderer
+                    -
+                        repo: mimmi20/laminasviewrenderer-js-log
+                    -
+                        repo: mimmi20/laminasviewrenderer-revision
+                    -
+                        repo: mimmi20/laminasviewrenderer-vite-url
+                    -
+                        repo: mimmi20/macos-build
+                    -
+                        repo: mimmi20/mezzio-generic-authorization
+                    -
+                        repo: mimmi20/mezzio-generic-authorization-acl
+                    -
+                        repo: mimmi20/mezzio-navigation
+                    -
+                        repo: mimmi20/mezzio-navigation-laminasviewrenderer
+                    -
+                        repo: mimmi20/mezzio-navigation-laminasviewrenderer-bootstrap
+                    -
+                        repo: mimmi20/mezzio-router-laminasrouter-factory
+                    -
+                        repo: mimmi20/mezzio-setlocale-middleware
+                    -
+                        repo: mimmi20/monolog-callbackfilterhandler
+                    -
+                        repo: mimmi20/monolog-streamformatter
+                    -
+                        repo: mimmi20/navigation-helper-acceptpage
+                    -
+                        repo: mimmi20/navigation-helper-containerparser
+                    -
+                        repo: mimmi20/navigation-helper-converttopages
+                    -
+                        repo: mimmi20/navigation-helper-findactive
+                    -
+                        repo: mimmi20/navigation-helper-findfromproperty
+                    -
+                        repo: mimmi20/navigation-helper-findroot
+                    -
+                        repo: mimmi20/navigation-helper-htmlify
+                    -
+                        repo: mimmi20/ua-browser-type
+                    -
+                        repo: mimmi20/ua-device-type
+                    -
+                        repo: mimmi20/ua-normalizer
                     -
                         repo: numero2/contao-marketing-suite
                         cdaArgs: --disable-ext-analysis --config=depcheck.php
@@ -73,7 +178,6 @@ jobs:
                         cdaArgs: --disable-ext-analysis --config=build/composer-dependency-analyser.php
                     -
                         repo: qossmic/deptrac-src
-                        cdaArgs: --disable-ext-analysis
                     -
                         repo: rectorphp/rector-src
                     -
@@ -98,6 +202,8 @@ jobs:
                         repo: shipmonk-rnd/input-mapper
                     -
                         repo: shipmonk-rnd/name-collision-detector
+                    -
+                        repo: shipmonk-rnd/phpstan-baseline-per-identifier
                     -
                         repo: shipmonk-rnd/phpstan-rules
                     -
