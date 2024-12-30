@@ -59,6 +59,7 @@ class UsedSymbolExtractorTest extends TestCase
             [],
             [
                 strtolower('PDO') => SymbolKind::CLASSLIKE,
+                strtolower('SESSION_ID') => SymbolKind::CONSTANT,
             ],
         ];
 

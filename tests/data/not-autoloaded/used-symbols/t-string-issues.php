@@ -10,6 +10,8 @@ use function array_walk;
 
 class Test
 {
+    public const string SESSION_ID = '...';
+
     use SomeTrait {
         array_filter insteadof array_values;
         array_map as array_walk;

@@ -426,6 +426,7 @@ class UsedSymbolExtractor
             || $tokenAfterName[0] === T_INSTEADOF
             || $tokenAfterName[0] === T_AS
             || $tokenAfterName === ':'
+            || $tokenAfterName === '='
         ) {
             return false;
         }
