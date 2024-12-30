@@ -35,7 +35,7 @@ class Foo {
 
     public function foo(Error $error): void // not PHPUnit\Framework\Error anymore
     {
-
+        user_defined_function();
     }
 
 }

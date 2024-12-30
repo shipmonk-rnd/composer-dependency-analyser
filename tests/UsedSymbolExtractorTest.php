@@ -72,6 +72,12 @@ class UsedSymbolExtractorTest extends TestCase
                     'PHPUnit\Framework\Error' => [14],
                     'LogicException' => [15, 20],
                 ],
+                SymbolKind::FUNCTION => [
+                    'user_defined_function' => [38],
+                ],
+            ],
+            [
+                'user_defined_function' => SymbolKind::FUNCTION,
             ],
         ];
 
