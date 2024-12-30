@@ -82,6 +82,7 @@ do {
 $result[] = [
     'repo' => 'phpstan/phpstan-src',
     'cdaArgs' => '--config=build/composer-dependency-analyser.php',
+    'php' => '8.4',
 ];
 $result[] = [
     'repo' => 'qossmic/deptrac-src',
