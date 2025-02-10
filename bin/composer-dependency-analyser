@@ -10,7 +10,7 @@ use ShipMonk\ComposerDependencyAnalyser\Initializer;
 use ShipMonk\ComposerDependencyAnalyser\Printer;
 use ShipMonk\ComposerDependencyAnalyser\Stopwatch;
 
-error_reporting(E_ALL);
+error_reporting(E_ALL & ~E_DEPRECATED);
 ini_set('display_errors', 'stderr');
 
 $psr4Prefix = 'ShipMonk\\ComposerDependencyAnalyser\\';
