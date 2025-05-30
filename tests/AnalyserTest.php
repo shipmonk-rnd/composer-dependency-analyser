@@ -684,7 +684,10 @@ class AnalyserTest extends TestCase
     public function testPharSupport(): void
     {
         $canCreatePhar = ini_set('phar.readonly', '0');
-        self::assertNotFalse($canCreatePhar, 'Your php runtime is not configured to allow phar creation. Use `php -dphar.readonly=0`');
+
+        if ($canCreatePhar === false) {
+            self::markTestSkipped('Your php runtime is not configured to allow phar creation. Use `php -dphar.readonly=0`');
+        }
 
         $pharPath = __DIR__ . '/data/not-autoloaded/phar/org/package/inner.phar';
 
