@@ -119,6 +119,8 @@ return $config
     ->ignoreErrorsOnPath(__DIR__ . '/cache/DIC.php', [ErrorType::SHADOW_DEPENDENCY])
     ->ignoreErrorsOnPackage('symfony/polyfill-php73', [ErrorType::UNUSED_DEPENDENCY])
     ->ignoreErrorsOnPackageAndPath('symfony/console', __DIR__ . '/src/OptionalCommand.php', [ErrorType::SHADOW_DEPENDENCY])
+    ->ignoreErrorsOnExtension('ext-intl', [ErrorType::SHADOW_DEPENDENCY])
+    ->ignoreErrorsOnExtensionAndPath('ext-sqlite3', __DIR__ . '/tests',  [ErrorType::SHADOW_DEPENDENCY])
 
     //// Ignoring unknown symbols
     ->ignoreUnknownClasses(['Memcached'])
