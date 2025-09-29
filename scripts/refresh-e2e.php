@@ -112,15 +112,21 @@ foreach ($result as $index => &$item) {
         || $item['repo'] === 'oveleon/contao-recommendation-bundle'
         || $item['repo'] === 'numero2/contao-marketing-suite' // since 1.8.2 (shadow symfony/contracts via trigger_deprecation)
         || $item['repo'] === 'teamneusta/pimcore-testing-framework' // since 1.8.2 (shadow symfony/contracts via trigger_deprecation)
+        || $item['repo'] === 'mimmi20/browser-detector-version'
+        || $item['repo'] === 'mimmi20/browser-detector'
+        || $item['repo'] === 'mimmi20/coding-standard'
+        || $item['repo'] === 'mimmi20/ua-normalizer'
+        || $item['repo'] === 'oveleon/contao-company-bundle'
+        || $item['repo'] === 'oveleon/contao-config-driver-bundle'
+        || $item['repo'] === 'oveleon/contao-cookiebar'
+        || $item['repo'] === 'oveleon/contao-glossary-bundle'
+        || $item['repo'] === 'oveleon/contao-theme-compiler-bundle'
     ) {
         unset($result[$index]); // failing builds
     }
 
     if (
         $item['repo'] === 'wallabag/wallabag'
-        || $item['repo'] === 'oveleon/contao-theme-compiler-bundle'
-        || $item['repo'] === 'oveleon/contao-glossary-bundle'
-        || $item['repo'] === 'oveleon/contao-cookiebar'
         || $item['repo'] === 'numero2/contao-marketing-suite'
         || $item['repo'] === 'inspirum/xml-php'
         || $item['repo'] === 'inspirum/balikobot-php'

@@ -76,12 +76,6 @@ jobs:
                     -
                         repo: kreait/firebase-php
                     -
-                        repo: mimmi20/browser-detector
-                    -
-                        repo: mimmi20/browser-detector-version
-                    -
-                        repo: mimmi20/coding-standard
-                    -
                         repo: mimmi20/ios-build
                     -
                         repo: mimmi20/laminas-form-element-group
@@ -146,30 +140,8 @@ jobs:
                     -
                         repo: mimmi20/ua-device-type
                     -
-                        repo: mimmi20/ua-normalizer
-                    -
                         repo: numero2/contao-opengraph3
                         cdaArgs: --config=depcheck.php
-                    -
-                        repo: oveleon/contao-company-bundle
-                        composerArgs: --no-plugins
-                        cdaArgs: --config=depcheck.php
-                    -
-                        repo: oveleon/contao-config-driver-bundle
-                        composerArgs: --no-plugins
-                        cdaArgs: --config=depcheck.php
-                    -
-                        repo: oveleon/contao-cookiebar
-                        composerArgs: --no-plugins
-                        cdaArgs: --disable-ext-analysis --config=depcheck.php
-                    -
-                        repo: oveleon/contao-glossary-bundle
-                        composerArgs: --no-plugins
-                        cdaArgs: --disable-ext-analysis --config=depcheck.php
-                    -
-                        repo: oveleon/contao-theme-compiler-bundle
-                        composerArgs: --no-plugins
-                        cdaArgs: --disable-ext-analysis --config=depcheck.php
                     -
                         repo: phpstan/phpstan-src
                         cdaArgs: --disable-ext-analysis --config=build/composer-dependency-analyser.php
