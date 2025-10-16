@@ -65,6 +65,12 @@ This tool reads your `composer.json` and scans all paths listed in `autoload` & 
   - For applications, it can break once you run it with `composer install --no-dev`
   - You should move those from `require-dev` to `require`
 
+### Dev source code used in production
+  - Detects when production code imports classes from dev-only autoload paths (e.g., `src-dev/`, `tests/`)
+  - This happens when the same namespace is mapped to both production and dev paths
+  - Can cause runtime failures when dev directories are excluded from deployment
+  - You should either move the used classes to production paths or refactor your code
+
 ### Prod dependencies used only in dev paths
   - For libraries, this miscategorization can lead to uselessly required dependencies for your users
   - You should move those from `require` to `require-dev`

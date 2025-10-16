@@ -21,6 +21,7 @@ use function ini_set;
 use function realpath;
 use function strtr;
 use function unlink;
+use const DIRECTORY_SEPARATOR;
 
 class AnalyserTest extends TestCase
 {
@@ -467,6 +468,7 @@ class AnalyserTest extends TestCase
             array_filter($args[ErrorType::UNKNOWN_FUNCTION] ?? []), // @phpstan-ignore-line ignore mixed
             array_filter($args[ErrorType::SHADOW_DEPENDENCY] ?? []), // @phpstan-ignore-line ignore mixed
             array_filter($args[ErrorType::DEV_DEPENDENCY_IN_PROD] ?? []), // @phpstan-ignore-line ignore mixed
+            array_filter($args[ErrorType::DEV_SOURCE_IN_PROD] ?? []), // @phpstan-ignore-line ignore mixed
             array_filter($args[ErrorType::PROD_DEPENDENCY_ONLY_IN_DEV] ?? []), // @phpstan-ignore-line ignore mixed
             array_filter($args[ErrorType::UNUSED_DEPENDENCY] ?? []), // @phpstan-ignore-line ignore mixed
             $unusedIgnores
@@ -812,6 +814,43 @@ class AnalyserTest extends TestCase
         $this->assertResultsWithoutUsages($this->createAnalysisResult(1, []), $result);
     }
 
+    public function testDevSourceInProduction(): void
+    {
+        require_once __DIR__ . '/data/not-autoloaded/dev-source-in-prod/src-dev/DevOnlyClass.php';
+
+        $vendorDir = realpath(__DIR__ . '/data/autoloaded/vendor');
+        $prodPath = realpath(__DIR__ . '/data/not-autoloaded/dev-source-in-prod/src');
+        $devPath = realpath(__DIR__ . '/data/not-autoloaded/dev-source-in-prod/src-dev');
+        self::assertNotFalse($vendorDir);
+        self::assertNotFalse($prodPath);
+        self::assertNotFalse($devPath);
+
+        $config = new Configuration();
+        $config->addPathToScan($prodPath, false);
+
+        $autoloadPaths = [
+            $prodPath => false,
+            $devPath => true,
+        ];
+
+        $detector = new Analyser(
+            $this->getStopwatchMock(),
+            $vendorDir,
+            [$vendorDir => $this->getClassLoaderMock()],
+            $config,
+            [],
+            $autoloadPaths
+        );
+        $result = $detector->run();
+
+        $prodFile = $prodPath . DIRECTORY_SEPARATOR . 'ProductionClass.php';
+        $expected = $this->createAnalysisResult(1, [
+            ErrorType::DEV_SOURCE_IN_PROD => ['src-dev' => ['App\DevOnlyClass' => [new SymbolUsage($prodFile, 11, SymbolKind::CLASSLIKE)]]],
+        ]);
+
+        $this->assertResultsWithoutUsages($expected, $result);
+    }
+
     private function getStopwatchMock(): Stopwatch
     {
         $stopwatch = $this->createMock(Stopwatch::class);
@@ -840,6 +879,7 @@ class AnalyserTest extends TestCase
         self::assertEquals($expectedResult->getUnknownFunctionErrors(), $result->getUnknownFunctionErrors(), 'Unknown functions mismatch');
         self::assertEquals($expectedResult->getShadowDependencyErrors(), $result->getShadowDependencyErrors(), 'Shadow dependency mismatch');
         self::assertEquals($expectedResult->getDevDependencyInProductionErrors(), $result->getDevDependencyInProductionErrors(), 'Dev dependency in production mismatch');
+        self::assertEquals($expectedResult->getDevSourceInProductionErrors(), $result->getDevSourceInProductionErrors(), 'Dev source in production mismatch');
         self::assertEquals($expectedResult->getProdDependencyOnlyInDevErrors(), $result->getProdDependencyOnlyInDevErrors(), 'Prod dependency only in dev mismatch');
         self::assertEquals($expectedResult->getUnusedDependencyErrors(), $result->getUnusedDependencyErrors(), 'Unused dependency mismatch');
     }

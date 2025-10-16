@@ -121,6 +121,7 @@ class ConsoleFormatter implements ResultFormatter
         $unknownFunctionErrors = $result->getUnknownFunctionErrors();
         $shadowDependencyErrors = $result->getShadowDependencyErrors();
         $devDependencyInProductionErrors = $result->getDevDependencyInProductionErrors();
+        $devSourceInProductionErrors = $result->getDevSourceInProductionErrors();
         $prodDependencyOnlyInDevErrors = $result->getProdDependencyOnlyInDevErrors();
         $unusedDependencyErrors = $result->getUnusedDependencyErrors();
 
@@ -128,6 +129,7 @@ class ConsoleFormatter implements ResultFormatter
         $unknownFunctionErrorsCount = count($unknownFunctionErrors);
         $shadowDependencyErrorsCount = count($shadowDependencyErrors);
         $devDependencyInProductionErrorsCount = count($devDependencyInProductionErrors);
+        $devSourceInProductionErrorsCount = count($devSourceInProductionErrors);
         $prodDependencyOnlyInDevErrorsCount = count($prodDependencyOnlyInDevErrors);
         $unusedDependencyErrorsCount = count($unusedDependencyErrors);
 
@@ -171,6 +173,17 @@ class ConsoleFormatter implements ResultFormatter
                 "Found $devDependencyInProductionErrorsCount dev $dependencies in production code!",
                 'those should probably be moved to "require" section in composer.json',
                 $devDependencyInProductionErrors,
+                $maxShownUsages
+            );
+        }
+
+        if ($devSourceInProductionErrorsCount > 0) {
+            $hasError = true;
+            $sources = $this->pluralize($devSourceInProductionErrorsCount, 'dev source');
+            $this->printPackageBasedErrors(
+                "Found $devSourceInProductionErrorsCount $sources used in production code!",
+                'source code from autoload-dev paths should not be used in production',
+                $devSourceInProductionErrors,
                 $maxShownUsages
             );
         }

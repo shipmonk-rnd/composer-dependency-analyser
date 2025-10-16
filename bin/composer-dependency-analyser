@@ -41,7 +41,7 @@ try {
     $configuration = $initializer->initConfiguration($options, $composerJson);
     $classLoaders = $initializer->initComposerClassLoaders();
 
-    $analyser = new Analyser($stopwatch, $composerJson->composerVendorDir, $classLoaders, $configuration, $composerJson->dependencies);
+    $analyser = new Analyser($stopwatch, $composerJson->composerVendorDir, $classLoaders, $configuration, $composerJson->dependencies, $composerJson->autoloadPaths);
     $result = $analyser->run();
 
     $formatter = $initializer->initFormatter($options);

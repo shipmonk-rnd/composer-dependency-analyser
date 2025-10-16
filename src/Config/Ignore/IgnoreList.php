@@ -238,7 +238,7 @@ class IgnoreList
     }
 
     /**
-     * @param ErrorType::SHADOW_DEPENDENCY|ErrorType::UNUSED_DEPENDENCY|ErrorType::DEV_DEPENDENCY_IN_PROD|ErrorType::PROD_DEPENDENCY_ONLY_IN_DEV $errorType
+     * @param ErrorType::SHADOW_DEPENDENCY|ErrorType::UNUSED_DEPENDENCY|ErrorType::DEV_DEPENDENCY_IN_PROD|ErrorType::DEV_SOURCE_IN_PROD|ErrorType::PROD_DEPENDENCY_ONLY_IN_DEV $errorType
      */
     public function shouldIgnoreError(string $errorType, ?string $realPath, ?string $dependency): bool
     {
