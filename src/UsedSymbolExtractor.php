@@ -32,6 +32,7 @@ use const T_NEW;
 use const T_NS_SEPARATOR;
 use const T_NULLSAFE_OBJECT_OPERATOR;
 use const T_OBJECT_OPERATOR;
+use const T_OPEN_TAG;
 use const T_STRING;
 use const T_TRAIT;
 use const T_USE;
@@ -225,6 +226,12 @@ class UsedSymbolExtractor
             $token = $this->tokens[$this->pointer++];
 
             switch ($token->id) {
+                case T_WHITESPACE:
+                case T_COMMENT:
+                case T_DOC_COMMENT:
+                case T_OPEN_TAG:
+                    continue 2;
+
                 case T_STRING:
                     $alias = $token->text;
 
@@ -257,11 +264,6 @@ class UsedSymbolExtractor
                 case T_AS:
                     $explicitAlias = true;
                     $alias = '';
-                    break;
-
-                case T_WHITESPACE:
-                case T_COMMENT:
-                case T_DOC_COMMENT:
                     break;
 
                 case ord(','):
@@ -364,7 +366,7 @@ class UsedSymbolExtractor
         while ($pointer >= 0) {
             $token = $this->tokens[$pointer];
 
-            if ($token->id === T_WHITESPACE || $token->id === T_COMMENT || $token->id === T_DOC_COMMENT) {
+            if ($token->isIgnorable()) {
                 $pointer--;
                 continue;
             }
@@ -380,7 +382,7 @@ class UsedSymbolExtractor
         while ($pointer < $this->numTokens) {
             $token = $this->tokens[$pointer];
 
-            if ($token->id === T_WHITESPACE || $token->id === T_COMMENT || $token->id === T_DOC_COMMENT) {
+            if ($token->isIgnorable()) {
                 $pointer++;
                 continue;
             }
