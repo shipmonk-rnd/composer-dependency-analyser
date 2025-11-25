@@ -136,10 +136,6 @@ jobs:
                     -
                         repo: mimmi20/navigation-helper-htmlify
                     -
-                        repo: mimmi20/ua-browser-type
-                    -
-                        repo: mimmi20/ua-device-type
-                    -
                         repo: numero2/contao-opengraph3
                         cdaArgs: --config=depcheck.php
                     -
