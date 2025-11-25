@@ -5,7 +5,7 @@ namespace ShipMonk\ComposerDependencyAnalyser;
 use PHPUnit\Framework\TestCase;
 use function file_get_contents;
 use function strtolower;
-use const PHP_VERSION_ID;
+use const PHP_VERSION_ID; // only needed for PHP 8.1+ (enum) and 8.4+ (property hooks) checks
 
 class UsedSymbolExtractorTest extends TestCase
 {
@@ -197,18 +197,16 @@ class UsedSymbolExtractorTest extends TestCase
             self::extensionSymbolsForExtensionsTestCases(),
         ];
 
-        if (PHP_VERSION_ID >= 80000) {
-            yield 'attribute' => [
-                __DIR__ . '/data/not-autoloaded/used-symbols/attribute.php',
-                [
-                    SymbolKind::CLASSLIKE => [
-                        'SomeAttribute' => [3],
-                        'Assert\NotNull' => [7],
-                        'Assert\NotBlank' => [8],
-                    ],
+        yield 'attribute' => [
+            __DIR__ . '/data/not-autoloaded/used-symbols/attribute.php',
+            [
+                SymbolKind::CLASSLIKE => [
+                    'SomeAttribute' => [3],
+                    'Assert\NotNull' => [7],
+                    'Assert\NotBlank' => [8],
                 ],
-            ];
-        }
+            ],
+        ];
 
         if (PHP_VERSION_ID >= 80400) {
             yield 'property hooks' => [

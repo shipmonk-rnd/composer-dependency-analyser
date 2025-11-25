@@ -113,7 +113,7 @@ class Cli
         $position = strpos($arg, '=');
 
         if ($position !== false) {
-            return substr($arg, $position + 1); // @phpstan-ignore-line this will never be false
+            return substr($arg, $position + 1);
         }
 
         return null;

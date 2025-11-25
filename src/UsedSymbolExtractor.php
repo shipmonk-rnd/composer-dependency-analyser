@@ -2,15 +2,15 @@
 
 namespace ShipMonk\ComposerDependencyAnalyser;
 
+use PhpToken;
+use function array_values;
 use function count;
 use function explode;
-use function is_array;
 use function ltrim;
+use function ord;
 use function strlen;
-use function strpos;
 use function strtolower;
 use function substr;
-use function token_get_all;
 use const PHP_VERSION_ID;
 use const T_AS;
 use const T_ATTRIBUTE;
@@ -43,23 +43,17 @@ class UsedSymbolExtractor
 {
 
     /**
-     * @var list<array{int, string, int}|string>
+     * @var list<PhpToken>
      */
-    private $tokens;
+    private array $tokens;
 
-    /**
-     * @var int
-     */
-    private $numTokens;
+    private int $numTokens;
 
-    /**
-     * @var int
-     */
-    private $pointer = 0;
+    private int $pointer = 0;
 
     public function __construct(string $code)
     {
-        $this->tokens = token_get_all($code);
+        $this->tokens = array_values(PhpToken::tokenize($code));
         $this->numTokens = count($this->tokens);
     }
 
@@ -91,218 +85,127 @@ class UsedSymbolExtractor
         while ($this->pointer < $numTokens) {
             $token = $tokens[$this->pointer++];
 
-            if (is_array($token)) {
-                switch ($token[0]) {
-                    case T_CLASS:
-                    case T_INTERFACE:
-                    case T_TRAIT:
-                    case PHP_VERSION_ID >= 80100 ? T_ENUM : -1:
-                        $inClassLevel = $level + 1;
-                        break;
+            switch ($token->id) {
+                case T_CLASS:
+                case T_INTERFACE:
+                case T_TRAIT:
+                case PHP_VERSION_ID >= 80100 ? T_ENUM : -1:
+                    $inClassLevel = $level + 1;
+                    break;
 
-                    case T_USE:
-                        if ($inClassLevel === null) {
-                            foreach ($this->parseUseStatement() as $alias => [$fullSymbolName, $symbolKind]) {
-                                $useStatements[$alias] = $this->normalizeBackslash($fullSymbolName);
-                                $useStatementKinds[$alias] = $symbolKind;
-                            }
+                case T_USE:
+                    if ($inClassLevel === null) {
+                        foreach ($this->parseUseStatement() as $alias => [$fullSymbolName, $symbolKind]) {
+                            $useStatements[$alias] = $this->normalizeBackslash($fullSymbolName);
+                            $useStatementKinds[$alias] = $symbolKind;
+                        }
+                    }
+
+                    break;
+
+                case T_ATTRIBUTE:
+                    $inAttributeSquareLevel = ++$squareLevel;
+                    break;
+
+                case T_NAMESPACE:
+                    // namespace change
+                    $inGlobalScope = false;
+                    $useStatements = [];
+                    $useStatementKinds = [];
+                    break;
+
+                case T_NAME_FULLY_QUALIFIED:
+                    $symbolName = $this->normalizeBackslash($token->text);
+                    $lowerSymbolName = strtolower($symbolName);
+                    $kind = $knownSymbols[$lowerSymbolName] ?? $this->getFqnSymbolKind($this->pointer - 2, $this->pointer, $inAttributeSquareLevel !== null);
+                    $usedSymbols[$kind][$symbolName][] = $token->line;
+                    break;
+
+                case T_NAME_QUALIFIED:
+                    [$neededAlias] = explode('\\', $token->text, 2);
+
+                    if (isset($useStatements[$neededAlias])) {
+                        $symbolName = $useStatements[$neededAlias] . substr($token->text, strlen($neededAlias));
+                    } elseif ($inGlobalScope) {
+                        $symbolName = $token->text;
+                    } else {
+                        break;
+                    }
+
+                    $lowerSymbolName = strtolower($symbolName);
+                    $kind = $knownSymbols[$lowerSymbolName] ?? $this->getFqnSymbolKind($this->pointer - 2, $this->pointer, $inAttributeSquareLevel !== null);
+                    $usedSymbols[$kind][$symbolName][] = $token->line;
+
+                    break;
+
+                case T_STRING:
+                    $name = $token->text;
+                    $lowerName = strtolower($name);
+                    $pointerBeforeName = $this->pointer - 2;
+                    $pointerAfterName = $this->pointer;
+
+                    if (!$this->canBeSymbolName($pointerBeforeName, $pointerAfterName)) {
+                        break;
+                    }
+
+                    if (isset($useStatements[$name])) {
+                        $symbolName = $useStatements[$name];
+                        $kind = $useStatementKinds[$name];
+                        $usedSymbols[$kind][$symbolName][] = $token->line;
+
+                    } elseif (isset($knownSymbols[$lowerName])) {
+                        $symbolName = $name;
+                        $kind = $knownSymbols[$lowerName];
+
+                        if (!$inGlobalScope && $kind === SymbolKind::CLASSLIKE) {
+                            break; // cannot use class-like symbols in non-global scope when not imported
                         }
 
-                        break;
+                        $usedSymbols[$kind][$symbolName][] = $token->line;
 
-                    case PHP_VERSION_ID > 80000 ? T_ATTRIBUTE : -1:
-                        $inAttributeSquareLevel = ++$squareLevel;
-                        break;
+                    } elseif (
+                        $inGlobalScope
+                        && $this->getTokenAfter($pointerAfterName)->id === T_DOUBLE_COLON
+                    ) {
+                        // unqualified static access (e.g., Foo::class, Foo::method(), Foo::CONSTANT) in global scope
+                        // register to allow detection of classes not in $knownSymbols
+                        $usedSymbols[SymbolKind::CLASSLIKE][$name][] = $token->line;
+                    }
 
-                    case PHP_VERSION_ID >= 80000 ? T_NAMESPACE : -1:
-                        // namespace change
-                        $inGlobalScope = false;
-                        $useStatements = [];
-                        $useStatementKinds = [];
-                        break;
+                    break;
 
-                    case PHP_VERSION_ID >= 80000 ? T_NAME_FULLY_QUALIFIED : -1:
-                        $symbolName = $this->normalizeBackslash($token[1]);
-                        $lowerSymbolName = strtolower($symbolName);
-                        $kind = $knownSymbols[$lowerSymbolName] ?? $this->getFqnSymbolKind($this->pointer - 2, $this->pointer, $inAttributeSquareLevel !== null);
-                        $usedSymbols[$kind][$symbolName][] = $token[2];
-                        break;
+                case T_CURLY_OPEN:
+                case T_DOLLAR_OPEN_CURLY_BRACES:
+                    $level++;
+                    break;
 
-                    case PHP_VERSION_ID >= 80000 ? T_NAME_QUALIFIED : -1:
-                        [$neededAlias] = explode('\\', $token[1], 2);
+                case ord('{'):
+                    $level++;
+                    break;
 
-                        if (isset($useStatements[$neededAlias])) {
-                            $symbolName = $useStatements[$neededAlias] . substr($token[1], strlen($neededAlias));
-                        } elseif ($inGlobalScope) {
-                            $symbolName = $token[1];
-                        } else {
-                            break;
-                        }
+                case ord('}'):
+                    if ($level === $inClassLevel) {
+                        $inClassLevel = null;
+                    }
 
-                        $lowerSymbolName = strtolower($symbolName);
-                        $kind = $knownSymbols[$lowerSymbolName] ?? $this->getFqnSymbolKind($this->pointer - 2, $this->pointer, $inAttributeSquareLevel !== null);
-                        $usedSymbols[$kind][$symbolName][] = $token[2];
+                    $level--;
+                    break;
 
-                        break;
+                case ord('['):
+                    $squareLevel++;
+                    break;
 
-                    case PHP_VERSION_ID >= 80000 ? T_STRING : -1:
-                        $name = $token[1];
-                        $lowerName = strtolower($name);
-                        $pointerBeforeName = $this->pointer - 2;
-                        $pointerAfterName = $this->pointer;
+                case ord(']'):
+                    if ($squareLevel === $inAttributeSquareLevel) {
+                        $inAttributeSquareLevel = null;
+                    }
 
-                        if (!$this->canBeSymbolName($pointerBeforeName, $pointerAfterName)) {
-                            break;
-                        }
-
-                        if (isset($useStatements[$name])) {
-                            $symbolName = $useStatements[$name];
-                            $kind = $useStatementKinds[$name];
-                            $usedSymbols[$kind][$symbolName][] = $token[2];
-
-                        } elseif (isset($knownSymbols[$lowerName])) {
-                            $symbolName = $name;
-                            $kind = $knownSymbols[$lowerName];
-
-                            if (!$inGlobalScope && $kind === SymbolKind::CLASSLIKE) {
-                                break; // cannot use class-like symbols in non-global scope when not imported
-                            }
-
-                            $usedSymbols[$kind][$symbolName][] = $token[2];
-
-                        } elseif (
-                            $inGlobalScope
-                            && $this->getTokenAfter($pointerAfterName)[0] === T_DOUBLE_COLON
-                        ) {
-                            // unqualified static access (e.g., Foo::class, Foo::method(), Foo::CONSTANT) in global scope
-                            // register to allow detection of classes not in $knownSymbols
-                            $usedSymbols[SymbolKind::CLASSLIKE][$name][] = $token[2];
-                        }
-
-                        break;
-
-                    case PHP_VERSION_ID < 80000 ? T_NAMESPACE : -1:
-                        $this->pointer++;
-                        $nextName = $this->parseNameForOldPhp();
-
-                        if (substr($nextName, 0, 1) !== '\\') { // not a namespace-relative name, but a new namespace declaration
-                            // namespace change
-                            $inGlobalScope = false;
-                            $useStatements = [];
-                            $useStatementKinds = [];
-                        }
-
-                        break;
-
-                    case PHP_VERSION_ID < 80000 ? T_NS_SEPARATOR : -1:
-                        $pointerBeforeName = $this->pointer - 2;
-                        $symbolName = $this->normalizeBackslash($this->parseNameForOldPhp());
-                        $lowerSymbolName = strtolower($symbolName);
-
-                        if ($symbolName !== '') { // e.g. \array (NS separator followed by not-a-name)
-                            $kind = $knownSymbols[$lowerSymbolName] ?? $this->getFqnSymbolKind($pointerBeforeName, $this->pointer - 1, false);
-                            $usedSymbols[$kind][$symbolName][] = $token[2];
-                        }
-
-                        break;
-
-                    case PHP_VERSION_ID < 80000 ? T_STRING : -1:
-                        $pointerBeforeName = $this->pointer - 2;
-                        $name = $this->parseNameForOldPhp();
-                        $lowerName = strtolower($name);
-                        $pointerAfterName = $this->pointer - 1;
-
-                        if (!$this->canBeSymbolName($pointerBeforeName, $pointerAfterName)) {
-                            break;
-                        }
-
-                        if (isset($useStatements[$name])) { // unqualified name
-                            $symbolName = $useStatements[$name];
-                            $kind = $useStatementKinds[$name];
-                            $usedSymbols[$kind][$symbolName][] = $token[2];
-
-                        } elseif (isset($knownSymbols[$lowerName])) {
-                            $symbolName = $name;
-                            $kind = $knownSymbols[$lowerName];
-
-                            if (!$inGlobalScope && $kind === SymbolKind::CLASSLIKE) {
-                                break; // cannot use class-like symbols in non-global scope when not imported
-                            }
-
-                            $usedSymbols[$kind][$symbolName][] = $token[2];
-
-                        } else {
-                            [$neededAlias] = explode('\\', $name, 2);
-
-                            if (isset($useStatements[$neededAlias])) { // qualified name
-                                $symbolName = $useStatements[$neededAlias] . substr($name, strlen($neededAlias));
-                                $kind = $this->getFqnSymbolKind($pointerBeforeName, $pointerAfterName, false);
-                                $usedSymbols[$kind][$symbolName][] = $token[2];
-
-                            } elseif ($inGlobalScope && strpos($name, '\\') !== false) {
-                                $symbolName = $name;
-                                $kind = $this->getFqnSymbolKind($pointerBeforeName, $pointerAfterName, false);
-                                $usedSymbols[$kind][$symbolName][] = $token[2];
-
-                            } elseif (
-                                strpos($name, '\\') === false
-                                && $inGlobalScope
-                                && $this->getTokenAfter($pointerAfterName)[0] === T_DOUBLE_COLON
-                            ) {
-                                // unqualified static access (e.g., Foo::class, Foo::method(), Foo::CONSTANT) in global scope
-                                // register to allow detection of classes not in $knownSymbols
-                                $usedSymbols[SymbolKind::CLASSLIKE][$name][] = $token[2];
-                            }
-                        }
-
-                        break;
-
-                    case T_CURLY_OPEN:
-                    case T_DOLLAR_OPEN_CURLY_BRACES:
-                        $level++;
-                        break;
-                }
-            } elseif ($token === '{') {
-                $level++;
-            } elseif ($token === '}') {
-                if ($level === $inClassLevel) {
-                    $inClassLevel = null;
-                }
-
-                $level--;
-            } elseif ($token === '[') {
-                $squareLevel++;
-            } elseif ($token === ']') {
-                if ($squareLevel === $inAttributeSquareLevel) {
-                    $inAttributeSquareLevel = null;
-                }
-
-                $squareLevel--;
+                    $squareLevel--;
+                    break;
             }
         }
 
         return $usedSymbols;
-    }
-
-    /**
-     * See old behaviour: https://wiki.php.net/rfc/namespaced_names_as_token
-     */
-    private function parseNameForOldPhp(): string
-    {
-        $this->pointer--; // we already detected start token above
-        $name = '';
-
-        while ($this->pointer < $this->numTokens) {
-            $token = $this->tokens[$this->pointer++];
-
-            if (!is_array($token) || ($token[0] !== T_STRING && $token[0] !== T_NS_SEPARATOR)) {
-                break;
-            }
-
-            $name .= $token[1];
-        }
-
-        return $name;
     }
 
     /**
@@ -321,72 +224,73 @@ class UsedSymbolExtractor
         while ($this->pointer < $this->numTokens) {
             $token = $this->tokens[$this->pointer++];
 
-            if (is_array($token)) {
-                switch ($token[0]) {
-                    case T_STRING:
-                        $alias = $token[1];
+            switch ($token->id) {
+                case T_STRING:
+                    $alias = $token->text;
 
-                        if (!$explicitAlias) {
-                            $class .= $alias;
-                        }
+                    if (!$explicitAlias) {
+                        $class .= $alias;
+                    }
 
-                        break;
+                    break;
 
-                    case PHP_VERSION_ID >= 80000 ? T_NAME_QUALIFIED : -1:
-                    case PHP_VERSION_ID >= 80000 ? T_NAME_FULLY_QUALIFIED : -1:
-                        $class .= $token[1];
-                        $classSplit = explode('\\', $token[1]);
-                        $alias = $classSplit[count($classSplit) - 1];
-                        break;
+                case T_NAME_QUALIFIED:
+                case T_NAME_FULLY_QUALIFIED:
+                    $class .= $token->text;
+                    $classSplit = explode('\\', $token->text);
+                    $alias = $classSplit[count($classSplit) - 1];
+                    break;
 
-                    case T_FUNCTION:
-                        $kind = SymbolKind::FUNCTION;
-                        break;
+                case T_FUNCTION:
+                    $kind = SymbolKind::FUNCTION;
+                    break;
 
-                    case T_CONST:
-                        $kind = SymbolKind::CONSTANT;
-                        break;
+                case T_CONST:
+                    $kind = SymbolKind::CONSTANT;
+                    break;
 
-                    case T_NS_SEPARATOR:
-                        $class .= '\\';
-                        $alias = '';
-                        break;
+                case T_NS_SEPARATOR:
+                    $class .= '\\';
+                    $alias = '';
+                    break;
 
-                    case T_AS:
-                        $explicitAlias = true;
-                        $alias = '';
-                        break;
+                case T_AS:
+                    $explicitAlias = true;
+                    $alias = '';
+                    break;
 
-                    case T_WHITESPACE:
-                    case T_COMMENT:
-                    case T_DOC_COMMENT:
-                        break;
+                case T_WHITESPACE:
+                case T_COMMENT:
+                case T_DOC_COMMENT:
+                    break;
 
-                    default:
-                        break 2;
-                }
-            } elseif ($token === ',') {
-                $statements[$alias] = [$groupRoot . $class, $kind];
+                case ord(','):
+                    $statements[$alias] = [$groupRoot . $class, $kind];
 
-                if (!$kindFrozen) {
-                    $kind = SymbolKind::CLASSLIKE;
-                }
+                    if (!$kindFrozen) {
+                        $kind = SymbolKind::CLASSLIKE;
+                    }
 
-                $class = '';
-                $alias = '';
-                $explicitAlias = false;
-            } elseif ($token === ';') {
-                $statements[$alias] = [$groupRoot . $class, $kind];
+                    $class = '';
+                    $alias = '';
+                    $explicitAlias = false;
+                    break;
 
-                break;
-            } elseif ($token === '{') {
-                $kindFrozen = ($kind === SymbolKind::FUNCTION || $kind === SymbolKind::CONSTANT);
-                $groupRoot = $class;
-                $class = '';
-            } elseif ($token === '}') {
-                continue;
-            } else {
-                break;
+                case ord(';'):
+                    $statements[$alias] = [$groupRoot . $class, $kind];
+                    return $statements;
+
+                case ord('{'):
+                    $kindFrozen = ($kind === SymbolKind::FUNCTION || $kind === SymbolKind::CONSTANT);
+                    $groupRoot = $class;
+                    $class = '';
+                    break;
+
+                case ord('}'):
+                    break;
+
+                default:
+                    return $statements;
             }
         }
 
@@ -415,8 +319,8 @@ class UsedSymbolExtractor
         $tokenAfterName = $this->getTokenAfter($pointerAfterName);
 
         if (
-            $tokenAfterName === '('
-            && $tokenBeforeName[0] !== T_NEW // eliminate new \ClassName(
+            $tokenAfterName->text === '('
+            && $tokenBeforeName->id !== T_NEW // eliminate new \ClassName(
         ) {
             return SymbolKind::FUNCTION;
         }
@@ -433,21 +337,21 @@ class UsedSymbolExtractor
         $tokenAfterName = $this->getTokenAfter($pointerAfterName);
 
         if (
-            $tokenBeforeName[0] === T_DOUBLE_COLON
-            || $tokenBeforeName[0] === T_INSTEADOF
-            || $tokenBeforeName[0] === T_AS
-            || $tokenBeforeName[0] === T_FUNCTION
-            || $tokenBeforeName[0] === T_OBJECT_OPERATOR
-            || $tokenBeforeName[0] === T_NAMESPACE
-            || $tokenBeforeName[0] === T_CLASS
-            || $tokenBeforeName[0] === T_INTERFACE
-            || $tokenBeforeName[0] === T_TRAIT
-            || $tokenBeforeName[0] === (PHP_VERSION_ID >= 80100 ? T_ENUM : -1)
-            || $tokenBeforeName[0] === (PHP_VERSION_ID > 80000 ? T_NULLSAFE_OBJECT_OPERATOR : -1)
-            || $tokenAfterName[0] === T_INSTEADOF
-            || $tokenAfterName[0] === T_AS
-            || $tokenAfterName === ':'
-            || $tokenAfterName === '='
+            $tokenBeforeName->id === T_DOUBLE_COLON
+            || $tokenBeforeName->id === T_INSTEADOF
+            || $tokenBeforeName->id === T_AS
+            || $tokenBeforeName->id === T_FUNCTION
+            || $tokenBeforeName->id === T_OBJECT_OPERATOR
+            || $tokenBeforeName->id === T_NAMESPACE
+            || $tokenBeforeName->id === T_CLASS
+            || $tokenBeforeName->id === T_INTERFACE
+            || $tokenBeforeName->id === T_TRAIT
+            || $tokenBeforeName->id === (PHP_VERSION_ID >= 80100 ? T_ENUM : -1)
+            || $tokenBeforeName->id === T_NULLSAFE_OBJECT_OPERATOR
+            || $tokenAfterName->id === T_INSTEADOF
+            || $tokenAfterName->id === T_AS
+            || $tokenAfterName->text === ':'
+            || $tokenAfterName->text === '='
         ) {
             return false;
         }
@@ -455,50 +359,36 @@ class UsedSymbolExtractor
         return true;
     }
 
-    /**
-     * @return array{int, string}|string
-     */
-    private function getTokenBefore(int $pointer)
+    private function getTokenBefore(int $pointer): PhpToken
     {
-        do {
+        while ($pointer >= 0) {
             $token = $this->tokens[$pointer];
 
-            if (!is_array($token)) {
-                break;
-            }
-
-            if ($token[0] === T_WHITESPACE || $token[0] === T_COMMENT || $token[0] === T_DOC_COMMENT) {
+            if ($token->id === T_WHITESPACE || $token->id === T_COMMENT || $token->id === T_DOC_COMMENT) {
                 $pointer--;
                 continue;
             }
 
-            break;
-        } while ($pointer >= 0);
+            return $token;
+        }
 
-        return $token;
+        return $this->tokens[0];
     }
 
-    /**
-     * @return array{int, string}|string
-     */
-    private function getTokenAfter(int $pointer)
+    private function getTokenAfter(int $pointer): PhpToken
     {
-        do {
+        while ($pointer < $this->numTokens) {
             $token = $this->tokens[$pointer];
 
-            if (!is_array($token)) {
-                break;
-            }
-
-            if ($token[0] === T_WHITESPACE || $token[0] === T_COMMENT || $token[0] === T_DOC_COMMENT) {
+            if ($token->id === T_WHITESPACE || $token->id === T_COMMENT || $token->id === T_DOC_COMMENT) {
                 $pointer++;
                 continue;
             }
 
-            break;
-        } while ($pointer < $this->numTokens);
+            return $token;
+        }
 
-        return $token;
+        return $this->tokens[$this->numTokens - 1];
     }
 
 }

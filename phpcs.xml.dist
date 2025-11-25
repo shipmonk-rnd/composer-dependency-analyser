@@ -24,8 +24,8 @@
     <exclude-pattern>tests/data/*</exclude-pattern>
 
     <config name="installed_paths" value="vendor/slevomat/coding-standard,vendor/phpcompatibility/php-compatibility"/>
-    <config name="php_version" value="70200"/>
-    <config name="testVersion" value="7.2-"/>
+    <config name="php_version" value="80000"/>
+    <config name="testVersion" value="8.0-"/>
 
     <rule ref="PHPCompatibility"/>
 

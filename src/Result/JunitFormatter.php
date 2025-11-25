@@ -279,7 +279,7 @@ class JunitFormatter implements ResultFormatter
     private function relativizePath(string $path): string
     {
         if (strpos($path, $this->cwd) === 0) {
-            return (string) substr($path, strlen($this->cwd) + 1);
+            return substr($path, strlen($this->cwd) + 1);
         }
 
         return $path;
