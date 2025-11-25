@@ -169,6 +169,18 @@ class UsedSymbolExtractor
                             }
 
                             $usedSymbols[$kind][$symbolName][] = $token[2];
+
+                        } elseif (
+                            $this->getTokenAfter($pointerAfterName) === '('
+                            && $this->getTokenBefore($pointerBeforeName)[0] !== T_NEW
+                        ) {
+                            // unqualified function call - register to allow detection of unknown functions
+                            // but skip 'set' and 'get' in PHP 8.4+ property hooks (preceded by '{' inside a class)
+                            if ($inClassLevel !== null && ($lowerName === 'set' || $lowerName === 'get') && $this->getTokenBefore($pointerBeforeName) === '{') {
+                                break;
+                            }
+
+                            $usedSymbols[SymbolKind::FUNCTION][$name][] = $token[2];
                         }
 
                         break;
@@ -235,6 +247,19 @@ class UsedSymbolExtractor
                                 $symbolName = $name;
                                 $kind = $this->getFqnSymbolKind($pointerBeforeName, $pointerAfterName, false);
                                 $usedSymbols[$kind][$symbolName][] = $token[2];
+
+                            } elseif (
+                                strpos($name, '\\') === false
+                                && $this->getTokenAfter($pointerAfterName) === '('
+                                && $this->getTokenBefore($pointerBeforeName)[0] !== T_NEW
+                            ) {
+                                // unqualified function call - register to allow detection of unknown functions
+                                // but skip 'set' and 'get' in PHP 8.4+ property hooks (preceded by '{' inside a class)
+                                if ($inClassLevel !== null && ($lowerName === 'set' || $lowerName === 'get') && $this->getTokenBefore($pointerBeforeName) === '{') {
+                                    break;
+                                }
+
+                                $usedSymbols[SymbolKind::FUNCTION][$name][] = $token[2];
                             }
                         }
 

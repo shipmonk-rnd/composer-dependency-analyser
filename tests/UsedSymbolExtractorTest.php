@@ -150,6 +150,7 @@ class UsedSymbolExtractorTest extends TestCase
                     'DDTrace\root_span' => [13],
                     'DDTrace\Integrations\Exec\proc_get_pid' => [16],
                     'json_decode' => [21],
+                    'foo' => [25],
                 ],
                 SymbolKind::CONSTANT => [
                     'LIBXML_ERR_FATAL' => [9],
@@ -189,6 +190,18 @@ class UsedSymbolExtractorTest extends TestCase
             self::extensionSymbolsForExtensionsTestCases(),
         ];
 
+        // https://github.com/shipmonk-rnd/composer-dependency-analyser/issues/222
+        yield 'unqualified function' => [
+            __DIR__ . '/data/not-autoloaded/used-symbols/unqualified-function.php',
+            [
+                SymbolKind::FUNCTION => [
+                    'not_reported_or_defined' => [9],
+                    'reported_and_not_defined' => [10],
+                    'also_reported_and_not_defined' => [11],
+                ],
+            ],
+        ];
+
         if (PHP_VERSION_ID >= 80000) {
             yield 'attribute' => [
                 __DIR__ . '/data/not-autoloaded/used-symbols/attribute.php',
@@ -205,7 +218,11 @@ class UsedSymbolExtractorTest extends TestCase
         if (PHP_VERSION_ID >= 80400) {
             yield 'property hooks' => [
                 __DIR__ . '/data/not-autoloaded/used-symbols/property-hooks.php',
-                [],
+                [
+                    SymbolKind::FUNCTION => [
+                        'strtolower' => [15],
+                    ],
+                ],
             ];
         }
     }
