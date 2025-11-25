@@ -24,3 +24,9 @@ class Test
     }
 
 }
+
+// https://github.com/shipmonk-rnd/composer-dependency-analyser/issues/216
+// Class/interface/trait/enum definition names must not be detected as function usages
+class Value {}
+interface Collect {}
+trait Tap {}

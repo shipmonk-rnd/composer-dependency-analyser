@@ -422,6 +422,10 @@ class UsedSymbolExtractor
             || $tokenBeforeName[0] === T_FUNCTION
             || $tokenBeforeName[0] === T_OBJECT_OPERATOR
             || $tokenBeforeName[0] === T_NAMESPACE
+            || $tokenBeforeName[0] === T_CLASS
+            || $tokenBeforeName[0] === T_INTERFACE
+            || $tokenBeforeName[0] === T_TRAIT
+            || $tokenBeforeName[0] === (PHP_VERSION_ID >= 80100 ? T_ENUM : -1)
             || $tokenBeforeName[0] === (PHP_VERSION_ID > 80000 ? T_NULLSAFE_OBJECT_OPERATOR : -1)
             || $tokenAfterName[0] === T_INSTEADOF
             || $tokenAfterName[0] === T_AS
