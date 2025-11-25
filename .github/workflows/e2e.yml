@@ -145,7 +145,7 @@ jobs:
                     -
                         repo: phpstan/phpstan-src
                         cdaArgs: --disable-ext-analysis --config=build/composer-dependency-analyser.php
-                        php: 8.4
+                        php: 8.5
                     -
                         repo: qossmic/deptrac-src
                     -
@@ -210,11 +210,6 @@ jobs:
             -
                 name: List enabled extensions
                 run: php -m
-
-            -
-                name: Install analyser dependencies
-                working-directory: analyser
-                run: composer install --no-progress --no-interaction
 
             -
                 name: Disable autoloader prepend
