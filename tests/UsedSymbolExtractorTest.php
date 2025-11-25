@@ -60,6 +60,10 @@ class UsedSymbolExtractorTest extends TestCase
             [
                 strtolower('PDO') => SymbolKind::CLASSLIKE,
                 strtolower('SESSION_ID') => SymbolKind::CONSTANT,
+                // https://github.com/shipmonk-rnd/composer-dependency-analyser/issues/216
+                strtolower('value') => SymbolKind::FUNCTION,
+                strtolower('collect') => SymbolKind::FUNCTION,
+                strtolower('tap') => SymbolKind::FUNCTION,
             ],
         ];
 
