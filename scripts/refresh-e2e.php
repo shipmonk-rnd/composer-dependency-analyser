@@ -116,6 +116,8 @@ foreach ($result as $index => &$item) {
         || $item['repo'] === 'mimmi20/browser-detector'
         || $item['repo'] === 'mimmi20/coding-standard'
         || $item['repo'] === 'mimmi20/ua-normalizer'
+        || $item['repo'] === 'mimmi20/ua-browser-type'
+        || $item['repo'] === 'mimmi20/ua-device-type'
         || $item['repo'] === 'oveleon/contao-company-bundle'
         || $item['repo'] === 'oveleon/contao-config-driver-bundle'
         || $item['repo'] === 'oveleon/contao-cookiebar'
