@@ -5,7 +5,7 @@
 - ⚙️ **Configurable:** Fine-grained ignores via PHP config
 - 🕸️ **Lightweight:** No composer dependencies
 - 🍰 **Easy-to-use:** No config needed for first try
-- ✨ **Compatible:** PHP 7.2 - 8.4
+- ✨ **Compatible:** PHP 7.2 - 8.5
 
 ## Comparison:
 
@@ -179,5 +179,5 @@ NO_COLOR=1 vendor/bin/composer-dependency-analyser
 - All functionality must be tested
 
 ## Supported PHP versions
-- Runtime requires PHP 7.2 - 8.4
+- Runtime requires PHP 7.2 - 8.5
 - Scanned codebase should use PHP >= 5.3
