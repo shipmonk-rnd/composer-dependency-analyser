@@ -169,6 +169,14 @@ class UsedSymbolExtractor
                             }
 
                             $usedSymbols[$kind][$symbolName][] = $token[2];
+
+                        } elseif (
+                            $inGlobalScope
+                            && $this->getTokenAfter($pointerAfterName)[0] === T_DOUBLE_COLON
+                        ) {
+                            // unqualified static access (e.g., Foo::class, Foo::method(), Foo::CONSTANT) in global scope
+                            // register to allow detection of classes not in $knownSymbols
+                            $usedSymbols[SymbolKind::CLASSLIKE][$name][] = $token[2];
                         }
 
                         break;
@@ -235,6 +243,15 @@ class UsedSymbolExtractor
                                 $symbolName = $name;
                                 $kind = $this->getFqnSymbolKind($pointerBeforeName, $pointerAfterName, false);
                                 $usedSymbols[$kind][$symbolName][] = $token[2];
+
+                            } elseif (
+                                strpos($name, '\\') === false
+                                && $inGlobalScope
+                                && $this->getTokenAfter($pointerAfterName)[0] === T_DOUBLE_COLON
+                            ) {
+                                // unqualified static access (e.g., Foo::class, Foo::method(), Foo::CONSTANT) in global scope
+                                // register to allow detection of classes not in $knownSymbols
+                                $usedSymbols[SymbolKind::CLASSLIKE][$name][] = $token[2];
                             }
                         }
 
