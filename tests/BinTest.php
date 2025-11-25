@@ -64,7 +64,7 @@ class BinTest extends TestCase
         $procHandle = proc_open($command, $desc, $pipes, $cwd);
         self::assertNotFalse($procHandle);
 
-        /** @var list<resource> $pipes */
+        /** @var array<0|1|2, resource> $pipes */
         $output = stream_get_contents($pipes[1]);
         $errorOutput = stream_get_contents($pipes[2]);
         self::assertNotFalse($output);
