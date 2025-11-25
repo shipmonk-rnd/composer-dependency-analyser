@@ -129,6 +129,9 @@ class UsedSymbolExtractorTest extends TestCase
                 SymbolKind::CLASSLIKE => [
                     'DateTimeImmutable' => [3],
                     'PHPUnit\Framework\Error' => [5],
+                    'UnknownClass' => [17, 18, 19], // issue #224: unqualified static access in global scope
+                    'self' => [22], // filtered by Analyser via ignoredSymbols
+                    'parent' => [24], // filtered by Analyser via ignoredSymbols
                 ],
                 SymbolKind::FUNCTION => [
                     'PHPUnit\Framework\assertSame' => [7],
@@ -188,6 +191,7 @@ class UsedSymbolExtractorTest extends TestCase
                     'PDO' => [11],
                     'My\App\XMLReader' => [15],
                     'CURLOPT_SSL_VERIFYHOST' => [19],
+                    'ZipArchive' => [22], // issue #224: now detected via unqualified static access
                 ],
             ],
             self::extensionSymbolsForExtensionsTestCases(),
