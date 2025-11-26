@@ -19,7 +19,7 @@
         "unused code"
     ],
     "require": {
-        "php": "^8.0",
+        "php": "^8.1",
         "ext-json": "*",
         "ext-tokenizer": "*"
     },
@@ -32,7 +32,7 @@
         "phpstan/phpstan": "^1.12.26",
         "phpstan/phpstan-phpunit": "^1.4.2",
         "phpstan/phpstan-strict-rules": "^1.6.2",
-        "phpunit/phpunit": "^8.5.42 || ^9.6.23",
+        "phpunit/phpunit": "^9.6.23",
         "shipmonk/name-collision-detector": "^2.1.1",
         "slevomat/coding-standard": "^8.15.0"
     },
