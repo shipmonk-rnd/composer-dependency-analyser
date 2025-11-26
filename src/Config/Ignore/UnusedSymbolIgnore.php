@@ -7,15 +7,9 @@ use ShipMonk\ComposerDependencyAnalyser\SymbolKind;
 class UnusedSymbolIgnore
 {
 
-    /**
-     * @var string
-     */
-    private $unknownSymbol;
+    private string $unknownSymbol;
 
-    /**
-     * @var bool
-     */
-    private $isRegex;
+    private bool $isRegex;
 
     /**
      * @var SymbolKind::CLASSLIKE|SymbolKind::FUNCTION
@@ -25,7 +19,11 @@ class UnusedSymbolIgnore
     /**
      * @param SymbolKind::CLASSLIKE|SymbolKind::FUNCTION $symbolKind
      */
-    public function __construct(string $unknownSymbol, bool $isRegex, int $symbolKind)
+    public function __construct(
+        string $unknownSymbol,
+        bool $isRegex,
+        int $symbolKind,
+    )
     {
         $this->unknownSymbol = $unknownSymbol;
         $this->isRegex = $isRegex;

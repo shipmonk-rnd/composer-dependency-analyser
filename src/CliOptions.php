@@ -8,76 +8,61 @@ class CliOptions
     /**
      * @var true|null
      */
-    public $version = null;
+    public ?bool $version = null;
 
     /**
      * @var true|null
      */
-    public $help = null;
+    public ?bool $help = null;
 
     /**
      * @var true|null
      */
-    public $verbose = null;
+    public ?bool $verbose = null;
 
     /**
      * @var true|null
      */
-    public $disableExtAnalysis = null;
+    public ?bool $disableExtAnalysis = null;
 
     /**
      * @var true|null
      */
-    public $ignoreShadowDeps = null;
+    public ?bool $ignoreShadowDeps = null;
 
     /**
      * @var true|null
      */
-    public $ignoreUnusedDeps = null;
+    public ?bool $ignoreUnusedDeps = null;
 
     /**
      * @var true|null
      */
-    public $ignoreDevInProdDeps = null;
+    public ?bool $ignoreDevInProdDeps = null;
 
     /**
      * @var true|null
      */
-    public $ignoreProdOnlyInDevDeps = null;
+    public ?bool $ignoreProdOnlyInDevDeps = null;
 
     /**
      * @var true|null
      */
-    public $ignoreUnknownClasses = null;
+    public ?bool $ignoreUnknownClasses = null;
 
     /**
      * @var true|null
      */
-    public $ignoreUnknownFunctions = null;
+    public ?bool $ignoreUnknownFunctions = null;
 
-    /**
-     * @var string|null
-     */
-    public $composerJson = null;
+    public ?string $composerJson = null;
 
-    /**
-     * @var string|null
-     */
-    public $config = null;
+    public ?string $config = null;
 
-    /**
-     * @var string|null
-     */
-    public $dumpUsages = null;
+    public ?string $dumpUsages = null;
 
-    /**
-     * @var bool|null
-     */
-    public $showAllUsages = null;
+    public ?bool $showAllUsages = null;
 
-    /**
-     * @var string|null
-     */
-    public $format = null;
+    public ?string $format = null;
 
 }

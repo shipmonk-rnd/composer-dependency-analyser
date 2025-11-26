@@ -17,17 +17,13 @@ use ShipMonk\ComposerDependencyAnalyser\Result\ResultFormatter;
 use Throwable;
 use function class_exists;
 use function count;
-use function get_class;
 use function is_file;
 use function sprintf;
 
 class Initializer
 {
 
-    /**
-     * @var string
-     */
-    private static $help = <<<'EOD'
+    private static string $help = <<<'EOD'
 
 Usage:
     vendor/bin/composer-dependency-analyser
@@ -56,25 +52,16 @@ Ignore options:
     --disable-ext-analysis              Disable analysis of php extensions (e.g. ext-xml)
 EOD;
 
-    /**
-     * @var string
-     */
-    private $cwd;
+    private string $cwd;
 
-    /**
-     * @var Printer
-     */
-    private $stdOutPrinter;
+    private Printer $stdOutPrinter;
 
-    /**
-     * @var Printer
-     */
-    private $stdErrPrinter;
+    private Printer $stdErrPrinter;
 
     public function __construct(
         string $cwd,
         Printer $stdOutPrinter,
-        Printer $stdErrPrinter
+        Printer $stdErrPrinter,
     )
     {
         $this->cwd = $cwd;
@@ -87,7 +74,7 @@ EOD;
      */
     public function initConfiguration(
         CliOptions $options,
-        ComposerJson $composerJson
+        ComposerJson $composerJson,
     ): Configuration
     {
         if ($options->config !== null) {
@@ -108,7 +95,7 @@ EOD;
                     return require $configPath;
                 })();
             } catch (Throwable $e) {
-                throw new InvalidConfigException("Error while loading configuration from '$configPath':\n\n" . get_class($e) . " in {$e->getFile()}:{$e->getLine()}\n > " . $e->getMessage(), $e);
+                throw new InvalidConfigException("Error while loading configuration from '$configPath':\n\n" . $e::class . " in {$e->getFile()}:{$e->getLine()}\n > " . $e->getMessage(), $e);
             }
 
             if (!$config instanceof Configuration) {
@@ -233,10 +220,14 @@ EOD;
 
     /**
      * @param list<string> $argv
+     *
      * @throws AbortException
      * @throws InvalidCliException
      */
-    public function initCliOptions(string $cwd, array $argv): CliOptions
+    public function initCliOptions(
+        string $cwd,
+        array $argv,
+    ): CliOptions
     {
         $cliOptions = (new Cli($cwd, $argv))->getProvidedOptions();
 
@@ -292,7 +283,7 @@ EOD;
             return sprintf(
                 '%s (%s)',
                 InstalledVersions::getPrettyVersion($package),
-                InstalledVersions::getReference($package)
+                InstalledVersions::getReference($package),
             );
 
         } catch (OutOfBoundsException $e) {

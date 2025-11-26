@@ -10,5 +10,5 @@ return (new Configuration())
     ->ignoreErrorsOnExtensionsAndPaths(
         ['ext-dom', 'ext-libxml'],
         [__DIR__ . '/src/Result/JunitFormatter.php'], // optional usages guarded with extension_loaded()
-        [ErrorType::DEV_DEPENDENCY_IN_PROD]
+        [ErrorType::DEV_DEPENDENCY_IN_PROD],
     );

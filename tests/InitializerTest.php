@@ -53,14 +53,14 @@ class InitializerTest extends TestCase
 
         self::assertSame(
             strtr($cwd . '/custom-vendor/autoload.php', '/', DIRECTORY_SEPARATOR),
-            $composerJson->composerAutoloadPath
+            $composerJson->composerAutoloadPath,
         );
         self::assertSame(
             [
                 'nette/utils' => false,
                 'phpstan/phpstan' => true,
             ],
-            $composerJson->dependencies
+            $composerJson->dependencies,
         );
     }
 
@@ -79,14 +79,14 @@ class InitializerTest extends TestCase
 
         self::assertSame(
             strtr(dirname($composerJsonPath) . '/custom-vendor/autoload.php', '/', DIRECTORY_SEPARATOR),
-            $composerJson->composerAutoloadPath
+            $composerJson->composerAutoloadPath,
         );
         self::assertSame(
             [
                 'nette/utils' => false,
                 'phpstan/phpstan' => true,
             ],
-            $composerJson->dependencies
+            $composerJson->dependencies,
         );
     }
 
@@ -140,7 +140,10 @@ class InitializerTest extends TestCase
     /**
      * @dataProvider provideInitFormatterFailures
      */
-    public function testInitFormatterFailures(CliOptions $options, string $message): void
+    public function testInitFormatterFailures(
+        CliOptions $options,
+        string $message,
+    ): void
     {
         $printer = $this->createMock(Printer::class);
 

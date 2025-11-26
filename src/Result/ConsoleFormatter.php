@@ -23,17 +23,14 @@ use const PHP_INT_MAX;
 class ConsoleFormatter implements ResultFormatter
 {
 
-    /**
-     * @var string
-     */
-    private $cwd;
+    private string $cwd;
 
-    /**
-     * @var Printer
-     */
-    private $printer;
+    private Printer $printer;
 
-    public function __construct(string $cwd, Printer $printer)
+    public function __construct(
+        string $cwd,
+        Printer $printer,
+    )
     {
         $this->cwd = $cwd;
         $this->printer = $printer;
@@ -42,7 +39,7 @@ class ConsoleFormatter implements ResultFormatter
     public function format(
         AnalysisResult $result,
         CliOptions $options,
-        Configuration $configuration
+        Configuration $configuration,
     ): int
     {
         if ($options->dumpUsages !== null) {
@@ -68,7 +65,7 @@ class ConsoleFormatter implements ResultFormatter
     private function printResultUsages(
         AnalysisResult $result,
         string $package,
-        bool $showAllUsages
+        bool $showAllUsages,
     ): int
     {
         $usagesToDump = $this->filterUsagesToDump($result->getUsages(), $package);
@@ -95,7 +92,10 @@ class ConsoleFormatter implements ResultFormatter
      * @param array<string, array<string, list<SymbolUsage>>> $usages
      * @return array<string, array<string, list<SymbolUsage>>>
      */
-    private function filterUsagesToDump(array $usages, string $filter): array
+    private function filterUsagesToDump(
+        array $usages,
+        string $filter,
+    ): array
     {
         $result = [];
 
@@ -111,7 +111,7 @@ class ConsoleFormatter implements ResultFormatter
     private function printResultErrors(
         AnalysisResult $result,
         int $maxShownUsages,
-        bool $reportUnmatchedIgnores
+        bool $reportUnmatchedIgnores,
     ): int
     {
         $hasError = false;
@@ -138,7 +138,7 @@ class ConsoleFormatter implements ResultFormatter
                 "Found $unknownClassErrorsCount unknown $classes!",
                 'unable to autoload those, so we cannot check them',
                 $unknownClassErrors,
-                $maxShownUsages
+                $maxShownUsages,
             );
         }
 
@@ -149,7 +149,7 @@ class ConsoleFormatter implements ResultFormatter
                 "Found $unknownFunctionErrorsCount unknown $functions!",
                 'those are not declared, so we cannot check them',
                 $unknownFunctionErrors,
-                $maxShownUsages
+                $maxShownUsages,
             );
         }
 
@@ -160,7 +160,7 @@ class ConsoleFormatter implements ResultFormatter
                 "Found $shadowDependencyErrorsCount shadow $dependencies!",
                 'those are used, but not listed as dependency in composer.json',
                 $shadowDependencyErrors,
-                $maxShownUsages
+                $maxShownUsages,
             );
         }
 
@@ -171,7 +171,7 @@ class ConsoleFormatter implements ResultFormatter
                 "Found $devDependencyInProductionErrorsCount dev $dependencies in production code!",
                 'those should probably be moved to "require" section in composer.json',
                 $devDependencyInProductionErrors,
-                $maxShownUsages
+                $maxShownUsages,
             );
         }
 
@@ -182,7 +182,7 @@ class ConsoleFormatter implements ResultFormatter
                 "Found $prodDependencyOnlyInDevErrorsCount prod $dependencies used only in dev paths!",
                 'those should probably be moved to "require-dev" section in composer.json',
                 array_fill_keys($prodDependencyOnlyInDevErrors, []),
-                $maxShownUsages
+                $maxShownUsages,
             );
         }
 
@@ -193,7 +193,7 @@ class ConsoleFormatter implements ResultFormatter
                 "Found $unusedDependencyErrorsCount unused $dependencies!",
                 'those are listed in composer.json, but no usage was found in scanned paths',
                 array_fill_keys($unusedDependencyErrors, []),
-                $maxShownUsages
+                $maxShownUsages,
             );
         }
 
@@ -217,7 +217,12 @@ class ConsoleFormatter implements ResultFormatter
     /**
      * @param array<string, list<SymbolUsage>> $errors
      */
-    private function printSymbolBasedErrors(string $title, string $subtitle, array $errors, int $maxShownUsages): void
+    private function printSymbolBasedErrors(
+        string $title,
+        string $subtitle,
+        array $errors,
+        int $maxShownUsages,
+    ): void
     {
         $this->printHeader($title, $subtitle);
 
@@ -254,7 +259,12 @@ class ConsoleFormatter implements ResultFormatter
     /**
      * @param array<string, array<string, list<SymbolUsage>>> $errors
      */
-    private function printPackageBasedErrors(string $title, string $subtitle, array $errors, int $maxShownUsages): void
+    private function printPackageBasedErrors(
+        string $title,
+        string $subtitle,
+        array $errors,
+        int $maxShownUsages,
+    ): void
     {
         $this->printHeader($title, $subtitle);
 
@@ -270,7 +280,10 @@ class ConsoleFormatter implements ResultFormatter
     /**
      * @param array<string, list<SymbolUsage>> $usagesPerSymbol
      */
-    private function printUsages(array $usagesPerSymbol, int $maxShownUsages): void
+    private function printUsages(
+        array $usagesPerSymbol,
+        int $maxShownUsages,
+    ): void
     {
         if ($maxShownUsages === 1) {
             $countOfAllUsages = array_reduce(
@@ -278,7 +291,7 @@ class ConsoleFormatter implements ResultFormatter
                 static function (int $carry, array $usages): int {
                     return $carry + count($usages);
                 },
-                0
+                0,
             );
 
             foreach ($usagesPerSymbol as $symbol => $usages) {
@@ -320,7 +333,10 @@ class ConsoleFormatter implements ResultFormatter
         }
     }
 
-    private function printHeader(string $title, string $subtitle): void
+    private function printHeader(
+        string $title,
+        string $subtitle,
+    ): void
     {
         $this->printLine('');
         $this->printLine("<red>$title</red>");
@@ -430,7 +446,10 @@ class ConsoleFormatter implements ResultFormatter
     /**
      * @param array<string, array<string, list<SymbolUsage>>> $usages
      */
-    private function willLimitUsages(array $usages, int $limit): bool
+    private function willLimitUsages(
+        array $usages,
+        int $limit,
+    ): bool
     {
         foreach ($usages as $usagesPerSymbol) {
             if (count($usagesPerSymbol) > $limit) {
@@ -447,7 +466,10 @@ class ConsoleFormatter implements ResultFormatter
         return false;
     }
 
-    private function pluralize(int $count, string $singular): string
+    private function pluralize(
+        int $count,
+        string $singular,
+    ): string
     {
         if ($count === 1) {
             return $singular;

@@ -26,10 +26,14 @@ class AnalyserTest extends TestCase
 {
 
     /**
-     * @dataProvider provideConfigs
      * @param callable(Configuration): void $editConfig
+     *
+     * @dataProvider provideConfigs
      */
-    public function test(callable $editConfig, AnalysisResult $expectedResult): void
+    public function test(
+        callable $editConfig,
+        AnalysisResult $expectedResult,
+    ): void
     {
         $vendorDir = realpath(__DIR__ . '/data/autoloaded/vendor');
         self::assertNotFalse($vendorDir);
@@ -48,7 +52,7 @@ class AnalyserTest extends TestCase
             $vendorDir,
             [$vendorDir => $this->getClassLoaderMock()],
             $config,
-            $dependencies
+            $dependencies,
         );
         $result = $detector->run();
 
@@ -457,7 +461,11 @@ class AnalyserTest extends TestCase
      * @param array<ErrorType::*, array<mixed>> $args
      * @param list<UnusedErrorIgnore|UnusedSymbolIgnore> $unusedIgnores
      */
-    private function createAnalysisResult(int $scannedFiles, array $args, array $unusedIgnores = []): AnalysisResult
+    private function createAnalysisResult(
+        int $scannedFiles,
+        array $args,
+        array $unusedIgnores = [],
+    ): AnalysisResult
     {
         return new AnalysisResult(
             $scannedFiles,
@@ -469,7 +477,7 @@ class AnalyserTest extends TestCase
             array_filter($args[ErrorType::DEV_DEPENDENCY_IN_PROD] ?? []), // @phpstan-ignore-line ignore mixed
             array_filter($args[ErrorType::PROD_DEPENDENCY_ONLY_IN_DEV] ?? []), // @phpstan-ignore-line ignore mixed
             array_filter($args[ErrorType::UNUSED_DEPENDENCY] ?? []), // @phpstan-ignore-line ignore mixed
-            $unusedIgnores
+            $unusedIgnores,
         );
     }
 
@@ -487,7 +495,7 @@ class AnalyserTest extends TestCase
             $vendorDir,
             [$vendorDir => $this->getClassLoaderMock()],
             $config,
-            []
+            [],
         );
         $result = $detector->run();
 
@@ -517,7 +525,7 @@ class AnalyserTest extends TestCase
             $vendorDir,
             [$vendorDir => $this->getClassLoaderMock()],
             $config,
-            []
+            [],
         );
         $result = $detector->run();
 
@@ -550,7 +558,7 @@ class AnalyserTest extends TestCase
             [
                 'regular/package' => false,
                 'dev/package' => true,
-            ]
+            ],
         );
         $result = $detector->run();
 
@@ -578,7 +586,7 @@ class AnalyserTest extends TestCase
             [
                 'regular/package' => false,
                 'dev/package' => true,
-            ]
+            ],
         );
         $result = $detector->run();
 
@@ -602,7 +610,7 @@ class AnalyserTest extends TestCase
             $vendorDir,
             [$vendorDir => $this->getClassLoaderMock()],
             $config,
-            []
+            [],
         );
         $result = $detector->run();
 
@@ -631,7 +639,7 @@ class AnalyserTest extends TestCase
                 'ext-dom' => false,
                 'ext-libxml' => true,
                 'ext-mbstring' => false,
-            ]
+            ],
         );
         $result = $detector->run();
 
@@ -674,7 +682,7 @@ class AnalyserTest extends TestCase
                 'ext-dom' => false,
                 'ext-libxml' => true,
                 'ext-mbstring' => false,
-            ]
+            ],
         );
         $result = $detector->run();
 
@@ -715,7 +723,7 @@ class AnalyserTest extends TestCase
             $config,
             [
                 'org/package' => false,
-            ]
+            ],
         );
         $result = $detector->run();
 
@@ -755,7 +763,7 @@ class AnalyserTest extends TestCase
             $config,
             [
                 'phpstan/phpstan' => true,
-            ]
+            ],
         );
         $result = $detector->run();
 
@@ -781,7 +789,7 @@ class AnalyserTest extends TestCase
             $vendorDir,
             [$vendorDir => $this->getClassLoaderMock()],
             $config,
-            ['org/package' => false]
+            ['org/package' => false],
         );
         $result = $detector->run();
 
@@ -805,7 +813,7 @@ class AnalyserTest extends TestCase
             $config,
             [
                 'dev/package' => true,
-            ]
+            ],
         );
         $result = $detector->run();
 
@@ -832,7 +840,10 @@ class AnalyserTest extends TestCase
         return $classLoader;
     }
 
-    private function assertResultsWithoutUsages(AnalysisResult $expectedResult, AnalysisResult $result): void
+    private function assertResultsWithoutUsages(
+        AnalysisResult $expectedResult,
+        AnalysisResult $result,
+    ): void
     {
         self::assertSame($expectedResult->getScannedFilesCount(), $result->getScannedFilesCount(), 'Scanned files count mismatch');
         self::assertEquals($expectedResult->getUnusedIgnores(), $result->getUnusedIgnores(), 'Unused ignores mismatch');

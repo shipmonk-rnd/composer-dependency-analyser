@@ -71,7 +71,7 @@ OUT;
             ['some/package' => ['Another\Command' => [new SymbolUsage('/app/src/ProductGenerator.php', 28, SymbolKind::CLASSLIKE)]]],
             ['misplaced/package'],
             ['dead/package'],
-            []
+            [],
         );
 
         $regularOutput = $this->getFormatterNormalizedOutput(static function ($formatter) use ($analysisResult): void {

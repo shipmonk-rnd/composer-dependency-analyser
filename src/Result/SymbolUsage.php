@@ -7,15 +7,9 @@ use ShipMonk\ComposerDependencyAnalyser\SymbolKind;
 class SymbolUsage
 {
 
-    /**
-     * @var string
-     */
-    private $filepath;
+    private string $filepath;
 
-    /**
-     * @var int
-     */
-    private $lineNumber;
+    private int $lineNumber;
 
     /**
      * @var SymbolKind::*
@@ -25,7 +19,11 @@ class SymbolUsage
     /**
      * @param SymbolKind::* $kind
      */
-    public function __construct(string $filepath, int $lineNumber, int $kind)
+    public function __construct(
+        string $filepath,
+        int $lineNumber,
+        int $kind,
+    )
     {
         $this->filepath = $filepath;
         $this->lineNumber = $lineNumber;

@@ -28,15 +28,15 @@ class Printer
      */
     private $resource;
 
-    /**
-     * @var bool
-     */
-    private $noColor;
+    private bool $noColor;
 
     /**
      * @param resource $resource
      */
-    public function __construct($resource, bool $noColor)
+    public function __construct(
+        $resource,
+        bool $noColor,
+    )
     {
         $this->resource = $resource;
         $this->noColor = $noColor;
@@ -61,7 +61,7 @@ class Printer
         return str_replace(
             array_keys(self::COLORS),
             $this->noColor ? '' : array_values(self::COLORS),
-            $string
+            $string,
         );
     }
 

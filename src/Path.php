@@ -39,7 +39,10 @@ class Path
         return $realPath;
     }
 
-    public static function resolve(string $basePath, string $path): string
+    public static function resolve(
+        string $basePath,
+        string $path,
+    ): string
     {
         return self::isAbsolute($path)
             ? self::normalize($path)

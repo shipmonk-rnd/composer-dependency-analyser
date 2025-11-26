@@ -63,67 +63,61 @@ class Analyser
         'ext-standard',
     ];
 
-    /**
-     * @var Stopwatch
-     */
-    private $stopwatch;
+    private Stopwatch $stopwatch;
 
     /**
      * @var list<string>
      */
-    private $vendorDirs;
+    private array $vendorDirs;
 
     /**
      * @var list<ClassLoader>
      */
-    private $classLoaders;
+    private array $classLoaders;
 
-    /**
-     * @var Configuration
-     */
-    private $config;
+    private Configuration $config;
 
     /**
      * className => path
      *
      * @var array<string, ?string>
      */
-    private $classmap = [];
+    private array $classmap = [];
 
     /**
      * package or ext-* => is dev dependency
      *
      * @var array<string, bool>
      */
-    private $composerJsonDependencies;
+    private array $composerJsonDependencies;
 
     /**
      * symbol name => true
      *
      * @var array<string, true>
      */
-    private $ignoredSymbols;
+    private array $ignoredSymbols;
 
     /**
      * custom function name => path
      *
      * @var array<string, string>
      */
-    private $definedFunctions = [];
+    private array $definedFunctions = [];
 
     /**
      * kind => [symbol name => ext-*]
      *
      * @var array<SymbolKind::*, array<string, string>>
      */
-    private $extensionSymbols = [];
+    private array $extensionSymbols = [];
 
     /**
      * lowercase symbol name => kind
      *
      * @var array<string, SymbolKind::*>
      */
-    private $knownSymbolKinds = [];
+    private array $knownSymbolKinds = [];
 
     /**
      * @param array<string, ClassLoader> $classLoaders vendorDir => ClassLoader (e.g. result of \Composer\Autoload\ClassLoader::getRegisteredLoaders())
@@ -134,7 +128,7 @@ class Analyser
         string $defaultVendorDir,
         array $classLoaders,
         Configuration $config,
-        array $composerJsonDependencies
+        array $composerJsonDependencies,
     )
     {
         $this->stopwatch = $stopwatch;
@@ -286,7 +280,7 @@ class Analyser
         $unusedDependencies = array_diff(
             $dependenciesForUnusedAnalysis,
             array_keys($usedDependencies),
-            self::CORE_EXTENSIONS
+            self::CORE_EXTENSIONS,
         );
 
         foreach ($unusedDependencies as $unusedDependency) {
@@ -303,7 +297,7 @@ class Analyser
             array_keys($prodDependenciesUsedInProdPath),
             array_keys($forceUsedPackages), // we dont know where are those used, lets not report them
             $unusedDependencies,
-            self::CORE_EXTENSIONS
+            self::CORE_EXTENSIONS,
         );
 
         foreach ($prodPackagesUsedOnlyInDev as $prodPackageUsedOnlyInDev) {
@@ -322,7 +316,7 @@ class Analyser
             $devInProdErrors,
             $prodOnlyInDevErrors,
             $unusedErrors,
-            $ignoreList->getUnusedIgnores()
+            $ignoreList->getUnusedIgnores(),
         );
     }
 
@@ -331,6 +325,7 @@ class Analyser
      * we don't want to scan paths multiple times
      *
      * @return array<string, bool>
+     *
      * @throws InvalidPathException
      */
     private function getUniqueFilePathsToScan(): array
@@ -381,6 +376,7 @@ class Analyser
 
     /**
      * @return array<SymbolKind::*, array<string, list<int>>>
+     *
      * @throws InvalidPathException
      */
     private function getUsedSymbolsInFile(string $filePath): array
@@ -392,12 +388,13 @@ class Analyser
         }
 
         return (new UsedSymbolExtractor($code))->parseUsedSymbols(
-            $this->knownSymbolKinds
+            $this->knownSymbolKinds,
         );
     }
 
     /**
      * @return Generator<string>
+     *
      * @throws InvalidPathException
      */
     private function listPhpFilesIn(string $path): Generator
@@ -434,7 +431,10 @@ class Analyser
         return false;
     }
 
-    private function getSymbolPath(string $symbol, ?int $kind): ?string
+    private function getSymbolPath(
+        string $symbol,
+        ?int $kind,
+    ): ?string
     {
         if ($kind === SymbolKind::FUNCTION || $kind === null) {
             $lowerSymbol = strtolower($symbol);
@@ -615,7 +615,10 @@ class Analyser
      * @param array<string, bool> $dependencies
      * @return array<string, bool>
      */
-    private function filterDependencies(array $dependencies, Configuration $config): array
+    private function filterDependencies(
+        array $dependencies,
+        Configuration $config,
+    ): array
     {
         $filtered = [];
 

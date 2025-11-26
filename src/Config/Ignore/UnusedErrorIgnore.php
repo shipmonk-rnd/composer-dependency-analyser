@@ -12,20 +12,18 @@ class UnusedErrorIgnore
      */
     private $errorType;
 
-    /**
-     * @var string|null
-     */
-    private $filePath;
+    private ?string $filePath = null;
 
-    /**
-     * @var string|null
-     */
-    private $package;
+    private ?string $package = null;
 
     /**
      * @param ErrorType::* $errorType
      */
-    public function __construct(string $errorType, ?string $filePath, ?string $package)
+    public function __construct(
+        string $errorType,
+        ?string $filePath,
+        ?string $package,
+    )
     {
         $this->errorType = $errorType;
         $this->filePath = $filePath;

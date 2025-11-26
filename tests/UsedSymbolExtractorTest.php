@@ -13,9 +13,14 @@ class UsedSymbolExtractorTest extends TestCase
     /**
      * @param array<SymbolKind::*, array<string, list<int>>> $expectedUsages
      * @param array<string, SymbolKind::*> $extensionSymbols
+     *
      * @dataProvider provideVariants
      */
-    public function test(string $path, array $expectedUsages, array $extensionSymbols = []): void
+    public function test(
+        string $path,
+        array $expectedUsages,
+        array $extensionSymbols = [],
+    ): void
     {
         $code = file_get_contents($path);
         self::assertNotFalse($code);
@@ -24,7 +29,7 @@ class UsedSymbolExtractorTest extends TestCase
 
         self::assertSame(
             $expectedUsages,
-            $extractor->parseUsedSymbols($extensionSymbols)
+            $extractor->parseUsedSymbols($extensionSymbols),
         );
     }
 
@@ -208,7 +213,7 @@ class UsedSymbolExtractorTest extends TestCase
             ],
         ];
 
-        if (PHP_VERSION_ID >= 80400) {
+        if (PHP_VERSION_ID >= 80_400) {
             yield 'property hooks' => [
                 __DIR__ . '/data/not-autoloaded/used-symbols/property-hooks.php',
                 [],

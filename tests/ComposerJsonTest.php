@@ -25,7 +25,7 @@ class ComposerJsonTest extends TestCase
 
         self::assertSame(
             strtr(dirname($composerJsonPath) . '/custom-vendor/autoload.php', '/', DIRECTORY_SEPARATOR),
-            $composerJson->composerAutoloadPath
+            $composerJson->composerAutoloadPath,
         );
 
         self::assertSame(
@@ -33,7 +33,7 @@ class ComposerJsonTest extends TestCase
                 'nette/utils' => false,
                 'phpstan/phpstan' => true,
             ],
-            $composerJson->dependencies
+            $composerJson->dependencies,
         );
 
         self::assertSame(
@@ -43,7 +43,7 @@ class ComposerJsonTest extends TestCase
                 realpath(__DIR__ . '/data/not-autoloaded/composer/dir2') => false,
                 DIRECTORY_SEPARATOR . 'absolute' . DIRECTORY_SEPARATOR . 'dir' => false,
             ],
-            $composerJson->autoloadPaths
+            $composerJson->autoloadPaths,
         );
 
         $replacements = [
@@ -52,12 +52,12 @@ class ComposerJsonTest extends TestCase
 
         self::assertSame(
             [
-                strtr('#^__DIR__/data/not\-autoloaded/composer/dir2/[^/]+?\.php($|/)#', $replacements)    => false,
+                strtr('#^__DIR__/data/not\-autoloaded/composer/dir2/[^/]+?\.php($|/)#', $replacements) => false,
                 strtr('#^__DIR__/data/not\-autoloaded/composer/dir3/.+?/file1\.php($|/)#', $replacements) => false,
-                strtr('#^__DIR__/data/not\-autoloaded/composer/tests($|/)#', $replacements)               => false,
-                strtr('#^__DIR__/data/not\-autoloaded/composer/dir1/file1\.php($|/)#', $replacements)     => true,
+                strtr('#^__DIR__/data/not\-autoloaded/composer/tests($|/)#', $replacements) => false,
+                strtr('#^__DIR__/data/not\-autoloaded/composer/dir1/file1\.php($|/)#', $replacements) => true,
             ],
-            $composerJson->autoloadExcludeRegexes
+            $composerJson->autoloadExcludeRegexes,
         );
     }
 
@@ -77,7 +77,7 @@ class ComposerJsonTest extends TestCase
 
         self::assertSame(
             strtr(sys_get_temp_dir() . '/autoload.php', '/', DIRECTORY_SEPARATOR),
-            $composerJson->composerAutoloadPath
+            $composerJson->composerAutoloadPath,
         );
     }
 
@@ -105,7 +105,7 @@ class ComposerJsonTest extends TestCase
 
         self::assertSame(
             strtr(sys_get_temp_dir() . '/vendor-beside/data/autoload.php', '/', DIRECTORY_SEPARATOR),
-            $composerJson->composerAutoloadPath
+            $composerJson->composerAutoloadPath,
         );
     }
 

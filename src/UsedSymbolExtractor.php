@@ -64,10 +64,11 @@ class UsedSymbolExtractor
      *
      * @param array<string, SymbolKind::*> $knownSymbols
      * @return array<SymbolKind::*, array<string, list<int>>>
+     *
      * @license Inspired by https://github.com/doctrine/annotations/blob/2.0.0/lib/Doctrine/Common/Annotations/TokenParser.php
      */
     public function parseUsedSymbols(
-        array $knownSymbols
+        array $knownSymbols,
     ): array
     {
         $usedSymbols = [];
@@ -90,7 +91,7 @@ class UsedSymbolExtractor
                 case T_CLASS:
                 case T_INTERFACE:
                 case T_TRAIT:
-                case PHP_VERSION_ID >= 80100 ? T_ENUM : -1:
+                case PHP_VERSION_ID >= 80_100 ? T_ENUM : -1:
                     $inClassLevel = $level + 1;
                     break;
 
@@ -310,7 +311,7 @@ class UsedSymbolExtractor
     private function getFqnSymbolKind(
         int $pointerBeforeName,
         int $pointerAfterName,
-        bool $inAttribute
+        bool $inAttribute,
     ): int
     {
         if ($inAttribute) {
@@ -332,7 +333,7 @@ class UsedSymbolExtractor
 
     private function canBeSymbolName(
         int $pointerBeforeName,
-        int $pointerAfterName
+        int $pointerAfterName,
     ): bool
     {
         $tokenBeforeName = $this->getTokenBefore($pointerBeforeName);
@@ -348,7 +349,7 @@ class UsedSymbolExtractor
             || $tokenBeforeName->id === T_CLASS
             || $tokenBeforeName->id === T_INTERFACE
             || $tokenBeforeName->id === T_TRAIT
-            || $tokenBeforeName->id === (PHP_VERSION_ID >= 80100 ? T_ENUM : -1)
+            || $tokenBeforeName->id === (PHP_VERSION_ID >= 80_100 ? T_ENUM : -1)
             || $tokenBeforeName->id === T_NULLSAFE_OBJECT_OPERATOR
             || $tokenAfterName->id === T_INSTEADOF
             || $tokenAfterName->id === T_AS
