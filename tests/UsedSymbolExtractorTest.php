@@ -13,9 +13,14 @@ class UsedSymbolExtractorTest extends TestCase
     /**
      * @param array<SymbolKind::*, array<string, list<int>>> $expectedUsages
      * @param array<string, SymbolKind::*> $extensionSymbols
+     *
      * @dataProvider provideVariants
      */
-    public function test(string $path, array $expectedUsages, array $extensionSymbols = []): void
+    public function test(
+        string $path,
+        array $expectedUsages,
+        array $extensionSymbols = []
+    ): void
     {
         $code = file_get_contents($path);
         self::assertNotFalse($code);

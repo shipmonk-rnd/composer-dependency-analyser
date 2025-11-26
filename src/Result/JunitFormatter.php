@@ -36,7 +36,10 @@ class JunitFormatter implements ResultFormatter
      */
     private $printer;
 
-    public function __construct(string $cwd, Printer $printer)
+    public function __construct(
+        string $cwd,
+        Printer $printer
+    )
     {
         $this->cwd = $cwd;
         $this->printer = $printer;
@@ -153,7 +156,11 @@ class JunitFormatter implements ResultFormatter
     /**
      * @param array<string, list<SymbolUsage>> $errors
      */
-    private function createSymbolBasedTestSuite(string $title, array $errors, int $maxShownUsages): string
+    private function createSymbolBasedTestSuite(
+        string $title,
+        array $errors,
+        int $maxShownUsages
+    ): string
     {
         $xml = sprintf('<testsuite name="%s" failures="%u">', $this->escape($title), count($errors));
 
@@ -179,7 +186,11 @@ class JunitFormatter implements ResultFormatter
     /**
      * @param array<string, array<string, list<SymbolUsage>>> $errors
      */
-    private function createPackageBasedTestSuite(string $title, array $errors, int $maxShownUsages): string
+    private function createPackageBasedTestSuite(
+        string $title,
+        array $errors,
+        int $maxShownUsages
+    ): string
     {
         $xml = sprintf('<testsuite name="%s" failures="%u">', $this->escape($title), count($errors));
 
@@ -215,7 +226,10 @@ class JunitFormatter implements ResultFormatter
      * @param list<SymbolUsage> $usages
      * @return list<string>
      */
-    private function createUsages(array $usages, int $maxShownUsages): array
+    private function createUsages(
+        array $usages,
+        int $maxShownUsages
+    ): array
     {
         $usageMessages = [];
 

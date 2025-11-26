@@ -33,7 +33,10 @@ class ConsoleFormatter implements ResultFormatter
      */
     private $printer;
 
-    public function __construct(string $cwd, Printer $printer)
+    public function __construct(
+        string $cwd,
+        Printer $printer
+    )
     {
         $this->cwd = $cwd;
         $this->printer = $printer;
@@ -95,7 +98,10 @@ class ConsoleFormatter implements ResultFormatter
      * @param array<string, array<string, list<SymbolUsage>>> $usages
      * @return array<string, array<string, list<SymbolUsage>>>
      */
-    private function filterUsagesToDump(array $usages, string $filter): array
+    private function filterUsagesToDump(
+        array $usages,
+        string $filter
+    ): array
     {
         $result = [];
 
@@ -217,7 +223,12 @@ class ConsoleFormatter implements ResultFormatter
     /**
      * @param array<string, list<SymbolUsage>> $errors
      */
-    private function printSymbolBasedErrors(string $title, string $subtitle, array $errors, int $maxShownUsages): void
+    private function printSymbolBasedErrors(
+        string $title,
+        string $subtitle,
+        array $errors,
+        int $maxShownUsages
+    ): void
     {
         $this->printHeader($title, $subtitle);
 
@@ -254,7 +265,12 @@ class ConsoleFormatter implements ResultFormatter
     /**
      * @param array<string, array<string, list<SymbolUsage>>> $errors
      */
-    private function printPackageBasedErrors(string $title, string $subtitle, array $errors, int $maxShownUsages): void
+    private function printPackageBasedErrors(
+        string $title,
+        string $subtitle,
+        array $errors,
+        int $maxShownUsages
+    ): void
     {
         $this->printHeader($title, $subtitle);
 
@@ -270,7 +286,10 @@ class ConsoleFormatter implements ResultFormatter
     /**
      * @param array<string, list<SymbolUsage>> $usagesPerSymbol
      */
-    private function printUsages(array $usagesPerSymbol, int $maxShownUsages): void
+    private function printUsages(
+        array $usagesPerSymbol,
+        int $maxShownUsages
+    ): void
     {
         if ($maxShownUsages === 1) {
             $countOfAllUsages = array_reduce(
@@ -320,7 +339,10 @@ class ConsoleFormatter implements ResultFormatter
         }
     }
 
-    private function printHeader(string $title, string $subtitle): void
+    private function printHeader(
+        string $title,
+        string $subtitle
+    ): void
     {
         $this->printLine('');
         $this->printLine("<red>$title</red>");
@@ -430,7 +452,10 @@ class ConsoleFormatter implements ResultFormatter
     /**
      * @param array<string, array<string, list<SymbolUsage>>> $usages
      */
-    private function willLimitUsages(array $usages, int $limit): bool
+    private function willLimitUsages(
+        array $usages,
+        int $limit
+    ): bool
     {
         foreach ($usages as $usagesPerSymbol) {
             if (count($usagesPerSymbol) > $limit) {
@@ -447,7 +472,10 @@ class ConsoleFormatter implements ResultFormatter
         return false;
     }
 
-    private function pluralize(int $count, string $singular): string
+    private function pluralize(
+        int $count,
+        string $singular
+    ): string
     {
         if ($count === 1) {
             return $singular;

@@ -25,7 +25,11 @@ class SymbolUsage
     /**
      * @param SymbolKind::* $kind
      */
-    public function __construct(string $filepath, int $lineNumber, int $kind)
+    public function __construct(
+        string $filepath,
+        int $lineNumber,
+        int $kind
+    )
     {
         $this->filepath = $filepath;
         $this->lineNumber = $lineNumber;

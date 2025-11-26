@@ -52,10 +52,10 @@ class ComposerJsonTest extends TestCase
 
         self::assertSame(
             [
-                strtr('#^__DIR__/data/not\-autoloaded/composer/dir2/[^/]+?\.php($|/)#', $replacements)    => false,
+                strtr('#^__DIR__/data/not\-autoloaded/composer/dir2/[^/]+?\.php($|/)#', $replacements) => false,
                 strtr('#^__DIR__/data/not\-autoloaded/composer/dir3/.+?/file1\.php($|/)#', $replacements) => false,
-                strtr('#^__DIR__/data/not\-autoloaded/composer/tests($|/)#', $replacements)               => false,
-                strtr('#^__DIR__/data/not\-autoloaded/composer/dir1/file1\.php($|/)#', $replacements)     => true,
+                strtr('#^__DIR__/data/not\-autoloaded/composer/tests($|/)#', $replacements) => false,
+                strtr('#^__DIR__/data/not\-autoloaded/composer/dir1/file1\.php($|/)#', $replacements) => true,
             ],
             $composerJson->autoloadExcludeRegexes
         );

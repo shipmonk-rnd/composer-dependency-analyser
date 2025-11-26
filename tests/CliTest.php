@@ -10,9 +10,14 @@ class CliTest extends TestCase
 
     /**
      * @param list<string> $argv
+     *
      * @dataProvider validationDataProvider
      */
-    public function testValidation(?string $expectedExceptionMessage, array $argv, ?CliOptions $options = null): void
+    public function testValidation(
+        ?string $expectedExceptionMessage,
+        array $argv,
+        ?CliOptions $options = null
+    ): void
     {
         if ($expectedExceptionMessage !== null) {
             $this->expectException(InvalidCliException::class);

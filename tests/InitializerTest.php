@@ -140,7 +140,10 @@ class InitializerTest extends TestCase
     /**
      * @dataProvider provideInitFormatterFailures
      */
-    public function testInitFormatterFailures(CliOptions $options, string $message): void
+    public function testInitFormatterFailures(
+        CliOptions $options,
+        string $message
+    ): void
     {
         $printer = $this->createMock(Printer::class);
 

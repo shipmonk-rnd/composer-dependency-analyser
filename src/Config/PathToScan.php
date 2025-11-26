@@ -15,7 +15,10 @@ class PathToScan
      */
     private $isDev;
 
-    public function __construct(string $path, bool $isDev)
+    public function __construct(
+        string $path,
+        bool $isDev
+    )
     {
         $this->path = $path;
         $this->isDev = $isDev;

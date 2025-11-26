@@ -143,9 +143,13 @@ class ConfigurationTest extends TestCase
 
     /**
      * @param callable(Configuration): void $configure
+     *
      * @dataProvider provideInvalidConfigs
      */
-    public function testInvalidConfig(callable $configure, string $exceptionMessage): void
+    public function testInvalidConfig(
+        callable $configure,
+        string $exceptionMessage
+    ): void
     {
         $configuration = new Configuration();
         $this->expectException(InvalidConfigException::class);
@@ -260,9 +264,13 @@ class ConfigurationTest extends TestCase
 
     /**
      * @param callable(Configuration): void $configure
+     *
      * @dataProvider provideInvalidPaths
      */
-    public function testInvalidPath(callable $configure, string $exceptionMessage): void
+    public function testInvalidPath(
+        callable $configure,
+        string $exceptionMessage
+    ): void
     {
         $configuration = new Configuration();
         $this->expectException(InvalidPathException::class);

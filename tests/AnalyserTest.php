@@ -26,10 +26,14 @@ class AnalyserTest extends TestCase
 {
 
     /**
-     * @dataProvider provideConfigs
      * @param callable(Configuration): void $editConfig
+     *
+     * @dataProvider provideConfigs
      */
-    public function test(callable $editConfig, AnalysisResult $expectedResult): void
+    public function test(
+        callable $editConfig,
+        AnalysisResult $expectedResult
+    ): void
     {
         $vendorDir = realpath(__DIR__ . '/data/autoloaded/vendor');
         self::assertNotFalse($vendorDir);
@@ -457,7 +461,11 @@ class AnalyserTest extends TestCase
      * @param array<ErrorType::*, array<mixed>> $args
      * @param list<UnusedErrorIgnore|UnusedSymbolIgnore> $unusedIgnores
      */
-    private function createAnalysisResult(int $scannedFiles, array $args, array $unusedIgnores = []): AnalysisResult
+    private function createAnalysisResult(
+        int $scannedFiles,
+        array $args,
+        array $unusedIgnores = []
+    ): AnalysisResult
     {
         return new AnalysisResult(
             $scannedFiles,
@@ -832,7 +840,10 @@ class AnalyserTest extends TestCase
         return $classLoader;
     }
 
-    private function assertResultsWithoutUsages(AnalysisResult $expectedResult, AnalysisResult $result): void
+    private function assertResultsWithoutUsages(
+        AnalysisResult $expectedResult,
+        AnalysisResult $result
+    ): void
     {
         self::assertSame($expectedResult->getScannedFilesCount(), $result->getScannedFilesCount(), 'Scanned files count mismatch');
         self::assertEquals($expectedResult->getUnusedIgnores(), $result->getUnusedIgnores(), 'Unused ignores mismatch');

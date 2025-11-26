@@ -233,10 +233,14 @@ EOD;
 
     /**
      * @param list<string> $argv
+     *
      * @throws AbortException
      * @throws InvalidCliException
      */
-    public function initCliOptions(string $cwd, array $argv): CliOptions
+    public function initCliOptions(
+        string $cwd,
+        array $argv
+    ): CliOptions
     {
         $cliOptions = (new Cli($cwd, $argv))->getProvidedOptions();
 

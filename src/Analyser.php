@@ -331,6 +331,7 @@ class Analyser
      * we don't want to scan paths multiple times
      *
      * @return array<string, bool>
+     *
      * @throws InvalidPathException
      */
     private function getUniqueFilePathsToScan(): array
@@ -381,6 +382,7 @@ class Analyser
 
     /**
      * @return array<SymbolKind::*, array<string, list<int>>>
+     *
      * @throws InvalidPathException
      */
     private function getUsedSymbolsInFile(string $filePath): array
@@ -398,6 +400,7 @@ class Analyser
 
     /**
      * @return Generator<string>
+     *
      * @throws InvalidPathException
      */
     private function listPhpFilesIn(string $path): Generator
@@ -434,7 +437,10 @@ class Analyser
         return false;
     }
 
-    private function getSymbolPath(string $symbol, ?int $kind): ?string
+    private function getSymbolPath(
+        string $symbol,
+        ?int $kind
+    ): ?string
     {
         if ($kind === SymbolKind::FUNCTION || $kind === null) {
             $lowerSymbol = strtolower($symbol);
@@ -615,7 +621,10 @@ class Analyser
      * @param array<string, bool> $dependencies
      * @return array<string, bool>
      */
-    private function filterDependencies(array $dependencies, Configuration $config): array
+    private function filterDependencies(
+        array $dependencies,
+        Configuration $config
+    ): array
     {
         $filtered = [];
 

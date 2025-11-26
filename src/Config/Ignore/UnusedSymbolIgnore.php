@@ -25,7 +25,11 @@ class UnusedSymbolIgnore
     /**
      * @param SymbolKind::CLASSLIKE|SymbolKind::FUNCTION $symbolKind
      */
-    public function __construct(string $unknownSymbol, bool $isRegex, int $symbolKind)
+    public function __construct(
+        string $unknownSymbol,
+        bool $isRegex,
+        int $symbolKind
+    )
     {
         $this->unknownSymbol = $unknownSymbol;
         $this->isRegex = $isRegex;

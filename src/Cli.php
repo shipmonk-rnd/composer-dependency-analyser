@@ -42,9 +42,13 @@ class Cli
 
     /**
      * @param list<string> $argv
+     *
      * @throws InvalidCliException
      */
-    public function __construct(string $cwd, array $argv)
+    public function __construct(
+        string $cwd,
+        array $argv
+    )
     {
         $ignoreNextArg = false;
         $argsWithoutScript = array_slice($argv, 1);
@@ -191,7 +195,7 @@ class Cli
         }
 
         if (isset($this->providedOptions['dump-usages'])) {
-            $options->dumpUsages = $this->providedOptions['dump-usages'];  // @phpstan-ignore-line type is ensured
+            $options->dumpUsages = $this->providedOptions['dump-usages']; // @phpstan-ignore-line type is ensured
         }
 
         if (isset($this->providedOptions['show-all-usages'])) {

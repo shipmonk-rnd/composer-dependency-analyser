@@ -28,13 +28,13 @@
         "ext-libxml": "*",
         "editorconfig-checker/editorconfig-checker": "^10.7.0",
         "ergebnis/composer-normalize": "^2.19.0",
-        "phpcompatibility/php-compatibility": "^9.3.5",
+        "phpcompatibility/php-compatibility": "^10.0.0@alpha",
         "phpstan/phpstan": "^1.12.26",
         "phpstan/phpstan-phpunit": "^1.4.2",
         "phpstan/phpstan-strict-rules": "^1.6.2",
         "phpunit/phpunit": "^8.5.42 || ^9.6.23",
         "shipmonk/name-collision-detector": "^2.1.1",
-        "slevomat/coding-standard": "^8.15.0"
+        "shipmonk/coding-standard": "^0.2.0"
     },
     "autoload": {
         "psr-4": {

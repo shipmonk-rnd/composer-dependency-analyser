@@ -69,6 +69,7 @@ class UsedSymbolExtractor
      *
      * @param array<string, SymbolKind::*> $knownSymbols
      * @return array<SymbolKind::*, array<string, list<int>>>
+     *
      * @license Inspired by https://github.com/doctrine/annotations/blob/2.0.0/lib/Doctrine/Common/Annotations/TokenParser.php
      */
     public function parseUsedSymbols(

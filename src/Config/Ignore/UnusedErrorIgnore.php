@@ -25,7 +25,11 @@ class UnusedErrorIgnore
     /**
      * @param ErrorType::* $errorType
      */
-    public function __construct(string $errorType, ?string $filePath, ?string $package)
+    public function __construct(
+        string $errorType,
+        ?string $filePath,
+        ?string $package
+    )
     {
         $this->errorType = $errorType;
         $this->filePath = $filePath;

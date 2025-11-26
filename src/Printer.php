@@ -36,7 +36,10 @@ class Printer
     /**
      * @param resource $resource
      */
-    public function __construct($resource, bool $noColor)
+    public function __construct(
+        $resource,
+        bool $noColor
+    )
     {
         $this->resource = $resource;
         $this->noColor = $noColor;
