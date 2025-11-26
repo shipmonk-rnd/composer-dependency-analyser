@@ -46,6 +46,11 @@ class AnalysisResult
     private $devDependencyInProductionErrors = [];
 
     /**
+     * @var array<string, array<string, list<SymbolUsage>>>
+     */
+    private $devSourceInProductionErrors = [];
+
+    /**
      * @var list<string>
      */
     private $prodDependencyOnlyInDevErrors;
@@ -66,6 +71,7 @@ class AnalysisResult
      * @param array<string, list<SymbolUsage>> $unknownFunctionErrors package => usages
      * @param array<string, array<string, list<SymbolUsage>>> $shadowDependencyErrors package => [ classname => usage[] ]
      * @param array<string, array<string, list<SymbolUsage>>> $devDependencyInProductionErrors package => [ classname => usage[] ]
+     * @param array<string, array<string, list<SymbolUsage>>> $devSourceInProductionErrors dev-source => [ classname => usage[] ]
      * @param list<string> $prodDependencyOnlyInDevErrors package[]
      * @param list<string> $unusedDependencyErrors package[]
      * @param list<UnusedSymbolIgnore|UnusedErrorIgnore> $unusedIgnores
@@ -78,6 +84,7 @@ class AnalysisResult
         array $unknownFunctionErrors,
         array $shadowDependencyErrors,
         array $devDependencyInProductionErrors,
+        array $devSourceInProductionErrors,
         array $prodDependencyOnlyInDevErrors,
         array $unusedDependencyErrors,
         array $unusedIgnores
@@ -88,6 +95,7 @@ class AnalysisResult
         ksort($unknownFunctionErrors);
         ksort($shadowDependencyErrors);
         ksort($devDependencyInProductionErrors);
+        ksort($devSourceInProductionErrors);
         sort($prodDependencyOnlyInDevErrors);
         sort($unusedDependencyErrors);
 
@@ -109,6 +117,11 @@ class AnalysisResult
         foreach ($devDependencyInProductionErrors as $package => $classes) {
             ksort($classes);
             $this->devDependencyInProductionErrors[$package] = $classes;
+        }
+
+        foreach ($devSourceInProductionErrors as $devSource => $classes) {
+            ksort($classes);
+            $this->devSourceInProductionErrors[$devSource] = $classes;
         }
 
         $this->prodDependencyOnlyInDevErrors = $prodDependencyOnlyInDevErrors;
@@ -164,6 +177,14 @@ class AnalysisResult
     public function getDevDependencyInProductionErrors(): array
     {
         return $this->devDependencyInProductionErrors;
+    }
+
+    /**
+     * @return array<string, array<string, list<SymbolUsage>>>
+     */
+    public function getDevSourceInProductionErrors(): array
+    {
+        return $this->devSourceInProductionErrors;
     }
 
     /**

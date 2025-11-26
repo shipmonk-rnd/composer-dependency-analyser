@@ -23,6 +23,8 @@ use function array_filter;
 use function array_key_exists;
 use function array_keys;
 use function array_values;
+use function arsort;
+use function basename;
 use function explode;
 use function file_get_contents;
 use function get_declared_classes;
@@ -126,15 +128,24 @@ class Analyser
     private $knownSymbolKinds = [];
 
     /**
+     * autoload path => isDev
+     *
+     * @var array<string, bool>
+     */
+    private $autoloadPaths = [];
+
+    /**
      * @param array<string, ClassLoader> $classLoaders vendorDir => ClassLoader (e.g. result of \Composer\Autoload\ClassLoader::getRegisteredLoaders())
      * @param array<string, bool> $composerJsonDependencies package or ext-* => is dev dependency
+     * @param array<string, bool> $autoloadPaths absolute path => isDev
      */
     public function __construct(
         Stopwatch $stopwatch,
         string $defaultVendorDir,
         array $classLoaders,
         Configuration $config,
-        array $composerJsonDependencies
+        array $composerJsonDependencies,
+        array $autoloadPaths = []
     )
     {
         $this->stopwatch = $stopwatch;
@@ -142,6 +153,7 @@ class Analyser
         $this->composerJsonDependencies = $this->filterDependencies($composerJsonDependencies, $config);
         $this->vendorDirs = array_keys($classLoaders + [$defaultVendorDir => null]);
         $this->classLoaders = array_values($classLoaders);
+        $this->autoloadPaths = $autoloadPaths;
 
         $this->initExistingSymbols($config);
     }
@@ -158,6 +170,7 @@ class Analyser
         $unknownFunctionErrors = [];
         $shadowErrors = [];
         $devInProdErrors = [];
+        $devSourceInProdErrors = [];
         $prodOnlyInDevErrors = [];
         $unusedErrors = [];
 
@@ -204,6 +217,27 @@ class Analyser
                         }
 
                         if (!$this->isVendorPath($symbolPath)) {
+                            // Check if this is a local dev-only class being used in production code
+                            if (!$isDevFilePath && $this->isDevAutoloadPath($symbolPath)) {
+                                $devAutoloadPath = $this->getDevAutoloadPath($symbolPath);
+
+                                if ($devAutoloadPath !== null) {
+                                    // Use basename of the dev path as identifier (e.g. "src-dev" or "tests")
+                                    $devSourceName = basename($devAutoloadPath);
+
+                                    if (!$ignoreList->shouldIgnoreError(ErrorType::DEV_SOURCE_IN_PROD, $filePath, $devSourceName)) {
+                                        foreach ($lineNumbers as $lineNumber) {
+                                            $devSourceInProdErrors[$devSourceName][$usedSymbol][] = new SymbolUsage($filePath, $lineNumber, $kind);
+                                        }
+                                    }
+
+                                    // Track usages for --dump-usages support
+                                    foreach ($lineNumbers as $lineNumber) {
+                                        $usages[$devSourceName][$usedSymbol][] = new SymbolUsage($filePath, $lineNumber, $kind);
+                                    }
+                                }
+                            }
+
                             continue; // local class
                         }
 
@@ -320,6 +354,7 @@ class Analyser
             $unknownFunctionErrors,
             $shadowErrors,
             $devInProdErrors,
+            $devSourceInProdErrors,
             $prodOnlyInDevErrors,
             $unusedErrors,
             $ignoreList->getUnusedIgnores()
@@ -432,6 +467,38 @@ class Analyser
         }
 
         return false;
+    }
+
+    private function isDevAutoloadPath(string $realPath): bool
+    {
+        // Check if the file's path starts with any dev autoload path
+        foreach ($this->autoloadPaths as $autoloadPath => $isDev) {
+            if ($isDev && strpos($realPath, $autoloadPath) === 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function getDevAutoloadPath(string $realPath): ?string
+    {
+        // Find which specific dev autoload path contains this file
+        // Sort by length descending to get the most specific match
+        $devPaths = [];
+
+        foreach ($this->autoloadPaths as $autoloadPath => $isDev) {
+            if ($isDev && strpos($realPath, $autoloadPath) === 0) {
+                $devPaths[$autoloadPath] = strlen($autoloadPath);
+            }
+        }
+
+        if ($devPaths === []) {
+            return null;
+        }
+
+        arsort($devPaths);
+        return array_keys($devPaths)[0];
     }
 
     private function getSymbolPath(string $symbol, ?int $kind): ?string

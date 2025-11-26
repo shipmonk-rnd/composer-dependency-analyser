@@ -17,10 +17,10 @@ class ConsoleFormatterTest extends FormatterTestCase
     {
         // editorconfig-checker-disable
         $noIssuesOutput = $this->getFormatterNormalizedOutput(static function (ResultFormatter $formatter): void {
-            $formatter->format(new AnalysisResult(2, 0.123, [], [], [], [], [], [], [], []), new CliOptions(), new Configuration());
+            $formatter->format(new AnalysisResult(2, 0.123, [], [], [], [], [], [], [], [], []), new CliOptions(), new Configuration());
         });
         $noIssuesButUnusedIgnores = $this->getFormatterNormalizedOutput(static function (ResultFormatter $formatter): void {
-            $formatter->format(new AnalysisResult(2, 0.123, [], [], [], [], [], [], [], [new UnusedErrorIgnore(ErrorType::SHADOW_DEPENDENCY, null, null)]), new CliOptions(), new Configuration());
+            $formatter->format(new AnalysisResult(2, 0.123, [], [], [], [], [], [], [], [], [new UnusedErrorIgnore(ErrorType::SHADOW_DEPENDENCY, null, null)]), new CliOptions(), new Configuration());
         });
 
         $expectedNoIssuesOutput = <<<'OUT'
@@ -67,6 +67,7 @@ OUT;
                 ],
             ],
             ['some/package' => ['Another\Command' => [new SymbolUsage('/app/src/ProductGenerator.php', 28, SymbolKind::CLASSLIKE)]]],
+            [],
             ['misplaced/package'],
             ['dead/package'],
             []
