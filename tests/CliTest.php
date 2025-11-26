@@ -2,6 +2,7 @@
 
 namespace ShipMonk\ComposerDependencyAnalyser;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidCliException;
 
@@ -10,9 +11,8 @@ class CliTest extends TestCase
 
     /**
      * @param list<string> $argv
-     *
-     * @dataProvider validationDataProvider
      */
+    #[DataProvider('validationDataProvider')]
     public function testValidation(
         ?string $expectedExceptionMessage,
         array $argv,
@@ -34,7 +34,7 @@ class CliTest extends TestCase
     /**
      * @return iterable<string, array{string|null, list<string>}>
      */
-    public function validationDataProvider(): iterable
+    public static function validationDataProvider(): iterable
     {
         yield 'unknown long option' => [
             'Unknown option --unknown, see --help',

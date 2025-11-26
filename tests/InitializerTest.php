@@ -2,6 +2,7 @@
 
 namespace ShipMonk\ComposerDependencyAnalyser;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
 use ShipMonk\ComposerDependencyAnalyser\Config\PathToScan;
@@ -137,9 +138,7 @@ class InitializerTest extends TestCase
         self::assertInstanceOf(JunitFormatter::class, $initializer->initFormatter($optionsFormatJunit));
     }
 
-    /**
-     * @dataProvider provideInitFormatterFailures
-     */
+    #[DataProvider('provideInitFormatterFailures')]
     public function testInitFormatterFailures(
         CliOptions $options,
         string $message,

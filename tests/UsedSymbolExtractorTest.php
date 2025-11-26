@@ -2,6 +2,7 @@
 
 namespace ShipMonk\ComposerDependencyAnalyser;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use function file_get_contents;
 use function strtolower;
@@ -13,9 +14,8 @@ class UsedSymbolExtractorTest extends TestCase
     /**
      * @param array<SymbolKind::*, array<string, list<int>>> $expectedUsages
      * @param array<string, SymbolKind::*> $extensionSymbols
-     *
-     * @dataProvider provideVariants
      */
+    #[DataProvider('provideVariants')]
     public function test(
         string $path,
         array $expectedUsages,
@@ -36,7 +36,7 @@ class UsedSymbolExtractorTest extends TestCase
     /**
      * @return iterable<array{0: string, 1: array<SymbolKind::*, array<string, list<int>>>, 2?: array<string, SymbolKind::*>}>
      */
-    public function provideVariants(): iterable
+    public static function provideVariants(): iterable
     {
         yield 'use statements' => [
             __DIR__ . '/data/not-autoloaded/used-symbols/use-statements.php',

@@ -2,6 +2,7 @@
 
 namespace ShipMonk\ComposerDependencyAnalyser;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use ShipMonk\ComposerDependencyAnalyser\Config\Configuration;
 use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
@@ -143,9 +144,8 @@ class ConfigurationTest extends TestCase
 
     /**
      * @param callable(Configuration): void $configure
-     *
-     * @dataProvider provideInvalidConfigs
      */
+    #[DataProvider('provideInvalidConfigs')]
     public function testInvalidConfig(
         callable $configure,
         string $exceptionMessage,
@@ -161,7 +161,7 @@ class ConfigurationTest extends TestCase
     /**
      * @return iterable<string, array{callable(Configuration): void, string}>
      */
-    public function provideInvalidConfigs(): iterable
+    public static function provideInvalidConfigs(): iterable
     {
         yield 'invalid ignore for path #1' => [
             static function (Configuration $configuration): void {
@@ -264,9 +264,8 @@ class ConfigurationTest extends TestCase
 
     /**
      * @param callable(Configuration): void $configure
-     *
-     * @dataProvider provideInvalidPaths
      */
+    #[DataProvider('provideInvalidPaths')]
     public function testInvalidPath(
         callable $configure,
         string $exceptionMessage,
@@ -294,7 +293,7 @@ class ConfigurationTest extends TestCase
     /**
      * @return iterable<string, array{callable(Configuration): void, string}>
      */
-    public function provideInvalidPaths(): iterable
+    public static function provideInvalidPaths(): iterable
     {
         yield 'invalid path' => [
             static function (Configuration $configuration): void {
