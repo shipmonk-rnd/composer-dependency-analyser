@@ -52,21 +52,12 @@ Ignore options:
     --disable-ext-analysis              Disable analysis of php extensions (e.g. ext-xml)
 EOD;
 
-    private string $cwd;
-
-    private Printer $stdOutPrinter;
-
-    private Printer $stdErrPrinter;
-
     public function __construct(
-        string $cwd,
-        Printer $stdOutPrinter,
-        Printer $stdErrPrinter,
+        private string $cwd,
+        private Printer $stdOutPrinter,
+        private Printer $stdErrPrinter,
     )
     {
-        $this->cwd = $cwd;
-        $this->stdOutPrinter = $stdOutPrinter;
-        $this->stdErrPrinter = $stdErrPrinter;
     }
 
     /**

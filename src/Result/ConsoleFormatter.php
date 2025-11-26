@@ -23,17 +23,11 @@ use const PHP_INT_MAX;
 class ConsoleFormatter implements ResultFormatter
 {
 
-    private string $cwd;
-
-    private Printer $printer;
-
     public function __construct(
-        string $cwd,
-        Printer $printer,
+        private string $cwd,
+        private Printer $printer,
     )
     {
-        $this->cwd = $cwd;
-        $this->printer = $printer;
     }
 
     public function format(

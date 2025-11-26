@@ -7,27 +7,15 @@ use ShipMonk\ComposerDependencyAnalyser\SymbolKind;
 class UnusedSymbolIgnore
 {
 
-    private string $unknownSymbol;
-
-    private bool $isRegex;
-
-    /**
-     * @var SymbolKind::CLASSLIKE|SymbolKind::FUNCTION
-     */
-    private $symbolKind;
-
     /**
      * @param SymbolKind::CLASSLIKE|SymbolKind::FUNCTION $symbolKind
      */
     public function __construct(
-        string $unknownSymbol,
-        bool $isRegex,
-        int $symbolKind,
+        private string $unknownSymbol,
+        private bool $isRegex,
+        private int $symbolKind,
     )
     {
-        $this->unknownSymbol = $unknownSymbol;
-        $this->isRegex = $isRegex;
-        $this->symbolKind = $symbolKind;
     }
 
     public function getUnknownSymbol(): string
