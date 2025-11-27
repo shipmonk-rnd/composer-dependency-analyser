@@ -6,7 +6,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use function file_get_contents;
 use function strtolower;
-use const PHP_VERSION_ID; // only needed for PHP 8.1+ (enum) and 8.4+ (property hooks) checks
+use const PHP_VERSION_ID;
 
 class UsedSymbolExtractorTest extends TestCase
 {

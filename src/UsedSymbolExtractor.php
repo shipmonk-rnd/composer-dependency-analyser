@@ -11,7 +11,6 @@ use function ord;
 use function strlen;
 use function strtolower;
 use function substr;
-use const PHP_VERSION_ID;
 use const T_AS;
 use const T_ATTRIBUTE;
 use const T_CLASS;
@@ -91,7 +90,7 @@ class UsedSymbolExtractor
                 case T_CLASS:
                 case T_INTERFACE:
                 case T_TRAIT:
-                case PHP_VERSION_ID >= 80_100 ? T_ENUM : -1:
+                case T_ENUM:
                     $inClassLevel = $level + 1;
                     break;
 
@@ -349,7 +348,7 @@ class UsedSymbolExtractor
             || $tokenBeforeName->id === T_CLASS
             || $tokenBeforeName->id === T_INTERFACE
             || $tokenBeforeName->id === T_TRAIT
-            || $tokenBeforeName->id === (PHP_VERSION_ID >= 80_100 ? T_ENUM : -1)
+            || $tokenBeforeName->id === T_ENUM
             || $tokenBeforeName->id === T_NULLSAFE_OBJECT_OPERATOR
             || $tokenAfterName->id === T_INSTEADOF
             || $tokenAfterName->id === T_AS
