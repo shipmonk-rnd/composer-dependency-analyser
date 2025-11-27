@@ -186,13 +186,13 @@ jobs:
 
             -
                 name: Checkout code
-                uses: actions/checkout@v4
+                uses: actions/checkout@v6
                 with:
                     path: analyser
 
             -
                 name: Clone ${{ matrix.repo }}
-                uses: actions/checkout@v4
+                uses: actions/checkout@v6
                 with:
                     path: ${{ matrix.repo }}
                     repository: ${{ matrix.repo }}
