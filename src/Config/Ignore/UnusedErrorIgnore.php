@@ -8,28 +8,14 @@ class UnusedErrorIgnore
 {
 
     /**
-     * @var ErrorType::*
-     */
-    private $errorType;
-
-    /**
-     * @var string|null
-     */
-    private $filePath;
-
-    /**
-     * @var string|null
-     */
-    private $package;
-
-    /**
      * @param ErrorType::* $errorType
      */
-    public function __construct(string $errorType, ?string $filePath, ?string $package)
+    public function __construct(
+        private string $errorType,
+        private ?string $filePath,
+        private ?string $package,
+    )
     {
-        $this->errorType = $errorType;
-        $this->filePath = $filePath;
-        $this->package = $package;
     }
 
     public function getErrorType(): string

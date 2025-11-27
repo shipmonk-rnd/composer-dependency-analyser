@@ -52,7 +52,7 @@ class BinTest extends TestCase
         string $cwd,
         int $expectedExitCode,
         ?string $expectedOutputContains = null,
-        ?string $expectedErrorContains = null
+        ?string $expectedErrorContains = null,
     ): void
     {
         $desc = [
@@ -64,7 +64,6 @@ class BinTest extends TestCase
         $procHandle = proc_open($command, $desc, $pipes, $cwd);
         self::assertNotFalse($procHandle);
 
-        /** @var list<resource> $pipes */
         $output = stream_get_contents($pipes[1]);
         $errorOutput = stream_get_contents($pipes[2]);
         self::assertNotFalse($output);
@@ -80,14 +79,14 @@ class BinTest extends TestCase
         self::assertSame(
             $expectedExitCode,
             $exitCode,
-            $extraInfo
+            $extraInfo,
         );
 
         if ($expectedOutputContains !== null) {
             self::assertStringContainsString(
                 $expectedOutputContains,
                 $output,
-                $extraInfo
+                $extraInfo,
             );
         }
 
@@ -95,7 +94,7 @@ class BinTest extends TestCase
             self::assertStringContainsString(
                 $expectedErrorContains,
                 $errorOutput,
-                $extraInfo
+                $extraInfo,
             );
         }
     }

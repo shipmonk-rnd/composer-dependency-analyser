@@ -13,7 +13,7 @@ interface ResultFormatter
     public function format(
         AnalysisResult $result,
         CliOptions $options,
-        Configuration $configuration
+        Configuration $configuration,
     ): int;
 
 }

@@ -2,6 +2,7 @@
 
 namespace ShipMonk\ComposerDependencyAnalyser;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use function file_get_contents;
 use function strtolower;
@@ -13,9 +14,13 @@ class UsedSymbolExtractorTest extends TestCase
     /**
      * @param array<SymbolKind::*, array<string, list<int>>> $expectedUsages
      * @param array<string, SymbolKind::*> $extensionSymbols
-     * @dataProvider provideVariants
      */
-    public function test(string $path, array $expectedUsages, array $extensionSymbols = []): void
+    #[DataProvider('provideVariants')]
+    public function test(
+        string $path,
+        array $expectedUsages,
+        array $extensionSymbols = [],
+    ): void
     {
         $code = file_get_contents($path);
         self::assertNotFalse($code);
@@ -24,14 +29,14 @@ class UsedSymbolExtractorTest extends TestCase
 
         self::assertSame(
             $expectedUsages,
-            $extractor->parseUsedSymbols($extensionSymbols)
+            $extractor->parseUsedSymbols($extensionSymbols),
         );
     }
 
     /**
      * @return iterable<array{0: string, 1: array<SymbolKind::*, array<string, list<int>>>, 2?: array<string, SymbolKind::*>}>
      */
-    public function provideVariants(): iterable
+    public static function provideVariants(): iterable
     {
         yield 'use statements' => [
             __DIR__ . '/data/not-autoloaded/used-symbols/use-statements.php',
@@ -197,20 +202,18 @@ class UsedSymbolExtractorTest extends TestCase
             self::extensionSymbolsForExtensionsTestCases(),
         ];
 
-        if (PHP_VERSION_ID >= 80000) {
-            yield 'attribute' => [
-                __DIR__ . '/data/not-autoloaded/used-symbols/attribute.php',
-                [
-                    SymbolKind::CLASSLIKE => [
-                        'SomeAttribute' => [3],
-                        'Assert\NotNull' => [7],
-                        'Assert\NotBlank' => [8],
-                    ],
+        yield 'attribute' => [
+            __DIR__ . '/data/not-autoloaded/used-symbols/attribute.php',
+            [
+                SymbolKind::CLASSLIKE => [
+                    'SomeAttribute' => [3],
+                    'Assert\NotNull' => [7],
+                    'Assert\NotBlank' => [8],
                 ],
-            ];
-        }
+            ],
+        ];
 
-        if (PHP_VERSION_ID >= 80400) {
+        if (PHP_VERSION_ID >= 80_400) {
             yield 'property hooks' => [
                 __DIR__ . '/data/not-autoloaded/used-symbols/property-hooks.php',
                 [],

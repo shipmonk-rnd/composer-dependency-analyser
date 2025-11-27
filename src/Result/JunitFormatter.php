@@ -26,26 +26,17 @@ use const PHP_INT_MAX;
 class JunitFormatter implements ResultFormatter
 {
 
-    /**
-     * @var string
-     */
-    private $cwd;
-
-    /**
-     * @var Printer
-     */
-    private $printer;
-
-    public function __construct(string $cwd, Printer $printer)
+    public function __construct(
+        private string $cwd,
+        private Printer $printer,
+    )
     {
-        $this->cwd = $cwd;
-        $this->printer = $printer;
     }
 
     public function format(
         AnalysisResult $result,
         CliOptions $options,
-        Configuration $configuration
+        Configuration $configuration,
     ): int
     {
         $xml = '<?xml version="1.0" encoding="UTF-8"?>';
@@ -68,7 +59,7 @@ class JunitFormatter implements ResultFormatter
             $xml .= $this->createSymbolBasedTestSuite(
                 'unknown classes',
                 $unknownClassErrors,
-                $maxShownUsages
+                $maxShownUsages,
             );
         }
 
@@ -77,7 +68,7 @@ class JunitFormatter implements ResultFormatter
             $xml .= $this->createSymbolBasedTestSuite(
                 'unknown functions',
                 $unknownFunctionErrors,
-                $maxShownUsages
+                $maxShownUsages,
             );
         }
 
@@ -86,7 +77,7 @@ class JunitFormatter implements ResultFormatter
             $xml .= $this->createPackageBasedTestSuite(
                 'shadow dependencies',
                 $shadowDependencyErrors,
-                $maxShownUsages
+                $maxShownUsages,
             );
         }
 
@@ -95,7 +86,7 @@ class JunitFormatter implements ResultFormatter
             $xml .= $this->createPackageBasedTestSuite(
                 'dev dependencies in production code',
                 $devDependencyInProductionErrors,
-                $maxShownUsages
+                $maxShownUsages,
             );
         }
 
@@ -104,7 +95,7 @@ class JunitFormatter implements ResultFormatter
             $xml .= $this->createPackageBasedTestSuite(
                 'prod dependencies used only in dev paths',
                 array_fill_keys($prodDependencyOnlyInDevErrors, []),
-                $maxShownUsages
+                $maxShownUsages,
             );
         }
 
@@ -113,7 +104,7 @@ class JunitFormatter implements ResultFormatter
             $xml .= $this->createPackageBasedTestSuite(
                 'unused dependencies',
                 array_fill_keys($unusedDependencyErrors, []),
-                $maxShownUsages
+                $maxShownUsages,
             );
         }
 
@@ -153,7 +144,11 @@ class JunitFormatter implements ResultFormatter
     /**
      * @param array<string, list<SymbolUsage>> $errors
      */
-    private function createSymbolBasedTestSuite(string $title, array $errors, int $maxShownUsages): string
+    private function createSymbolBasedTestSuite(
+        string $title,
+        array $errors,
+        int $maxShownUsages,
+    ): string
     {
         $xml = sprintf('<testsuite name="%s" failures="%u">', $this->escape($title), count($errors));
 
@@ -179,7 +174,11 @@ class JunitFormatter implements ResultFormatter
     /**
      * @param array<string, array<string, list<SymbolUsage>>> $errors
      */
-    private function createPackageBasedTestSuite(string $title, array $errors, int $maxShownUsages): string
+    private function createPackageBasedTestSuite(
+        string $title,
+        array $errors,
+        int $maxShownUsages,
+    ): string
     {
         $xml = sprintf('<testsuite name="%s" failures="%u">', $this->escape($title), count($errors));
 
@@ -194,7 +193,7 @@ class JunitFormatter implements ResultFormatter
                     $xml .= sprintf(
                         '<failure message="%s">%s</failure>',
                         $symbol,
-                        $this->escape($usage)
+                        $this->escape($usage),
                     );
 
                     if ($printedSymbols === $maxShownUsages) {
@@ -215,7 +214,10 @@ class JunitFormatter implements ResultFormatter
      * @param list<SymbolUsage> $usages
      * @return list<string>
      */
-    private function createUsages(array $usages, int $maxShownUsages): array
+    private function createUsages(
+        array $usages,
+        int $maxShownUsages,
+    ): array
     {
         $usageMessages = [];
 
@@ -279,7 +281,7 @@ class JunitFormatter implements ResultFormatter
     private function relativizePath(string $path): string
     {
         if (strpos($path, $this->cwd) === 0) {
-            return (string) substr($path, strlen($this->cwd) + 1);
+            return substr($path, strlen($this->cwd) + 1);
         }
 
         return $path;

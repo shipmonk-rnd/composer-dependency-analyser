@@ -6,7 +6,7 @@ includes:
 
 parameters:
     level: max
-    phpVersion: 70200
+    phpVersion: 80100
     paths:
         - bin/composer-dependency-analyser
         - src

@@ -15,42 +15,42 @@ class IgnoreList
     /**
      * @var array<ErrorType::*, bool>
      */
-    private $ignoredErrors;
+    private array $ignoredErrors;
 
     /**
      * @var array<string, array<ErrorType::*, bool>>
      */
-    private $ignoredErrorsOnPath = [];
+    private array $ignoredErrorsOnPath = [];
 
     /**
      * @var array<string, array<ErrorType::*, bool>>
      */
-    private $ignoredErrorsOnDependency = [];
+    private array $ignoredErrorsOnDependency = [];
 
     /**
      * @var array<string, array<string, array<ErrorType::*, bool>>>
      */
-    private $ignoredErrorsOnDependencyAndPath = [];
+    private array $ignoredErrorsOnDependencyAndPath = [];
 
     /**
      * @var array<string, bool>
      */
-    private $ignoredUnknownClasses;
+    private array $ignoredUnknownClasses;
 
     /**
      * @var array<string, bool>
      */
-    private $ignoredUnknownClassesRegexes;
+    private array $ignoredUnknownClassesRegexes;
 
     /**
      * @var array<string, bool>
      */
-    private $ignoredUnknownFunctions;
+    private array $ignoredUnknownFunctions;
 
     /**
      * @var array<string, bool>
      */
-    private $ignoredUnknownFunctionsRegexes;
+    private array $ignoredUnknownFunctionsRegexes;
 
     /**
      * @param list<ErrorType::*> $ignoredErrors
@@ -70,7 +70,7 @@ class IgnoreList
         array $ignoredUnknownClasses,
         array $ignoredUnknownClassesRegexes,
         array $ignoredUnknownFunctions,
-        array $ignoredUnknownFunctionsRegexes
+        array $ignoredUnknownFunctionsRegexes,
     )
     {
         $this->ignoredErrors = array_fill_keys($ignoredErrors, false);
@@ -161,7 +161,10 @@ class IgnoreList
         return $unused;
     }
 
-    public function shouldIgnoreUnknownClass(string $class, string $filePath): bool
+    public function shouldIgnoreUnknownClass(
+        string $class,
+        string $filePath,
+    ): bool
     {
         $ignoredGlobally = $this->shouldIgnoreErrorGlobally(ErrorType::UNKNOWN_CLASS);
         $ignoredByPath = $this->shouldIgnoreErrorOnPath(ErrorType::UNKNOWN_CLASS, $filePath);
@@ -171,7 +174,10 @@ class IgnoreList
         return $ignoredGlobally || $ignoredByPath || $ignoredByRegex || $ignoredByBlacklist;
     }
 
-    public function shouldIgnoreUnknownFunction(string $function, string $filePath): bool
+    public function shouldIgnoreUnknownFunction(
+        string $function,
+        string $filePath,
+    ): bool
     {
         $ignoredGlobally = $this->shouldIgnoreErrorGlobally(ErrorType::UNKNOWN_FUNCTION);
         $ignoredByPath = $this->shouldIgnoreErrorOnPath(ErrorType::UNKNOWN_FUNCTION, $filePath);
@@ -240,7 +246,11 @@ class IgnoreList
     /**
      * @param ErrorType::SHADOW_DEPENDENCY|ErrorType::UNUSED_DEPENDENCY|ErrorType::DEV_DEPENDENCY_IN_PROD|ErrorType::PROD_DEPENDENCY_ONLY_IN_DEV $errorType
      */
-    public function shouldIgnoreError(string $errorType, ?string $realPath, ?string $dependency): bool
+    public function shouldIgnoreError(
+        string $errorType,
+        ?string $realPath,
+        ?string $dependency,
+    ): bool
     {
         $ignoredGlobally = $this->shouldIgnoreErrorGlobally($errorType);
         $ignoredByPath = $realPath !== null && $this->shouldIgnoreErrorOnPath($errorType, $realPath);
@@ -266,7 +276,10 @@ class IgnoreList
     /**
      * @param ErrorType::* $errorType
      */
-    private function shouldIgnoreErrorOnPath(string $errorType, string $filePath): bool
+    private function shouldIgnoreErrorOnPath(
+        string $errorType,
+        string $filePath,
+    ): bool
     {
         foreach ($this->ignoredErrorsOnPath as $path => $errorTypes) {
             if ($this->isFilepathWithinPath($filePath, $path) && isset($errorTypes[$errorType])) {
@@ -281,7 +294,10 @@ class IgnoreList
     /**
      * @param ErrorType::* $errorType
      */
-    private function shouldIgnoreErrorOnDependency(string $errorType, string $dependency): bool
+    private function shouldIgnoreErrorOnDependency(
+        string $errorType,
+        string $dependency,
+    ): bool
     {
         if (isset($this->ignoredErrorsOnDependency[$dependency][$errorType])) {
             $this->ignoredErrorsOnDependency[$dependency][$errorType] = true;
@@ -294,7 +310,11 @@ class IgnoreList
     /**
      * @param ErrorType::* $errorType
      */
-    private function shouldIgnoreErrorOnDependencyAndPath(string $errorType, string $packageName, string $filePath): bool
+    private function shouldIgnoreErrorOnDependencyAndPath(
+        string $errorType,
+        string $packageName,
+        string $filePath,
+    ): bool
     {
         if (isset($this->ignoredErrorsOnDependencyAndPath[$packageName])) {
             foreach ($this->ignoredErrorsOnDependencyAndPath[$packageName] as $path => $errorTypes) {
@@ -308,7 +328,10 @@ class IgnoreList
         return false;
     }
 
-    private function isFilepathWithinPath(string $filePath, string $path): bool
+    private function isFilepathWithinPath(
+        string $filePath,
+        string $path,
+    ): bool
     {
         return strpos($filePath, $path) === 0;
     }

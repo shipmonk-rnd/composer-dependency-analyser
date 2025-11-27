@@ -2,6 +2,7 @@
 
 namespace ShipMonk\ComposerDependencyAnalyser;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
 use ShipMonk\ComposerDependencyAnalyser\Config\PathToScan;
@@ -53,14 +54,14 @@ class InitializerTest extends TestCase
 
         self::assertSame(
             strtr($cwd . '/custom-vendor/autoload.php', '/', DIRECTORY_SEPARATOR),
-            $composerJson->composerAutoloadPath
+            $composerJson->composerAutoloadPath,
         );
         self::assertSame(
             [
                 'nette/utils' => false,
                 'phpstan/phpstan' => true,
             ],
-            $composerJson->dependencies
+            $composerJson->dependencies,
         );
     }
 
@@ -79,14 +80,14 @@ class InitializerTest extends TestCase
 
         self::assertSame(
             strtr(dirname($composerJsonPath) . '/custom-vendor/autoload.php', '/', DIRECTORY_SEPARATOR),
-            $composerJson->composerAutoloadPath
+            $composerJson->composerAutoloadPath,
         );
         self::assertSame(
             [
                 'nette/utils' => false,
                 'phpstan/phpstan' => true,
             ],
-            $composerJson->dependencies
+            $composerJson->dependencies,
         );
     }
 
@@ -137,10 +138,11 @@ class InitializerTest extends TestCase
         self::assertInstanceOf(JunitFormatter::class, $initializer->initFormatter($optionsFormatJunit));
     }
 
-    /**
-     * @dataProvider provideInitFormatterFailures
-     */
-    public function testInitFormatterFailures(CliOptions $options, string $message): void
+    #[DataProvider('provideInitFormatterFailures')]
+    public function testInitFormatterFailures(
+        CliOptions $options,
+        string $message,
+    ): void
     {
         $printer = $this->createMock(Printer::class);
 

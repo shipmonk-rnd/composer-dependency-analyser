@@ -34,46 +34,47 @@ class ComposerJson
 
     /**
      * @readonly
-     * @var string
      */
-    public $composerVendorDir;
+    public string $composerVendorDir;
 
     /**
      * @readonly
-     * @var string
      */
-    public $composerAutoloadPath;
+    public string $composerAutoloadPath;
 
     /**
      * Package or ext-* => isDev
      *
-     * @readonly
      * @var array<string, bool>
+     *
+     * @readonly
      */
-    public $dependencies;
+    public array $dependencies;
 
     /**
      * Absolute path => isDev
      *
-     * @readonly
      * @var array<string, bool>
+     *
+     * @readonly
      */
-    public $autoloadPaths;
+    public array $autoloadPaths;
 
     /**
      * Regex => isDev
      *
-     * @readonly
      * @var array<string, bool>
+     *
+     * @readonly
      */
-    public $autoloadExcludeRegexes;
+    public array $autoloadExcludeRegexes;
 
     /**
      * @throws InvalidPathException
      * @throws InvalidConfigException
      */
     public function __construct(
-        string $composerJsonPath
+        string $composerJsonPath,
     )
     {
         $basePath = dirname($composerJsonPath);
@@ -93,11 +94,11 @@ class ComposerJson
             $this->extractAutoloadPaths($basePath, $composerJsonData['autoload-dev']['psr-0'] ?? [], true),
             $this->extractAutoloadPaths($basePath, $composerJsonData['autoload-dev']['psr-4'] ?? [], true),
             $this->extractAutoloadPaths($basePath, $composerJsonData['autoload-dev']['files'] ?? [], true),
-            $this->extractAutoloadPaths($basePath, $composerJsonData['autoload-dev']['classmap'] ?? [], true)
+            $this->extractAutoloadPaths($basePath, $composerJsonData['autoload-dev']['classmap'] ?? [], true),
         );
         $this->autoloadExcludeRegexes = array_merge(
             $this->extractAutoloadExcludeRegexes($basePath, $composerJsonData['autoload']['exclude-from-classmap'] ?? [], false),
-            $this->extractAutoloadExcludeRegexes($basePath, $composerJsonData['autoload-dev']['exclude-from-classmap'] ?? [], true)
+            $this->extractAutoloadExcludeRegexes($basePath, $composerJsonData['autoload-dev']['exclude-from-classmap'] ?? [], true),
         );
 
         $filterExtensions = static function (string $dependency): bool {
@@ -111,7 +112,7 @@ class ComposerJson
             array_fill_keys(array_keys(array_filter($requiredPackages, $filterPackages, ARRAY_FILTER_USE_KEY)), false),
             array_fill_keys(array_keys(array_filter($requiredPackages, $filterExtensions, ARRAY_FILTER_USE_KEY)), false),
             array_fill_keys(array_keys(array_filter($requiredDevPackages, $filterPackages, ARRAY_FILTER_USE_KEY)), true),
-            array_fill_keys(array_keys(array_filter($requiredDevPackages, $filterExtensions, ARRAY_FILTER_USE_KEY)), true)
+            array_fill_keys(array_keys(array_filter($requiredDevPackages, $filterExtensions, ARRAY_FILTER_USE_KEY)), true),
         ));
 
         if (count($this->dependencies) === 0) {
@@ -151,9 +152,14 @@ class ComposerJson
     /**
      * @param array<string|array<string>> $autoload
      * @return array<string, bool>
+     *
      * @throws InvalidPathException
      */
-    private function extractAutoloadPaths(string $basePath, array $autoload, bool $isDev): array
+    private function extractAutoloadPaths(
+        string $basePath,
+        array $autoload,
+        bool $isDev,
+    ): array
     {
         $result = [];
 
@@ -193,9 +199,14 @@ class ComposerJson
     /**
      * @param array<string> $exclude
      * @return array<string, bool>
+     *
      * @throws InvalidPathException
      */
-    private function extractAutoloadExcludeRegexes(string $basePath, array $exclude, bool $isDev): array
+    private function extractAutoloadExcludeRegexes(
+        string $basePath,
+        array $exclude,
+        bool $isDev,
+    ): array
     {
         $regexes = [];
 
@@ -214,7 +225,10 @@ class ComposerJson
      * @see https://github.com/composer/composer/blob/ee2c9afdc86ef3f06a4bd49b1fea7d1d636afc92/src/Composer/Autoload/AutoloadGenerator.php#L1256-L1286
      * @throws InvalidPathException
      */
-    private function resolveAutoloadExclude(string $basePath, string $pathPattern): string
+    private function resolveAutoloadExclude(
+        string $basePath,
+        string $pathPattern,
+    ): string
     {
         // first escape user input
         $path = preg_replace('{/+}', '/', preg_quote(trim(strtr($pathPattern, '\\', '/'), '/')));
@@ -236,7 +250,7 @@ class ComposerJson
 
                 return '';
             },
-            $path
+            $path,
             // note: composer also uses `PREG_UNMATCHED_AS_NULL` but the `$flags` arg supported since PHP v7.4
         );
 
@@ -280,6 +294,7 @@ class ComposerJson
      *          exclude-from-classmap?: string[]
      *     }
      * }
+     *
      * @throws InvalidPathException
      */
     private function parseComposerJson(string $composerJsonPath): array
@@ -305,7 +320,10 @@ class ComposerJson
         return $composerJsonData; // @phpstan-ignore-line ignore mixed returned
     }
 
-    private function resolveComposerVendorDir(string $basePath, string $vendorDir): string
+    private function resolveComposerVendorDir(
+        string $basePath,
+        string $vendorDir,
+    ): string
     {
         if (Path::isAbsolute($vendorDir)) {
             return Path::normalize($vendorDir);

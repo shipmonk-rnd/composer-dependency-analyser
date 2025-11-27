@@ -19,7 +19,7 @@
         "unused code"
     ],
     "require": {
-        "php": "^7.2 || ^8.0",
+        "php": "^8.1",
         "ext-json": "*",
         "ext-tokenizer": "*"
     },
@@ -28,13 +28,12 @@
         "ext-libxml": "*",
         "editorconfig-checker/editorconfig-checker": "^10.7.0",
         "ergebnis/composer-normalize": "^2.19.0",
-        "phpcompatibility/php-compatibility": "^9.3.5",
-        "phpstan/phpstan": "^1.12.26",
-        "phpstan/phpstan-phpunit": "^1.4.2",
-        "phpstan/phpstan-strict-rules": "^1.6.2",
-        "phpunit/phpunit": "^8.5.42 || ^9.6.23",
-        "shipmonk/name-collision-detector": "^2.1.1",
-        "slevomat/coding-standard": "^8.15.0"
+        "phpstan/phpstan": "^2.1",
+        "phpstan/phpstan-phpunit": "^2.0",
+        "phpstan/phpstan-strict-rules": "^2.0",
+        "phpunit/phpunit": "^10.5.58",
+        "shipmonk/coding-standard": "^0.2.0",
+        "shipmonk/name-collision-detector": "^2.1.1"
     },
     "autoload": {
         "psr-4": {
@@ -79,7 +78,7 @@
         "check:ec": "ec src tests",
         "check:scripts": "phpstan analyse -vv --ansi --level=6 scripts/*.php",
         "check:self": "bin/composer-dependency-analyser",
-        "check:tests": "phpunit -vvv tests",
+        "check:tests": "phpunit tests",
         "check:types": "phpstan analyse -vv --ansi",
         "fix:cs": "phpcbf"
     }

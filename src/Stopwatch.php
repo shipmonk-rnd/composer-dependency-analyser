@@ -8,10 +8,7 @@ use function microtime;
 class Stopwatch
 {
 
-    /**
-     * @var float|null
-     */
-    private $startTime;
+    private ?float $startTime = null;
 
     public function start(): void
     {

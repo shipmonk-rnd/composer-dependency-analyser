@@ -10,55 +10,49 @@ use function sort;
 class AnalysisResult
 {
 
-    /**
-     * @var int
-     */
-    private $scannedFilesCount;
+    private int $scannedFilesCount;
 
-    /**
-     * @var float
-     */
-    private $elapsedTime;
+    private float $elapsedTime;
 
     /**
      * @var array<string, array<string, list<SymbolUsage>>>
      */
-    private $usages;
+    private array $usages = [];
 
     /**
      * @var array<string, list<SymbolUsage>>
      */
-    private $unknownClassErrors;
+    private array $unknownClassErrors;
 
     /**
      * @var array<string, list<SymbolUsage>>
      */
-    private $unknownFunctionErrors;
+    private array $unknownFunctionErrors;
 
     /**
      * @var array<string, array<string, list<SymbolUsage>>>
      */
-    private $shadowDependencyErrors = [];
+    private array $shadowDependencyErrors = [];
 
     /**
      * @var array<string, array<string, list<SymbolUsage>>>
      */
-    private $devDependencyInProductionErrors = [];
+    private array $devDependencyInProductionErrors = [];
 
     /**
      * @var list<string>
      */
-    private $prodDependencyOnlyInDevErrors;
+    private array $prodDependencyOnlyInDevErrors;
 
     /**
      * @var list<string>
      */
-    private $unusedDependencyErrors;
+    private array $unusedDependencyErrors;
 
     /**
      * @var list<UnusedSymbolIgnore|UnusedErrorIgnore>
      */
-    private $unusedIgnores;
+    private array $unusedIgnores;
 
     /**
      * @param array<string, array<string, list<SymbolUsage>>> $usages package => [ classname => usage[] ]
@@ -80,7 +74,7 @@ class AnalysisResult
         array $devDependencyInProductionErrors,
         array $prodDependencyOnlyInDevErrors,
         array $unusedDependencyErrors,
-        array $unusedIgnores
+        array $unusedIgnores,
     )
     {
         ksort($usages);

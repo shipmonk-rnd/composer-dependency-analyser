@@ -8,28 +8,14 @@ class SymbolUsage
 {
 
     /**
-     * @var string
-     */
-    private $filepath;
-
-    /**
-     * @var int
-     */
-    private $lineNumber;
-
-    /**
-     * @var SymbolKind::*
-     */
-    private $kind;
-
-    /**
      * @param SymbolKind::* $kind
      */
-    public function __construct(string $filepath, int $lineNumber, int $kind)
+    public function __construct(
+        private string $filepath,
+        private int $lineNumber,
+        private int $kind,
+    )
     {
-        $this->filepath = $filepath;
-        $this->lineNumber = $lineNumber;
-        $this->kind = $kind;
     }
 
     public function getFilepath(): string

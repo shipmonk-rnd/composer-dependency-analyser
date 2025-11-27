@@ -8,28 +8,14 @@ class UnusedSymbolIgnore
 {
 
     /**
-     * @var string
-     */
-    private $unknownSymbol;
-
-    /**
-     * @var bool
-     */
-    private $isRegex;
-
-    /**
-     * @var SymbolKind::CLASSLIKE|SymbolKind::FUNCTION
-     */
-    private $symbolKind;
-
-    /**
      * @param SymbolKind::CLASSLIKE|SymbolKind::FUNCTION $symbolKind
      */
-    public function __construct(string $unknownSymbol, bool $isRegex, int $symbolKind)
+    public function __construct(
+        private string $unknownSymbol,
+        private bool $isRegex,
+        private int $symbolKind,
+    )
     {
-        $this->unknownSymbol = $unknownSymbol;
-        $this->isRegex = $isRegex;
-        $this->symbolKind = $symbolKind;
     }
 
     public function getUnknownSymbol(): string

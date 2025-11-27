@@ -5,20 +5,11 @@ namespace ShipMonk\ComposerDependencyAnalyser\Config;
 class PathToScan
 {
 
-    /**
-     * @var string
-     */
-    private $path;
-
-    /**
-     * @var bool
-     */
-    private $isDev;
-
-    public function __construct(string $path, bool $isDev)
+    public function __construct(
+        private string $path,
+        private bool $isDev,
+    )
     {
-        $this->path = $path;
-        $this->isDev = $isDev;
     }
 
     public function getPath(): string

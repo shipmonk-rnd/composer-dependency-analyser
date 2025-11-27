@@ -1,5 +1,5 @@
 #!/usr/bin/env php
-<?php declare(strict_types=1);
+<?php declare(strict_types = 1);
 
 use ShipMonk\ComposerDependencyAnalyser\Analyser;
 use ShipMonk\ComposerDependencyAnalyser\Exception\AbortException;
@@ -35,6 +35,11 @@ $initializer = new Initializer($cwd, $stdOutPrinter, $stdErrPrinter);
 $stopwatch = new Stopwatch();
 
 try {
+    if (!isset($argv)) {
+        $stdErrPrinter->printLine("\n<red>Missing \$argv, check your register_argc_argv setting.</red>" . PHP_EOL);
+        exit(1);
+    }
+
     $options = $initializer->initCliOptions($cwd, $argv);
     $composerJson = $initializer->initComposerJson($options);
     $initializer->initComposerAutoloader($composerJson);
@@ -60,5 +65,3 @@ try {
 }
 
 exit($exitCode);
-
-
