@@ -33,6 +33,7 @@
         "phpstan/phpstan-strict-rules": "^2.0",
         "phpunit/phpunit": "^10.5.58",
         "shipmonk/coding-standard": "^0.2.0",
+        "shipmonk/coverage-guard": "dev-master",
         "shipmonk/name-collision-detector": "^2.1.1"
     },
     "autoload": {
@@ -64,7 +65,7 @@
             "@check:ec",
             "@check:cs",
             "@check:types",
-            "@check:tests",
+            "@check:coverage",
             "@check:self",
             "@check:collisions",
             "@check:scripts"
@@ -74,11 +75,15 @@
             "composer normalize --dry-run --no-check-lock --no-update-lock",
             "composer validate --strict"
         ],
+        "check:coverage": [
+            "XDEBUG_MODE=coverage phpunit --coverage-clover cache/clover.xml",
+            "coverage-guard check cache/clover.xml"
+        ],
         "check:cs": "phpcs",
         "check:ec": "ec src tests",
         "check:scripts": "phpstan analyse -vv --ansi --level=6 scripts/*.php",
         "check:self": "bin/composer-dependency-analyser",
-        "check:tests": "phpunit tests",
+        "check:tests": "phpunit",
         "check:types": "phpstan analyse -vv --ansi",
         "fix:cs": "phpcbf"
     }
