@@ -2850,12 +2850,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/shipmonk-rnd/coverage-guard.git",
-                "reference": "2f1281f7883ce7933ee029241fd517bb14cafcd6"
+                "reference": "cb3a4905f5b552d950db979379358b304bcfc47f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/shipmonk-rnd/coverage-guard/zipball/2f1281f7883ce7933ee029241fd517bb14cafcd6",
-                "reference": "2f1281f7883ce7933ee029241fd517bb14cafcd6",
+                "url": "https://api.github.com/repos/shipmonk-rnd/coverage-guard/zipball/cb3a4905f5b552d950db979379358b304bcfc47f",
+                "reference": "cb3a4905f5b552d950db979379358b304bcfc47f",
                 "shasum": ""
             },
             "require": {
@@ -2903,7 +2903,7 @@
                 "issues": "https://github.com/shipmonk-rnd/coverage-guard/issues",
                 "source": "https://github.com/shipmonk-rnd/coverage-guard/tree/master"
             },
-            "time": "2025-11-28T14:42:05+00:00"
+            "time": "2025-12-05T07:38:45+00:00"
         },
         {
             "name": "shipmonk/name-collision-detector",

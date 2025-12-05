@@ -28,8 +28,13 @@ $config->addRule(new class implements CoverageRule {
             return null;
         }
 
+        $methodReflection = $context->getMethodReflection();
+        if ($methodReflection === null) {
+            return null;
+        }
+
         $coverage = $codeBlock->getCoveragePercentage();
-        $classReflection = $codeBlock->getMethodReflection()->getDeclaringClass();
+        $classReflection = $methodReflection->getDeclaringClass();
         $requiredCoverage = $this->getRequiredCoverage($classReflection);
 
         if ($codeBlock->getCoveragePercentage() < $requiredCoverage) {
