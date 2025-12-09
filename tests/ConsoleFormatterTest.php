@@ -196,7 +196,55 @@ OUT;
 
         self::assertSame($this->normalizeEol($expectedRegularOutput), $regularOutput);
         self::assertSame($this->normalizeEol($expectedVerboseOutput), $verboseOutput);
-        // editorconfig-checker-enable
+    }
+
+    public function testPrintResultUsages(): void
+    {
+        $analysisResult = new AnalysisResult(
+            scannedFilesCount: 5,
+            elapsedTime: 0.456,
+            usages: [
+                'symfony/console' => [
+                    'Symfony\Component\Console\Application' => [
+                        new SymbolUsage('/app/src/Application.php', 5, SymbolKind::CLASSLIKE),
+                    ],
+                    'Symfony\Component\Console\Command\Command' => [
+                        new SymbolUsage('/app/src/MyCommand.php', 10, SymbolKind::CLASSLIKE),
+                        new SymbolUsage('/app/src/AnotherCommand.php', 15, SymbolKind::CLASSLIKE),
+                    ],
+                ],
+            ],
+            unknownClassErrors: [],
+            unknownFunctionErrors: [],
+            shadowDependencyErrors: [],
+            devDependencyInProductionErrors: [],
+            prodDependencyOnlyInDevErrors: [],
+            unusedDependencyErrors: [],
+            unusedIgnores: [],
+        );
+
+        $output = $this->getFormatterNormalizedOutput(static function ($formatter) use ($analysisResult): void {
+            $options = new CliOptions();
+            $options->dumpUsages = 'symfony/console';
+            $formatter->format($analysisResult, $options, new Configuration());
+        });
+
+        $expectedOutput = <<<'OUT'
+
+Dumping sample usages of symfony/console
+(3 usages of 2 symbols in total)
+
+  • symfony/console
+      Symfony\Component\Console\Application
+        src/Application.php:5
+      Symfony\Component\Console\Command\Command
+        src/MyCommand.php:10
+        src/AnotherCommand.php:15
+
+
+OUT;
+
+        self::assertSame($this->normalizeEol($expectedOutput), $output);
     }
 
     protected function createFormatter(Printer $printer): ResultFormatter

@@ -10,6 +10,7 @@ use ShipMonk\ComposerDependencyAnalyser\Exception\AbortException;
 use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidConfigException;
 use ShipMonk\ComposerDependencyAnalyser\Result\ConsoleFormatter;
 use ShipMonk\ComposerDependencyAnalyser\Result\JunitFormatter;
+use function count;
 use function dirname;
 use function strtr;
 use const DIRECTORY_SEPARATOR;
@@ -118,6 +119,30 @@ class InitializerTest extends TestCase
 
         $this->expectException(AbortException::class);
         $initializer->initCliOptions(__DIR__, ['script.php', '--help']);
+    }
+
+    public function testInitCliOptionsVersion(): void
+    {
+        $printer = $this->createMock(Printer::class);
+        $printer->expects(self::once())
+            ->method('printLine')
+            ->with(self::stringStartsWith('Composer Dependency Analyser'));
+
+        $initializer = new Initializer(__DIR__, $printer, $printer);
+
+        $this->expectException(AbortException::class);
+        $initializer->initCliOptions(__DIR__, ['script.php', '--version']);
+    }
+
+    public function testInitComposerClassLoaders(): void
+    {
+        $stdOutPrinter = $this->createMock(Printer::class);
+        $stdErrPrinter = $this->createMock(Printer::class);
+
+        $initializer = new Initializer(__DIR__, $stdOutPrinter, $stdErrPrinter);
+        $loaders = $initializer->initComposerClassLoaders();
+
+        self::assertGreaterThan(0, count($loaders));
     }
 
     public function testInitFormatter(): void

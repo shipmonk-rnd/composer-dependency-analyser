@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1e778873976d3b30cd278cd274d5b823",
+    "content-hash": "6d0cae9257bbaa5bd6e93e1466c71ffd",
     "packages": [],
     "packages-dev": [
         {
@@ -2845,6 +2845,66 @@
             "time": "2025-11-25T11:07:36+00:00"
         },
         {
+            "name": "shipmonk/coverage-guard",
+            "version": "1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/shipmonk-rnd/coverage-guard.git",
+                "reference": "2ce122d97467e8f02933f54bf51ee7b3cc8a8d83"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/shipmonk-rnd/coverage-guard/zipball/2ce122d97467e8f02933f54bf51ee7b3cc8a8d83",
+                "reference": "2ce122d97467e8f02933f54bf51ee7b3cc8a8d83",
+                "shasum": ""
+            },
+            "require": {
+                "nikic/php-parser": "^4.19.1 || ^5.0",
+                "php": "^8.1"
+            },
+            "require-dev": {
+                "editorconfig-checker/editorconfig-checker": "10.7.0",
+                "ergebnis/composer-normalize": "2.48.2",
+                "phpstan/phpstan": "2.1.32",
+                "phpstan/phpstan-phpunit": "2.0.8",
+                "phpstan/phpstan-strict-rules": "2.0.7",
+                "phpunit/php-code-coverage": "^10.1",
+                "phpunit/phpunit": "~10.5.58",
+                "sebastian/diff": "^4.0 || ^5.0 || ^6.0 || ^7.0",
+                "shipmonk/coding-standard": "^0.2.0",
+                "shipmonk/composer-dependency-analyser": "1.8.4",
+                "shipmonk/dead-code-detector": "0.14.0",
+                "shipmonk/name-collision-detector": "2.1.1",
+                "shipmonk/phpstan-rules": "4.3.0"
+            },
+            "bin": [
+                "bin/coverage-guard"
+            ],
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "ShipMonk\\CoverageGuard\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Enforce code coverage in your CI. Not by percentage, but target core methods. No more untested Facades, Controllers, or Repositories. Allows you to start enforcing coverage for new code only!",
+            "keywords": [
+                "code coverage",
+                "git diff",
+                "patch",
+                "phpunit",
+                "testing"
+            ],
+            "support": {
+                "issues": "https://github.com/shipmonk-rnd/coverage-guard/issues",
+                "source": "https://github.com/shipmonk-rnd/coverage-guard/tree/1.0.0"
+            },
+            "time": "2025-12-08T08:45:32+00:00"
+        },
+        {
             "name": "shipmonk/name-collision-detector",
             "version": "2.1.1",
             "source": {
@@ -3111,5 +3171,5 @@
         "ext-dom": "*",
         "ext-libxml": "*"
     },
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.9.0"
 }

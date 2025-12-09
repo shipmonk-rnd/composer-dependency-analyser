@@ -142,6 +142,33 @@ class ConfigurationTest extends TestCase
         ], $ignoreList3->getUnusedIgnores());
     }
 
+    public function testShouldIgnoreUnknownFunction(): void
+    {
+        $configuration = new Configuration();
+        $configuration->ignoreUnknownFunctions(['unknown_function']);
+        $configuration->ignoreErrorsOnPath(__DIR__ . '/data/../', [ErrorType::UNKNOWN_FUNCTION]);
+
+        $ignoreList = $configuration->getIgnoreList();
+
+        self::assertTrue($ignoreList->shouldIgnoreUnknownFunction('unknown_function', __DIR__));
+        self::assertTrue($ignoreList->shouldIgnoreUnknownFunction('unknown_function', __DIR__ . '/app'));
+        self::assertTrue($ignoreList->shouldIgnoreUnknownFunction('any_function', __DIR__));
+        self::assertTrue($ignoreList->shouldIgnoreUnknownFunction('any_function', __DIR__ . DIRECTORY_SEPARATOR . 'app'));
+        self::assertFalse($ignoreList->shouldIgnoreUnknownFunction('any_function', '/other/path'));
+    }
+
+    public function testShouldIgnoreUnknownFunctionByRegex(): void
+    {
+        $configuration = new Configuration();
+        $configuration->ignoreUnknownFunctionsRegex('~^opcache_~');
+
+        $ignoreList = $configuration->getIgnoreList();
+
+        self::assertTrue($ignoreList->shouldIgnoreUnknownFunction('opcache_reset', __DIR__));
+        self::assertTrue($ignoreList->shouldIgnoreUnknownFunction('opcache_invalidate', __DIR__));
+        self::assertFalse($ignoreList->shouldIgnoreUnknownFunction('other_function', __DIR__));
+    }
+
     /**
      * @param callable(Configuration): void $configure
      */
