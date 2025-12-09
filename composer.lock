@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "990380bfd7f59794f334b6dee1b26de5",
+    "content-hash": "6d0cae9257bbaa5bd6e93e1466c71ffd",
     "packages": [],
     "packages-dev": [
         {
@@ -2846,16 +2846,16 @@
         },
         {
             "name": "shipmonk/coverage-guard",
-            "version": "dev-master",
+            "version": "1.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/shipmonk-rnd/coverage-guard.git",
-                "reference": "cb3a4905f5b552d950db979379358b304bcfc47f"
+                "reference": "2ce122d97467e8f02933f54bf51ee7b3cc8a8d83"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/shipmonk-rnd/coverage-guard/zipball/cb3a4905f5b552d950db979379358b304bcfc47f",
-                "reference": "cb3a4905f5b552d950db979379358b304bcfc47f",
+                "url": "https://api.github.com/repos/shipmonk-rnd/coverage-guard/zipball/2ce122d97467e8f02933f54bf51ee7b3cc8a8d83",
+                "reference": "2ce122d97467e8f02933f54bf51ee7b3cc8a8d83",
                 "shasum": ""
             },
             "require": {
@@ -2866,18 +2866,17 @@
                 "editorconfig-checker/editorconfig-checker": "10.7.0",
                 "ergebnis/composer-normalize": "2.48.2",
                 "phpstan/phpstan": "2.1.32",
-                "phpstan/phpstan-phpunit": "2.0.7",
+                "phpstan/phpstan-phpunit": "2.0.8",
                 "phpstan/phpstan-strict-rules": "2.0.7",
                 "phpunit/php-code-coverage": "^10.1",
                 "phpunit/phpunit": "~10.5.58",
                 "sebastian/diff": "^4.0 || ^5.0 || ^6.0 || ^7.0",
                 "shipmonk/coding-standard": "^0.2.0",
-                "shipmonk/composer-dependency-analyser": "1.8.3",
-                "shipmonk/dead-code-detector": "0.13.3",
+                "shipmonk/composer-dependency-analyser": "1.8.4",
+                "shipmonk/dead-code-detector": "0.14.0",
                 "shipmonk/name-collision-detector": "2.1.1",
-                "shipmonk/phpstan-rules": "4.2.1"
+                "shipmonk/phpstan-rules": "4.3.0"
             },
-            "default-branch": true,
             "bin": [
                 "bin/coverage-guard"
             ],
@@ -2901,9 +2900,9 @@
             ],
             "support": {
                 "issues": "https://github.com/shipmonk-rnd/coverage-guard/issues",
-                "source": "https://github.com/shipmonk-rnd/coverage-guard/tree/master"
+                "source": "https://github.com/shipmonk-rnd/coverage-guard/tree/1.0.0"
             },
-            "time": "2025-12-05T07:38:45+00:00"
+            "time": "2025-12-08T08:45:32+00:00"
         },
         {
             "name": "shipmonk/name-collision-detector",
@@ -3160,9 +3159,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "shipmonk/coverage-guard": 20
-    },
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -3174,5 +3171,5 @@
         "ext-dom": "*",
         "ext-libxml": "*"
     },
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.9.0"
 }
