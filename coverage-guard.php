@@ -1,8 +1,7 @@
-<?php declare(strict_types=1);
+<?php declare(strict_types = 1);
 
 use ShipMonk\ComposerDependencyAnalyser\Analyser;
 use ShipMonk\ComposerDependencyAnalyser\Cli;
-use ShipMonk\ComposerDependencyAnalyser\ComposerJson;
 use ShipMonk\ComposerDependencyAnalyser\Initializer;
 use ShipMonk\ComposerDependencyAnalyser\UsedSymbolExtractor;
 use ShipMonk\CoverageGuard\Config;
@@ -17,7 +16,7 @@ $config->addRule(new class implements CoverageRule {
 
     public function inspect(
         CodeBlock $codeBlock,
-        InspectionContext $context
+        InspectionContext $context,
     ): ?CoverageError
     {
         if (!$codeBlock instanceof ClassMethodBlock) {

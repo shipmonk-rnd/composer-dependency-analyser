@@ -11,6 +11,7 @@ parameters:
         - bin/composer-dependency-analyser
         - src
         - tests
+        - coverage-guard.php
     excludePaths:
         analyseAndScan:
             - tests/data/not-autoloaded/*
