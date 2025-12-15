@@ -3,6 +3,7 @@ includes:
     - ./vendor/phpstan/phpstan-strict-rules/rules.neon
     - ./vendor/phpstan/phpstan-phpunit/extension.neon
     - ./vendor/phpstan/phpstan-phpunit/rules.neon
+    - ./vendor/shipmonk/dead-code-detector/rules.neon
 
 parameters:
     level: max
@@ -29,6 +30,13 @@ parameters:
         implicitThrows: false
         checkedExceptionClasses:
             - ShipMonk\ComposerDependencyAnalyser\Exception\RuntimeException
+
+    shipmonkDeadCode:
+        usageExcluders:
+            tests:
+                enabled: true
+        detect:
+            deadEnumCases: true
 
     ignoreErrors:
         -

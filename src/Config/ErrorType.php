@@ -2,6 +2,9 @@
 
 namespace ShipMonk\ComposerDependencyAnalyser\Config;
 
+/**
+ * @api
+ */
 final class ErrorType
 {
 

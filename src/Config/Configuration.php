@@ -11,6 +11,9 @@ use function in_array;
 use function preg_match;
 use function strpos;
 
+/**
+ * @api
+ */
 class Configuration
 {
 
