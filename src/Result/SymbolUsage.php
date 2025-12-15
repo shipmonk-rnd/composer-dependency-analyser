@@ -31,7 +31,7 @@ class SymbolUsage
     /**
      * @return SymbolKind::*
      */
-    public function getKind(): int
+    public function getKind(): int // @phpstan-ignore shipmonk.deadMethod
     {
         return $this->kind;
     }

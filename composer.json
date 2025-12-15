@@ -34,6 +34,7 @@
         "phpunit/phpunit": "^10.5.58",
         "shipmonk/coding-standard": "^0.2.0",
         "shipmonk/coverage-guard": "^1.0.0",
+        "shipmonk/dead-code-detector": "^0.14.0",
         "shipmonk/name-collision-detector": "^2.1.1"
     },
     "autoload": {
