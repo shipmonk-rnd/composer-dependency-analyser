@@ -31,7 +31,7 @@
         "phpstan/phpstan": "^2.1",
         "phpstan/phpstan-phpunit": "^2.0",
         "phpstan/phpstan-strict-rules": "^2.0",
-        "phpunit/phpunit": "^10.5.58",
+        "phpunit/phpunit": "^10.5.62",
         "shipmonk/coding-standard": "^0.2.0",
         "shipmonk/coverage-guard": "^1.0.0",
         "shipmonk/dead-code-detector": "^0.14.0",
