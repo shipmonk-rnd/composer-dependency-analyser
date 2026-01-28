@@ -213,6 +213,30 @@ class UsedSymbolExtractorTest extends TestCase
             ],
         ];
 
+        // https://github.com/shipmonk-rnd/composer-dependency-analyser/issues/256
+        yield 'namespace keyword as constant' => [
+            __DIR__ . '/data/not-autoloaded/used-symbols/namespace-keyword-constant.php',
+            [
+                SymbolKind::CLASSLIKE => [
+                    // Line 15: after "public const NAMESPACE = ..." (T_CONST case)
+                    // Line 27: after "ConstClass::NAMESPACE" (T_DOUBLE_COLON case)
+                    'Carbon\Carbon' => [15, 27],
+                ],
+            ],
+        ];
+
+        // Related to #256: CLASS/INTERFACE/TRAIT/ENUM keywords can also be constant names
+        yield 'class keyword as constant' => [
+            __DIR__ . '/data/not-autoloaded/used-symbols/class-keyword-constant.php',
+            [
+                SymbolKind::CLASSLIKE => [
+                    // Line 16: after "public const TRAIT = ..." (T_CONST case)
+                    // Line 37: after "Other::CLASS" and closure (T_DOUBLE_COLON case)
+                    'Carbon\Carbon' => [16, 37],
+                ],
+            ],
+        ];
+
         if (PHP_VERSION_ID >= 80_400) {
             yield 'property hooks' => [
                 __DIR__ . '/data/not-autoloaded/used-symbols/property-hooks.php',

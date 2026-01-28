@@ -91,7 +91,10 @@ class UsedSymbolExtractor
                 case T_INTERFACE:
                 case T_TRAIT:
                 case T_ENUM:
-                    $inClassLevel = $level + 1;
+                    if (!$this->isKeywordUsedAsConstantName()) {
+                        $inClassLevel = $level + 1;
+                    }
+
                     break;
 
                 case T_USE:
@@ -109,10 +112,12 @@ class UsedSymbolExtractor
                     break;
 
                 case T_NAMESPACE:
-                    // namespace change
-                    $inGlobalScope = false;
-                    $useStatements = [];
-                    $useStatementKinds = [];
+                    if (!$this->isKeywordUsedAsConstantName()) {
+                        $inGlobalScope = false;
+                        $useStatements = [];
+                        $useStatementKinds = [];
+                    }
+
                     break;
 
                 case T_NAME_FULLY_QUALIFIED:
@@ -359,6 +364,18 @@ class UsedSymbolExtractor
         }
 
         return true;
+    }
+
+    /**
+     * Checks if the current keyword token is used as a constant name.
+     * E.g., SomeClass::NAMESPACE (access) or public const INTERFACE = 'value' (definition)
+     */
+    private function isKeywordUsedAsConstantName(): bool
+    {
+        $tokenBefore = $this->getTokenBefore($this->pointer - 2);
+
+        return $tokenBefore->id === T_DOUBLE_COLON
+            || $tokenBefore->id === T_CONST;
     }
 
     private function getTokenBefore(int $pointer): PhpToken
