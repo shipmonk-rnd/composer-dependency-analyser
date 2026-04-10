@@ -12,21 +12,6 @@ jobs:
                     -
                         repo: TomasVotruba/unused-public
                     -
-                        repo: VasekPurchart/Console-Errors-Bundle
-                        cdaArgs: --config=build/composer-dependency-analyser.config.php
-                    -
-                        repo: VasekPurchart/Phing-Copy-Files-Task
-                        cdaArgs: --config=build/composer-dependency-analyser.config.php
-                    -
-                        repo: VasekPurchart/Phing-Symfony-Command-Task
-                        cdaArgs: --config=build/composer-dependency-analyser.config.php
-                    -
-                        repo: VasekPurchart/Rabbit-Mq-Consumer-Handler-Bundle
-                        cdaArgs: --config=build/composer-dependency-analyser.config.php
-                    -
-                        repo: VasekPurchart/Tracy-Blue-Screen-Bundle
-                        cdaArgs: --config=build/composer-dependency-analyser.config.php
-                    -
                         repo: VincentLanglet/Twig-CS-Fixer
                     -
                         repo: alex-kalanis/kw_files
@@ -38,27 +23,6 @@ jobs:
                         repo: cdn77/PhpFunctions
                     -
                         repo: cdn77/RabbitMQBundle
-                    -
-                        repo: consistence/consistence
-                        cdaArgs: --config=build/composer-dependency-analyser.config.php
-                    -
-                        repo: consistence/consistence-doctrine
-                        cdaArgs: --config=build/composer-dependency-analyser.config.php
-                    -
-                        repo: consistence/consistence-doctrine-symfony
-                        cdaArgs: --config=build/composer-dependency-analyser.config.php
-                    -
-                        repo: consistence/consistence-jms-serializer
-                        cdaArgs: --config=build/composer-dependency-analyser.config.php
-                    -
-                        repo: consistence/consistence-jms-serializer-symfony
-                        cdaArgs: --config=build/composer-dependency-analyser.config.php
-                    -
-                        repo: consistence/consistence-robot-loader-class-finder
-                        cdaArgs: --config=build/composer-dependency-analyser.config.php
-                    -
-                        repo: contao/contao
-                        cdaArgs: --disable-ext-analysis --config=depcheck.php
                     -
                         repo: idleberg/php-vite-manifest
                         cdaArgs: --disable-ext-analysis
@@ -74,8 +38,6 @@ jobs:
                     -
                         repo: inspirum/xml-php
                         cdaArgs: --disable-ext-analysis
-                    -
-                        repo: kreait/firebase-php
                     -
                         repo: mimmi20/ios-build
                     -
@@ -151,8 +113,6 @@ jobs:
                         repo: rectorphp/swiss-knife
                     -
                         repo: sensiolabs/GotenbergBundle
-                    -
-                        repo: shapecode/cron-bundle
                     -
                         repo: shipmonk-rnd/dead-code-detector
                     -

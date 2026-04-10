@@ -93,10 +93,6 @@ foreach ($result as $index => &$item) {
         $item['composerArgs'] = '--no-plugins';
     }
 
-    if (strpos($item['repo'], 'consistence') === 0 || strpos($item['repo'], 'VasekPurchart') === 0) {
-        $item['cdaArgs'] = '--config=build/composer-dependency-analyser.config.php';
-    }
-
     if (
         strpos($item['repo'], 'oveleon') === 0
         || strpos($item['repo'], 'contao') === 0
@@ -123,6 +119,11 @@ foreach ($result as $index => &$item) {
         || $item['repo'] === 'oveleon/contao-cookiebar'
         || $item['repo'] === 'oveleon/contao-glossary-bundle'
         || $item['repo'] === 'oveleon/contao-theme-compiler-bundle'
+        || strpos($item['repo'], 'consistence/') === 0
+        || strpos($item['repo'], 'VasekPurchart/') === 0
+        || $item['repo'] === 'contao/contao'
+        || $item['repo'] === 'kreait/firebase-php'
+        || $item['repo'] === 'shapecode/cron-bundle'
     ) {
         unset($result[$index]); // failing builds
     }
@@ -133,7 +134,6 @@ foreach ($result as $index => &$item) {
         || $item['repo'] === 'inspirum/xml-php'
         || $item['repo'] === 'inspirum/balikobot-php'
         || $item['repo'] === 'idleberg/php-vite-manifest'
-        || $item['repo'] === 'contao/contao'
         || $item['repo'] === 'phpstan/phpstan-src'
         || $item['repo'] === 'mimmi20/monolog-factory'
     ) {
