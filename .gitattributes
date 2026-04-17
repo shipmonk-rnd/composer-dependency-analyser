@@ -3,7 +3,7 @@
 /scripts export-ignore
 /tests export-ignore
 /cache export-ignore
-/.ecrc export-ignore
+/.editorconfig-checker.json export-ignore
 /.editorconfig export-ignore
 /.gitattributes export-ignore
 /.github export-ignore
