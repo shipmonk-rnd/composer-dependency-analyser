@@ -12,6 +12,7 @@ use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidCliException;
 use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidConfigException;
 use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidPathException;
 use ShipMonk\ComposerDependencyAnalyser\Result\ConsoleFormatter;
+use ShipMonk\ComposerDependencyAnalyser\Result\JsonFormatter;
 use ShipMonk\ComposerDependencyAnalyser\Result\JunitFormatter;
 use ShipMonk\ComposerDependencyAnalyser\Result\ResultFormatter;
 use Throwable;
@@ -37,7 +38,7 @@ Options:
     --composer-json <path>      Provide custom path to composer.json
     --config <path>             Provide path to php configuration file
                                 (must return \ShipMonk\ComposerDependencyAnalyser\Config\Configuration instance)
-    --format <format>           Change output format. Available values: console (default), junit
+    --format <format>           Change output format. Available values: console (default), json, junit
 
 Ignore options:
     (or use --config for better granularity)
@@ -242,6 +243,14 @@ EOD;
     {
         $format = $options->format ?? 'console';
 
+        if ($format === 'json') {
+            if ($options->dumpUsages !== null) {
+                throw new InvalidConfigException("Cannot use 'json' format with '--dump-usages' option.");
+            }
+
+            return new JsonFormatter($this->cwd, $this->stdOutPrinter);
+        }
+
         if ($format === 'junit') {
             if ($options->dumpUsages !== null) {
                 throw new InvalidConfigException("Cannot use 'junit' format with '--dump-usages' option.");
@@ -254,7 +263,7 @@ EOD;
             return new ConsoleFormatter($this->cwd, $this->stdOutPrinter);
         }
 
-        throw new InvalidConfigException("Invalid format option provided, allowed are 'console' or 'junit'.");
+        throw new InvalidConfigException("Invalid format option provided, allowed are 'console', 'json' or 'junit'.");
     }
 
     private function deduceVersion(): string
