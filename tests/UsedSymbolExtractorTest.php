@@ -237,6 +237,22 @@ class UsedSymbolExtractorTest extends TestCase
             ],
         ];
 
+        // https://github.com/shipmonk-rnd/composer-dependency-analyser/issues/264
+        yield 'symbol kind collision' => [
+            __DIR__ . '/data/not-autoloaded/used-symbols/symbol-kind-collision.php',
+            [
+                SymbolKind::CLASSLIKE => [
+                    'pcntl_fork' => [4, 5],
+                ],
+                SymbolKind::FUNCTION => [
+                    'pcntl_fork' => [8],
+                ],
+            ],
+            [
+                strtolower('pcntl_fork') => SymbolKind::FUNCTION,
+            ],
+        ];
+
         if (PHP_VERSION_ID >= 80_400) {
             yield 'property hooks' => [
                 __DIR__ . '/data/not-autoloaded/used-symbols/property-hooks.php',
