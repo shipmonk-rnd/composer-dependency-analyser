@@ -90,6 +90,8 @@ class Configuration
      */
     private array $ignoredUnknownFunctionsRegexes = [];
 
+    private ?string $editorUrl = null;
+
     /**
      * Disable analysis of ext-* dependencies
      *
@@ -578,6 +580,32 @@ class Configuration
 
         $this->ignoredUnknownFunctionsRegexes[] = $functionNameRegex;
         return $this;
+    }
+
+    /**
+     * Set the editor URL pattern to make filepaths clickable in CLI output via OSC 8 hyperlink.
+     *
+     * Available placeholders:
+     * - {file} - Absolute file path
+     * - {relFile} - Relative file path (from current working directory)
+     * - {line} - Line number
+     *
+     * Common editor URL patterns:
+     * - PHPStorm: phpstorm://open?file={file}&line={line}
+     * - VS Code: vscode://file/{file}:{line}
+     * - Sublime: subl://open?url=file://{file}&line={line}
+     *
+     * @return $this
+     */
+    public function setEditorUrl(string $editorUrl): self
+    {
+        $this->editorUrl = $editorUrl;
+        return $this;
+    }
+
+    public function getEditorUrl(): ?string
+    {
+        return $this->editorUrl;
     }
 
     public function getIgnoreList(): IgnoreList
