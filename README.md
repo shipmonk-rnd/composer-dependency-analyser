@@ -137,6 +137,10 @@ return $config
     // - designed for DIC config files (see below)
     // - beware that those are not validated and do not even trigger unknown class error
     ->addForceUsedSymbols($classesExtractedFromNeonJsonYamlXmlEtc)
+
+    //// Make CLI file paths clickable to your IDE (uses OSC 8 hyperlinks)
+    // Available placeholders: {file}, {relFile}, {line}
+    ->setEditorUrl('phpstorm://open?file={file}&line={line}')
 ```
 
 All paths are expected to exist. If you need some glob functionality, you can do it in your config file and pass the expanded list to e.g. `ignoreErrorsOnPaths`.

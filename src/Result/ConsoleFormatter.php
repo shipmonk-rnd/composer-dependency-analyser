@@ -14,6 +14,7 @@ use function count;
 use function fnmatch;
 use function in_array;
 use function round;
+use function str_replace;
 use function strlen;
 use function strpos;
 use function substr;
@@ -22,6 +23,8 @@ use const PHP_INT_MAX;
 
 class ConsoleFormatter implements ResultFormatter
 {
+
+    private ?string $editorUrl = null;
 
     public function __construct(
         private string $cwd,
@@ -36,6 +39,8 @@ class ConsoleFormatter implements ResultFormatter
         Configuration $configuration,
     ): int
     {
+        $this->editorUrl = $configuration->getEditorUrl();
+
         if ($options->dumpUsages !== null) {
             return $this->printResultUsages($result, $options->dumpUsages, $options->showAllUsages === true);
         }
@@ -344,7 +349,9 @@ class ConsoleFormatter implements ResultFormatter
 
     private function relativizeUsage(SymbolUsage $usage): string
     {
-        return "{$this->relativizePath($usage->getFilepath())}:{$usage->getLineNumber()}";
+        $filepath = $usage->getFilepath();
+        $line = $usage->getLineNumber();
+        return $this->makeClickable("{$this->relativizePath($filepath)}:{$line}", $filepath, $line);
     }
 
     private function relativizePath(string $path): string
@@ -354,6 +361,30 @@ class ConsoleFormatter implements ResultFormatter
         }
 
         return $path;
+    }
+
+    private function makeClickable(
+        string $text,
+        string $filepath,
+        int $line,
+    ): string
+    {
+        if ($this->editorUrl === null) {
+            return $text;
+        }
+
+        if ($this->printer->hasDisabledColors()) {
+            return $text;
+        }
+
+        $url = str_replace(
+            ['{relFile}', '{file}', '{line}'],
+            [$this->relativizePath($filepath), $filepath, (string) $line],
+            $this->editorUrl,
+        );
+
+        // OSC 8 hyperlink
+        return "\033]8;;{$url}\033\\{$text}\033]8;;\033\\";
     }
 
     /**

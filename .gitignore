@@ -3,3 +3,4 @@
 !/cache/.gitkeep
 /.idea
 /phpstan.neon
+/composer-dependency-analyser.local.php

@@ -9,6 +9,8 @@ use ShipMonk\ComposerDependencyAnalyser\Result\AnalysisResult;
 use ShipMonk\ComposerDependencyAnalyser\Result\ConsoleFormatter;
 use ShipMonk\ComposerDependencyAnalyser\Result\ResultFormatter;
 use ShipMonk\ComposerDependencyAnalyser\Result\SymbolUsage;
+use function fopen;
+use function stream_get_contents;
 
 class ConsoleFormatterTest extends FormatterTestCase
 {
@@ -245,6 +247,106 @@ Dumping sample usages of symfony/console
 OUT;
 
         self::assertSame($this->normalizeEol($expectedOutput), $output);
+    }
+
+    public function testPrintResultEmitsClickableHyperlinksWhenEditorUrlConfigured(): void
+    {
+        $analysisResult = new AnalysisResult(
+            10,
+            0.123,
+            [],
+            ['Unknown\\Thing' => [new SymbolUsage('/app/app/init.php', 1093, SymbolKind::CLASSLIKE)]],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+        );
+
+        $stream = fopen('php://memory', 'w');
+        self::assertNotFalse($stream);
+
+        $coloredPrinter = new Printer($stream, false);
+        $formatter = new ConsoleFormatter('/app', $coloredPrinter);
+
+        $configuration = new Configuration();
+        $configuration->setEditorUrl('phpstorm://open?file={file}&line={line}');
+
+        $formatter->format($analysisResult, new CliOptions(), $configuration);
+
+        $output = (string) stream_get_contents($stream, -1, 0);
+
+        // OSC 8 hyperlink wrapper: ESC ] 8 ; ; URL ESC \ TEXT ESC ] 8 ; ; ESC \
+        self::assertStringContainsString("\033]8;;phpstorm://open?file=/app/app/init.php&line=1093\033\\app/init.php:1093\033]8;;\033\\", $output);
+    }
+
+    public function testPrintResultUsagesEmitsClickableHyperlinksWhenEditorUrlConfigured(): void
+    {
+        $analysisResult = new AnalysisResult(
+            scannedFilesCount: 5,
+            elapsedTime: 0.456,
+            usages: [
+                'symfony/console' => [
+                    'Symfony\Component\Console\Application' => [
+                        new SymbolUsage('/app/src/Application.php', 5, SymbolKind::CLASSLIKE),
+                    ],
+                    'Symfony\Component\Console\Command\Command' => [
+                        new SymbolUsage('/app/src/MyCommand.php', 10, SymbolKind::CLASSLIKE),
+                    ],
+                ],
+            ],
+            unknownClassErrors: [],
+            unknownFunctionErrors: [],
+            shadowDependencyErrors: [],
+            devDependencyInProductionErrors: [],
+            prodDependencyOnlyInDevErrors: [],
+            unusedDependencyErrors: [],
+            unusedIgnores: [],
+        );
+
+        $stream = fopen('php://memory', 'w');
+        self::assertNotFalse($stream);
+
+        $coloredPrinter = new Printer($stream, false);
+        $formatter = new ConsoleFormatter('/app', $coloredPrinter);
+
+        $configuration = new Configuration();
+        $configuration->setEditorUrl('phpstorm://open?file={file}&line={line}');
+
+        $options = new CliOptions();
+        $options->dumpUsages = 'symfony/console';
+        $formatter->format($analysisResult, $options, $configuration);
+
+        $output = (string) stream_get_contents($stream, -1, 0);
+
+        self::assertStringContainsString("\033]8;;phpstorm://open?file=/app/src/Application.php&line=5\033\\src/Application.php:5\033]8;;\033\\", $output);
+        self::assertStringContainsString("\033]8;;phpstorm://open?file=/app/src/MyCommand.php&line=10\033\\src/MyCommand.php:10\033]8;;\033\\", $output);
+    }
+
+    public function testPrintResultSkipsClickableHyperlinksWhenColorsDisabled(): void
+    {
+        $analysisResult = new AnalysisResult(
+            10,
+            0.123,
+            [],
+            ['Unknown\\Thing' => [new SymbolUsage('/app/app/init.php', 1093, SymbolKind::CLASSLIKE)]],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+        );
+
+        $configuration = new Configuration();
+        $configuration->setEditorUrl('phpstorm://open?file={file}&line={line}');
+
+        $output = $this->getFormatterNormalizedOutput(static function (ResultFormatter $formatter) use ($analysisResult, $configuration): void {
+            $formatter->format($analysisResult, new CliOptions(), $configuration);
+        });
+
+        self::assertStringNotContainsString("\033]8;", $output);
     }
 
     protected function createFormatter(Printer $printer): ResultFormatter

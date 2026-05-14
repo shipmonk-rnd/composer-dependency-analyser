@@ -47,6 +47,11 @@ class Printer
         }
     }
 
+    public function hasDisabledColors(): bool
+    {
+        return $this->noColor;
+    }
+
     private function colorize(string $string): string
     {
         return str_replace(
