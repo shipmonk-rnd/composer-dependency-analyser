@@ -48,7 +48,7 @@ function fetchRepository(string $packageName): string
 }
 
 /**
- * @param list<array{repo: string, cdaArgs?: string, composerArgs?: string}> $items
+ * @param list<array{repo: string, cdaArgs?: string, composerArgs?: string, php?: string}> $items
  */
 function outputYaml(array $items): void
 {

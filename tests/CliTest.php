@@ -32,7 +32,7 @@ class CliTest extends TestCase
     }
 
     /**
-     * @return iterable<string, array{string|null, list<string>}>
+     * @return iterable<string, array{string|null, list<string>, 2?: CliOptions}>
      */
     public static function validationDataProvider(): iterable
     {
