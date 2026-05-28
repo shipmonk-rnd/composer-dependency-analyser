@@ -105,6 +105,7 @@ jobs:
                         repo: phpstan/phpstan-src
                         cdaArgs: --disable-ext-analysis --config=build/composer-dependency-analyser.php
                         php: 8.5
+                        phpExtensions: pcntl
                     -
                         repo: qossmic/deptrac-src
                     -
@@ -163,6 +164,7 @@ jobs:
                 with:
                     php-version: ${{ matrix.php || '8.3' }}
                     ini-file: development
+                    extensions: ${{ matrix.phpExtensions }}
 
             -
                 name: List enabled extensions
