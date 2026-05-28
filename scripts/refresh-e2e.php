@@ -124,6 +124,7 @@ foreach ($result as $index => &$item) {
         || $item['repo'] === 'contao/contao'
         || $item['repo'] === 'kreait/firebase-php'
         || $item['repo'] === 'shapecode/cron-bundle'
+        || $item['repo'] === 'cdn77/PhpFunctions' // uses ext-ds (Ds\Queue, Ds\Vector) which isn't installed in CI
     ) {
         unset($result[$index]); // failing builds
     }

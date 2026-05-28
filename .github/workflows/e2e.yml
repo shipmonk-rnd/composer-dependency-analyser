@@ -20,8 +20,6 @@ jobs:
                     -
                         repo: alex-kalanis/kw_storage
                     -
-                        repo: cdn77/PhpFunctions
-                    -
                         repo: cdn77/RabbitMQBundle
                     -
                         repo: idleberg/php-vite-manifest
