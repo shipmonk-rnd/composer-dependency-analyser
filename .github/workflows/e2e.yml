@@ -108,6 +108,7 @@ jobs:
                         repo: qossmic/deptrac-src
                     -
                         repo: rectorphp/rector-src
+                        php: 8.3 # uses symfony/polyfill-php84, which is a no-op (and thus reported unused) on PHP >= 8.4
                     -
                         repo: rectorphp/swiss-knife
                     -
@@ -160,7 +161,7 @@ jobs:
                 name: Setup PHP
                 uses: shivammathur/setup-php@v2
                 with:
-                    php-version: ${{ matrix.php || '8.3' }}
+                    php-version: ${{ matrix.php || '8.5' }}
                     ini-file: ${{ matrix.iniFile || 'development' }}
 
             -
