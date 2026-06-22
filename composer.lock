@@ -2813,12 +2813,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/shipmonk-rnd/coding-standard.git",
-                "reference": "556e3d2499dec123904ec09d90e5d1d8a2b36844"
+                "reference": "19a85333ebd6ed95316c4e525548ae5d03ed6a6a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/shipmonk-rnd/coding-standard/zipball/556e3d2499dec123904ec09d90e5d1d8a2b36844",
-                "reference": "556e3d2499dec123904ec09d90e5d1d8a2b36844",
+                "url": "https://api.github.com/repos/shipmonk-rnd/coding-standard/zipball/19a85333ebd6ed95316c4e525548ae5d03ed6a6a",
+                "reference": "19a85333ebd6ed95316c4e525548ae5d03ed6a6a",
                 "shasum": ""
             },
             "require": {
@@ -2855,7 +2855,7 @@
                 "issues": "https://github.com/shipmonk-rnd/coding-standard/issues",
                 "source": "https://github.com/shipmonk-rnd/coding-standard/tree/add-generic-custom-sniffs"
             },
-            "time": "2026-06-22T07:30:14+00:00"
+            "time": "2026-06-22T10:49:49+00:00"
         },
         {
             "name": "shipmonk/coverage-guard",
