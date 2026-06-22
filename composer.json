@@ -32,7 +32,7 @@
         "phpstan/phpstan-phpunit": "^2.0",
         "phpstan/phpstan-strict-rules": "^2.0",
         "phpunit/phpunit": "^10.5.62",
-        "shipmonk/coding-standard": "^0.2.0",
+        "shipmonk/coding-standard": "dev-add-generic-custom-sniffs",
         "shipmonk/coverage-guard": "^1.0.0",
         "shipmonk/dead-code-detector": "^1.0",
         "shipmonk/name-collision-detector": "^2.1.1"

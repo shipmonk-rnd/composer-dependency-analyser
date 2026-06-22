@@ -53,9 +53,9 @@ try {
     $exitCode = $formatter->format($result, $options, $configuration);
 
 } catch (
-    InvalidPathException |
+    InvalidCliException |
     InvalidConfigException |
-    InvalidCliException $e
+    InvalidPathException $e
 ) {
     $stdErrPrinter->printLine("\n<red>{$e->getMessage()}</red>" . PHP_EOL);
     exit(1);

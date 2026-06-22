@@ -158,8 +158,8 @@ EOD;
     }
 
     /**
-     * @throws InvalidPathException
      * @throws InvalidConfigException
+     * @throws InvalidPathException
      */
     public function initComposerJson(CliOptions $options): ComposerJson
     {
