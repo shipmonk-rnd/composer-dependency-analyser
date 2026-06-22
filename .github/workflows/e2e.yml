@@ -11,7 +11,6 @@ jobs:
                 include:
                     -
                         repo: TomasVotruba/unused-public
-                        php: 8.5
                     -
                         repo: VincentLanglet/Twig-CS-Fixer
                     -
@@ -39,7 +38,6 @@ jobs:
                         cdaArgs: --disable-ext-analysis
                     -
                         repo: mimmi20/ios-build
-                        php: 8.5
                     -
                         repo: mimmi20/laminas-form-element-group
                     -
@@ -66,7 +64,6 @@ jobs:
                         repo: mimmi20/laminasviewrenderer-vite-url
                     -
                         repo: mimmi20/macos-build
-                        php: 8.5
                     -
                         repo: mimmi20/mezzio-generic-authorization
                     -
@@ -163,7 +160,7 @@ jobs:
                 name: Setup PHP
                 uses: shivammathur/setup-php@v2
                 with:
-                    php-version: ${{ matrix.php || '8.3' }}
+                    php-version: ${{ matrix.php || '8.5' }}
                     ini-file: ${{ matrix.iniFile || 'development' }}
 
             -
