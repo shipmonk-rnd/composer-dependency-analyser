@@ -264,8 +264,8 @@ class Configuration
      * @param list<ErrorType::*> $errorTypes
      * @return $this
      *
-     * @throws InvalidPathException
      * @throws InvalidConfigException
+     * @throws InvalidPathException
      */
     public function ignoreErrorsOnPath(
         string $path,
@@ -286,8 +286,8 @@ class Configuration
      * @param list<ErrorType::*> $errorTypes
      * @return $this
      *
-     * @throws InvalidPathException
      * @throws InvalidConfigException
+     * @throws InvalidPathException
      */
     public function ignoreErrorsOnPaths(
         array $paths,
@@ -391,8 +391,8 @@ class Configuration
      * @param list<ErrorType::*> $errorTypes
      * @return $this
      *
-     * @throws InvalidPathException
      * @throws InvalidConfigException
+     * @throws InvalidPathException
      */
     public function ignoreErrorsOnPackageAndPath(
         string $packageName,
@@ -409,8 +409,8 @@ class Configuration
      * @param list<ErrorType::*> $errorTypes
      * @return $this
      *
-     * @throws InvalidPathException
      * @throws InvalidConfigException
+     * @throws InvalidPathException
      */
     public function ignoreErrorsOnExtensionAndPath(
         string $extension,
@@ -426,8 +426,8 @@ class Configuration
     /**
      * @param list<ErrorType::*> $errorTypes
      *
-     * @throws InvalidPathException
      * @throws InvalidConfigException
+     * @throws InvalidPathException
      */
     private function ignoreErrorsOnDependencyAndPath(
         string $dependency,
@@ -449,8 +449,8 @@ class Configuration
      * @param list<ErrorType::*> $errorTypes
      * @return $this
      *
-     * @throws InvalidPathException
      * @throws InvalidConfigException
+     * @throws InvalidPathException
      */
     public function ignoreErrorsOnPackageAndPaths(
         string $packageName,
@@ -470,8 +470,8 @@ class Configuration
      * @param list<ErrorType::*> $errorTypes
      * @return $this
      *
-     * @throws InvalidPathException
      * @throws InvalidConfigException
+     * @throws InvalidPathException
      */
     public function ignoreErrorsOnExtensionAndPaths(
         string $extension,
@@ -492,8 +492,8 @@ class Configuration
      * @param list<ErrorType::*> $errorTypes
      * @return $this
      *
-     * @throws InvalidPathException
      * @throws InvalidConfigException
+     * @throws InvalidPathException
      */
     public function ignoreErrorsOnPackagesAndPaths(
         array $packages,
@@ -514,8 +514,8 @@ class Configuration
      * @param list<ErrorType::*> $errorTypes
      * @return $this
      *
-     * @throws InvalidPathException
      * @throws InvalidConfigException
+     * @throws InvalidPathException
      */
     public function ignoreErrorsOnExtensionsAndPaths(
         array $extensions,

@@ -70,8 +70,8 @@ class ComposerJson
     public array $autoloadExcludeRegexes;
 
     /**
-     * @throws InvalidPathException
      * @throws InvalidConfigException
+     * @throws InvalidPathException
      */
     public function __construct(
         string $composerJsonPath,
