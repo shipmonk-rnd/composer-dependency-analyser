@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f3ce76ddb74ded15068d0dce5365288f",
+    "content-hash": "c2c6e0a2a324da149cc98bee84898e7c",
     "packages": [],
     "packages-dev": [
         {
@@ -2809,21 +2809,21 @@
         },
         {
             "name": "shipmonk/coding-standard",
-            "version": "dev-add-generic-custom-sniffs",
+            "version": "0.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/shipmonk-rnd/coding-standard.git",
-                "reference": "0bc44b528497e379e30641edde64b9d425795a7a"
+                "reference": "15182bf6b0e17682990c049dd17f593d3235ec62"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/shipmonk-rnd/coding-standard/zipball/0bc44b528497e379e30641edde64b9d425795a7a",
-                "reference": "0bc44b528497e379e30641edde64b9d425795a7a",
+                "url": "https://api.github.com/repos/shipmonk-rnd/coding-standard/zipball/15182bf6b0e17682990c049dd17f593d3235ec62",
+                "reference": "15182bf6b0e17682990c049dd17f593d3235ec62",
                 "shasum": ""
             },
             "require": {
                 "ext-tokenizer": "*",
-                "php": "^7.4 || ^8.0",
+                "php": "^8.1",
                 "slevomat/coding-standard": "^8.28.0",
                 "squizlabs/php_codesniffer": "^4.0.1"
             },
@@ -2834,9 +2834,9 @@
                 "phpstan/phpstan": "^2.1",
                 "phpstan/phpstan-phpunit": "^2.0",
                 "phpstan/phpstan-strict-rules": "^2.0",
-                "phpunit/phpunit": "^9.6",
+                "phpunit/phpunit": "^10.5.62",
                 "shipmonk/composer-dependency-analyser": "^1.8",
-                "shipmonk/dead-code-detector": "^0.12",
+                "shipmonk/dead-code-detector": "^1.0",
                 "shipmonk/name-collision-detector": "^2.1",
                 "shipmonk/phpstan-rules": "^4.1"
             },
@@ -2853,9 +2853,9 @@
             "description": "PHP Coding Standard used in ShipMonk",
             "support": {
                 "issues": "https://github.com/shipmonk-rnd/coding-standard/issues",
-                "source": "https://github.com/shipmonk-rnd/coding-standard/tree/add-generic-custom-sniffs"
+                "source": "https://github.com/shipmonk-rnd/coding-standard/tree/0.3.0"
             },
-            "time": "2026-06-22T10:52:55+00:00"
+            "time": "2026-06-23T07:41:40+00:00"
         },
         {
             "name": "shipmonk/coverage-guard",
@@ -3258,9 +3258,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "shipmonk/coding-standard": 20
-    },
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
