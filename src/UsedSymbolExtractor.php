@@ -161,7 +161,13 @@ class UsedSymbolExtractor
 
                     } elseif (isset($knownSymbols[$lowerName])) {
                         $symbolName = $name;
-                        $kind = $knownSymbols[$lowerName];
+                        $knownKind = $knownSymbols[$lowerName];
+
+                        // FUNCTION/CLASSLIKE names can collide (e.g. a class named like an extension function),
+                        // so prefer syntactic context over the known kind; CONSTANT cannot be inferred from context.
+                        $kind = $knownKind === SymbolKind::CONSTANT
+                            ? SymbolKind::CONSTANT
+                            : $this->getFqnSymbolKind($pointerBeforeName, $pointerAfterName, $inAttributeSquareLevel !== null);
 
                         if (!$inGlobalScope && $kind === SymbolKind::CLASSLIKE) {
                             break; // cannot use class-like symbols in non-global scope when not imported
