@@ -771,6 +771,42 @@ class AnalyserTest extends TestCase
         $this->assertResultsWithoutUsages(self::createAnalysisResult(1, []), $result);
     }
 
+    /**
+     * The used class is autoloadable (registered in composer's classmap), but loading it fails
+     * because its parent class is not available. Reflection then throws a plain Error, not a
+     * ReflectionException, which used to crash the whole analysis.
+     *
+     * @see https://github.com/shipmonk-rnd/composer-dependency-analyser/issues/271
+     */
+    public function testReflectionOfClassWithMissingParentDoesNotCrash(): void
+    {
+        $path = realpath(__DIR__ . '/data/not-autoloaded/reflection-error/usage.php');
+        self::assertNotFalse($path);
+
+        $vendorDir = realpath(__DIR__ . '/data/autoloaded/vendor');
+        self::assertNotFalse($vendorDir);
+
+        $config = new Configuration();
+        $config->addPathToScan($path, false);
+
+        $detector = new Analyser(
+            $this->getStopwatchMock(),
+            $vendorDir,
+            [$vendorDir => $this->getClassLoaderMock()],
+            $config,
+            [],
+        );
+        $result = $detector->run();
+
+        self::assertEquals(self::createAnalysisResult(1, [
+            ErrorType::UNKNOWN_CLASS => [
+                'BrokenParent\Package\Clazz' => [
+                    new SymbolUsage($path, 5, SymbolKind::CLASSLIKE),
+                ],
+            ],
+        ]), $result);
+    }
+
     public function testFunctions(): void
     {
         $path = __DIR__ . '/data/not-autoloaded/functions/org/package/fn-def.php';

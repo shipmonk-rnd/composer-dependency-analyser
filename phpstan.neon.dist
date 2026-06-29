@@ -16,6 +16,7 @@ parameters:
     excludePaths:
         analyseAndScan:
             - tests/data/not-autoloaded/*
+            - tests/data/autoloaded/broken-parent/* # intentionally extends a non-existent class
     tmpDir: cache/phpstan/
     reportAnyTypeWideningInVarTag: true
     checkMissingCallableSignature: true

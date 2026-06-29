@@ -4,6 +4,7 @@ namespace ShipMonk\ComposerDependencyAnalyser;
 
 use Composer\Autoload\ClassLoader;
 use DirectoryIterator;
+use Error;
 use Generator;
 use LogicException;
 use RecursiveDirectoryIterator;
@@ -480,6 +481,8 @@ class Analyser
             $reflection = new ReflectionClass($usedSymbol); // @phpstan-ignore-line ignore not a class-string, we catch the exception
         } catch (ReflectionException $e) {
             return null; // not autoloadable class
+        } catch (Error $e) { // @phpstan-ignore catch.neverThrown (autoloading the class may fail)
+            return null; // class is autoloadable, but loading it fails (e.g. missing parent class or interface)
         }
 
         $filePath = $reflection->getFileName();
