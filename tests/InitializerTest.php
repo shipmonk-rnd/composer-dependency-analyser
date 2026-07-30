@@ -102,6 +102,7 @@ class InitializerTest extends TestCase
         self::assertNull($options->showAllUsages);
         self::assertNull($options->composerJson);
         self::assertNull($options->disableExtAnalysis);
+        self::assertNull($options->ignoreVirtualPackages);
         self::assertNull($options->ignoreProdOnlyInDevDeps);
         self::assertNull($options->ignoreUnknownClasses);
         self::assertNull($options->ignoreUnknownFunctions);
@@ -109,6 +110,23 @@ class InitializerTest extends TestCase
         self::assertNull($options->ignoreShadowDeps);
         self::assertNull($options->ignoreDevInProdDeps);
         self::assertTrue($options->verbose);
+    }
+
+    public function testInitConfigurationIgnoreVirtualPackages(): void
+    {
+        $printer = $this->createMock(Printer::class);
+
+        $composerJson = $this->createMock(ComposerJson::class);
+        $composerJson->autoloadPaths = [__DIR__ => false]; // @phpstan-ignore-line ignore readonly
+        $composerJson->autoloadExcludeRegexes = []; // @phpstan-ignore-line ignore readonly
+
+        $options = new CliOptions();
+        $options->ignoreVirtualPackages = true;
+
+        $initializer = new Initializer(__DIR__, $printer, $printer);
+        $config = $initializer->initConfiguration($options, $composerJson);
+
+        self::assertTrue($config->shouldIgnoreVirtualPackages());
     }
 
     public function testInitCliOptionsHelp(): void

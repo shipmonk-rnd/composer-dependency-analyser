@@ -28,6 +28,11 @@ class CliOptions
     /**
      * @var true|null
      */
+    public ?bool $ignoreVirtualPackages = null;
+
+    /**
+     * @var true|null
+     */
     public ?bool $ignoreShadowDeps = null;
 
     /**

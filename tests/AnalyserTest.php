@@ -689,6 +689,57 @@ class AnalyserTest extends TestCase
         $this->assertResultsWithoutUsages(self::createAnalysisResult(2, []), $result);
     }
 
+    public function testVirtualPackagesAreReportedAsUnusedByDefault(): void
+    {
+        $vendorDir = realpath(__DIR__ . '/data/autoloaded/vendor');
+        self::assertNotFalse($vendorDir);
+
+        $config = new Configuration();
+
+        $detector = new Analyser(
+            $this->getStopwatchMock(),
+            $vendorDir,
+            [$vendorDir => $this->getClassLoaderMock()],
+            $config,
+            [
+                'regular/package' => false,
+                'psr/log-implementation' => false,
+            ],
+        );
+        $result = $detector->run();
+
+        $this->assertResultsWithoutUsages(self::createAnalysisResult(0, [
+            ErrorType::UNUSED_DEPENDENCY => ['psr/log-implementation', 'regular/package'],
+        ]), $result);
+    }
+
+    public function testIgnoreVirtualPackages(): void
+    {
+        $vendorDir = realpath(__DIR__ . '/data/autoloaded/vendor');
+        self::assertNotFalse($vendorDir);
+
+        $config = new Configuration();
+        $config->ignoreVirtualPackages();
+
+        $detector = new Analyser(
+            $this->getStopwatchMock(),
+            $vendorDir,
+            [$vendorDir => $this->getClassLoaderMock()],
+            $config,
+            [
+                'regular/package' => false,
+                'regular/dead' => false,
+                'psr/log-implementation' => false,
+                'psr/http-client-implementation' => false,
+            ],
+        );
+        $result = $detector->run();
+
+        $this->assertResultsWithoutUsages(self::createAnalysisResult(0, [
+            ErrorType::UNUSED_DEPENDENCY => ['regular/dead', 'regular/package'],
+        ]), $result);
+    }
+
     public function testPharSupport(): void
     {
         $canCreatePhar = ini_set('phar.readonly', '0');

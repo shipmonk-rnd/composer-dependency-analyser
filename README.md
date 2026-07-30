@@ -85,6 +85,7 @@ This tool reads your `composer.json` and scans all paths listed in `autoload` & 
 - `--show-all-usages` to see all usages
 - `--format` to use different output format, available are: `console` (default), `junit`
 - `--disable-ext-analysis` to disable php extensions analysis (e.g. `ext-xml`)
+- `--ignore-virtual-packages` to ignore virtual packages (e.g. `psr/log-implementation`)
 - `--ignore-unknown-classes` to globally ignore unknown classes
 - `--ignore-unknown-functions` to globally ignore unknown functions
 - `--ignore-shadow-deps` to globally ignore shadow dependencies
@@ -132,6 +133,7 @@ return $config
     ->enableAnalysisOfUnusedDevDependencies() // dev packages are often used only in CI, so this is not enabled by default
     ->disableReportingUnmatchedIgnores() // do not report ignores that never matched any error
     ->disableExtensionsAnalysis() // do not analyse ext-* dependencies
+    ->ignoreVirtualPackages() // ignore virtual packages (e.g. psr/log-implementation) that are never installed under vendor/
 
     //// Use symbols from yaml/xml/neon files
     // - designed for DIC config files (see below)

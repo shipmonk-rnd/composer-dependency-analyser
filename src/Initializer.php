@@ -50,6 +50,7 @@ Ignore options:
     --ignore-prod-only-in-dev-deps      Ignore all prod dependency used only in dev paths issues
 
     --disable-ext-analysis              Disable analysis of php extensions (e.g. ext-xml)
+    --ignore-virtual-packages           Ignore virtual packages (e.g. psr/log-implementation)
 EOD;
 
     public function __construct(
@@ -97,6 +98,7 @@ EOD;
         }
 
         $disableExtAnalysis = $options->disableExtAnalysis === true;
+        $ignoreVirtualPackages = $options->ignoreVirtualPackages === true;
         $ignoreUnknownClasses = $options->ignoreUnknownClasses === true;
         $ignoreUnknownFunctions = $options->ignoreUnknownFunctions === true;
         $ignoreUnused = $options->ignoreUnusedDeps === true;
@@ -106,6 +108,10 @@ EOD;
 
         if ($disableExtAnalysis) {
             $config->disableExtensionsAnalysis();
+        }
+
+        if ($ignoreVirtualPackages) {
+            $config->ignoreVirtualPackages();
         }
 
         if ($ignoreUnknownClasses) {

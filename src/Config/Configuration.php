@@ -19,6 +19,8 @@ class Configuration
 
     private bool $extensionsAnalysis = true;
 
+    private bool $ignoreVirtualPackages = false;
+
     private bool $scanComposerAutoloadPaths = true;
 
     private bool $reportUnusedDevDependencies = false;
@@ -100,6 +102,18 @@ class Configuration
     public function disableExtensionsAnalysis(): self
     {
         $this->extensionsAnalysis = false;
+        return $this;
+    }
+
+    /**
+     * Ignore virtual packages (e.g. psr/log-implementation) that are only provided by other packages
+     * and thus never installed under vendor/ and cannot contain any usable code.
+     *
+     * @return $this
+     */
+    public function ignoreVirtualPackages(): self
+    {
+        $this->ignoreVirtualPackages = true;
         return $this;
     }
 
@@ -649,6 +663,11 @@ class Configuration
     public function shouldAnalyseExtensions(): bool
     {
         return $this->extensionsAnalysis;
+    }
+
+    public function shouldIgnoreVirtualPackages(): bool
+    {
+        return $this->ignoreVirtualPackages;
     }
 
     public function shouldScanComposerAutoloadPaths(): bool

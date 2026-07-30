@@ -32,9 +32,11 @@ use function get_declared_traits;
 use function get_defined_constants;
 use function get_defined_functions;
 use function in_array;
+use function is_dir;
 use function is_file;
 use function is_string;
 use function str_replace;
+use function str_starts_with;
 use function strlen;
 use function strpos;
 use function strtolower;
@@ -134,9 +136,9 @@ class Analyser
     {
         $this->stopwatch = $stopwatch;
         $this->config = $config;
-        $this->composerJsonDependencies = $this->filterDependencies($composerJsonDependencies, $config);
         $this->vendorDirs = array_keys($classLoaders + [$defaultVendorDir => null]);
         $this->classLoaders = array_values($classLoaders);
+        $this->composerJsonDependencies = $this->filterDependencies($composerJsonDependencies, $config);
 
         $this->initExistingSymbols($config);
     }
@@ -630,10 +632,33 @@ class Analyser
                 continue;
             }
 
+            if ($config->shouldIgnoreVirtualPackages() && $this->isVirtualPackage($dependency)) {
+                continue;
+            }
+
             $filtered[$dependency] = $isDevDependency;
         }
 
         return $filtered;
+    }
+
+    /**
+     * Virtual packages (e.g. psr/log-implementation) are never installed under vendor/;
+     * they are only provided by other packages via composer's "provide" section.
+     */
+    private function isVirtualPackage(string $packageName): bool
+    {
+        if (str_starts_with($packageName, 'ext-')) {
+            return false;
+        }
+
+        foreach ($this->vendorDirs as $vendorDir) {
+            if (is_dir($vendorDir . '/' . $packageName)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
 }
