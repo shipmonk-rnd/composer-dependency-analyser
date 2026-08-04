@@ -707,6 +707,7 @@ class AnalyserTest extends TestCase
                 'some/metapackage' => false,
                 'illuminate/log' => false,
                 'never/installed' => false,
+                'psr/log' => false,
             ],
         );
         $result = $detector->run();
@@ -715,6 +716,7 @@ class AnalyserTest extends TestCase
             ErrorType::UNUSED_DEPENDENCY => [
                 'illuminate/log',
                 'never/installed',
+                'psr/log',
                 'regular/package',
             ],
         ]), $result);

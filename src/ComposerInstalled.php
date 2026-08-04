@@ -36,9 +36,14 @@ class ComposerInstalled
                     continue;
                 }
 
+                // composer merges "provide" and "replace" targets into the very same map as installed
+                // packages, so a really installed package may carry a 'provided' key as well; only an
+                // entry with no version of its own is a virtual package
+                $isInstalledPackage = isset($packageData['version']);
+
                 // virtual packages (e.g. psr/log-implementation) have no package of their own,
                 // metapackages (e.g. roave/security-advisories) have one, but it ships no files
-                $isVirtual = isset($packageData['provided']);
+                $isVirtual = !$isInstalledPackage && isset($packageData['provided']);
                 $isMetapackage = ($packageData['type'] ?? null) === 'metapackage';
 
                 if ($isVirtual || $isMetapackage) {

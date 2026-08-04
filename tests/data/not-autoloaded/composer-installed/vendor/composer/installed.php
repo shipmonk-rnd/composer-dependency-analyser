@@ -36,6 +36,17 @@ return [
             'dev_requirement' => false,
             'provided' => ['1.0|2.0|3.0'],
         ],
+        // really installed, but some other installed package declares "provide" for this name too
+        'psr/log' => [
+            'pretty_version' => '3.0.2',
+            'version' => '3.0.2.0',
+            'reference' => null,
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../psr/log',
+            'aliases' => [],
+            'dev_requirement' => false,
+            'provided' => ['1.0.0'],
+        ],
         'illuminate/log' => [
             'dev_requirement' => false,
             'replaced' => ['1.0.0'],

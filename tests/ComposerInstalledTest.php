@@ -40,6 +40,19 @@ class ComposerInstalledTest extends TestCase
         self::assertFalse($installed->installsNoFiles('illuminate/log'));
     }
 
+    /**
+     * Composer merges provide targets into the same map as installed packages, so a really installed
+     * package carries a 'provided' key as soon as any other installed package provides its name
+     *
+     * @see \Composer\Repository\FilesystemRepository::generateInstalledVersions()
+     */
+    public function testInstalledPackageProvidedByAnotherPackageInstallsFiles(): void
+    {
+        $installed = new ComposerInstalled([self::FIXTURE_DIR . '/vendor']);
+
+        self::assertFalse($installed->installsNoFiles('psr/log'));
+    }
+
     public function testUninstalledPackageIsNotReportedAsInstallingNoFiles(): void
     {
         $installed = new ComposerInstalled([self::FIXTURE_DIR . '/vendor']);
