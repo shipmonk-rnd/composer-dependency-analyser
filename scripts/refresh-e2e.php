@@ -108,12 +108,10 @@ foreach ($result as $index => &$item) {
         || $item['repo'] === 'oveleon/contao-recommendation-bundle'
         || $item['repo'] === 'numero2/contao-marketing-suite' // since 1.8.2 (shadow symfony/contracts via trigger_deprecation)
         || $item['repo'] === 'teamneusta/pimcore-testing-framework' // since 1.8.2 (shadow symfony/contracts via trigger_deprecation)
-        || $item['repo'] === 'mimmi20/browser-detector-version'
-        || $item['repo'] === 'mimmi20/browser-detector'
-        || $item['repo'] === 'mimmi20/coding-standard'
-        || $item['repo'] === 'mimmi20/ua-normalizer'
-        || $item['repo'] === 'mimmi20/ua-browser-type'
-        || $item['repo'] === 'mimmi20/ua-device-type'
+        // all of them require abandoned rector/type-perfect, which declares the same PSR-4 prefix
+        // as its successor tomasvotruba/type-coverage; the successor wins autoload resolution, so
+        // type-perfect is reported unused - a true positive we cannot fix from here
+        || strpos($item['repo'], 'mimmi20/') === 0
         || $item['repo'] === 'oveleon/contao-company-bundle'
         || $item['repo'] === 'oveleon/contao-config-driver-bundle'
         || $item['repo'] === 'oveleon/contao-cookiebar'
@@ -136,7 +134,6 @@ foreach ($result as $index => &$item) {
         || $item['repo'] === 'inspirum/balikobot-php'
         || $item['repo'] === 'idleberg/php-vite-manifest'
         || $item['repo'] === 'phpstan/phpstan-src'
-        || $item['repo'] === 'mimmi20/monolog-factory'
     ) {
         $item['cdaArgs'] = '--disable-ext-analysis ' . ($item['cdaArgs'] ?? '');
     }

@@ -37,66 +37,6 @@ jobs:
                         repo: inspirum/xml-php
                         cdaArgs: --disable-ext-analysis
                     -
-                        repo: mimmi20/ios-build
-                    -
-                        repo: mimmi20/laminas-form-element-group
-                    -
-                        repo: mimmi20/laminas-form-element-links
-                    -
-                        repo: mimmi20/laminas-form-element-paragraph
-                    -
-                        repo: mimmi20/laminas-module-errorhandling
-                    -
-                        repo: mimmi20/laminas-router-hostname
-                    -
-                        repo: mimmi20/laminasviewrenderer-bootstrap-form
-                    -
-                        repo: mimmi20/laminasviewrenderer-flash-message
-                    -
-                        repo: mimmi20/laminasviewrenderer-helper-htmlelement
-                    -
-                        repo: mimmi20/laminasviewrenderer-helper-partialrenderer
-                    -
-                        repo: mimmi20/laminasviewrenderer-js-log
-                    -
-                        repo: mimmi20/laminasviewrenderer-revision
-                    -
-                        repo: mimmi20/laminasviewrenderer-vite-url
-                    -
-                        repo: mimmi20/macos-build
-                    -
-                        repo: mimmi20/mezzio-generic-authorization
-                    -
-                        repo: mimmi20/mezzio-generic-authorization-acl
-                    -
-                        repo: mimmi20/mezzio-navigation
-                    -
-                        repo: mimmi20/mezzio-navigation-laminasviewrenderer
-                    -
-                        repo: mimmi20/mezzio-navigation-laminasviewrenderer-bootstrap
-                    -
-                        repo: mimmi20/mezzio-router-laminasrouter-factory
-                    -
-                        repo: mimmi20/mezzio-setlocale-middleware
-                    -
-                        repo: mimmi20/monolog-callbackfilterhandler
-                    -
-                        repo: mimmi20/monolog-streamformatter
-                    -
-                        repo: mimmi20/navigation-helper-acceptpage
-                    -
-                        repo: mimmi20/navigation-helper-containerparser
-                    -
-                        repo: mimmi20/navigation-helper-converttopages
-                    -
-                        repo: mimmi20/navigation-helper-findactive
-                    -
-                        repo: mimmi20/navigation-helper-findfromproperty
-                    -
-                        repo: mimmi20/navigation-helper-findroot
-                    -
-                        repo: mimmi20/navigation-helper-htmlify
-                    -
                         repo: numero2/contao-opengraph3
                         cdaArgs: --config=depcheck.php
                     -
@@ -172,15 +112,6 @@ jobs:
                 working-directory: ${{ matrix.repo }}
                 run: |
                     echo "$(jq --indent 4 '.config += {"prepend-autoloader": false}' composer.json)" > composer.json
-
-            -
-                # abandoned rector/type-perfect declares the same PSR-4 prefix as its successor
-                # tomasvotruba/type-coverage, which wins autoload resolution and makes every
-                # Rector\TypePerfect\* usage attributable only to the successor
-                name: Drop abandoned rector/type-perfect
-                working-directory: ${{ matrix.repo }}
-                run: |
-                    echo "$(jq --indent 4 'del(.require["rector/type-perfect"], .["require-dev"]["rector/type-perfect"])' composer.json)" > composer.json
 
             -
                 name: Install ${{ matrix.repo }} dependencies
