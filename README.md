@@ -59,6 +59,10 @@ This tool reads your `composer.json` and scans all paths listed in `autoload` & 
 ### Unused dependencies
   - Any non-dev dependency is expected to have at least single usage within the scanned paths
   - To avoid false positives here, you might need to adjust scanned paths or ignore some packages by `--config`
+  - Dependencies that install no files are never reported, as they cannot possibly be used from your code:
+    - virtual packages (e.g. `psr/log-implementation`), which exist only via `provide` of another package
+    - metapackages (e.g. `roave/security-advisories`), which ship requirements and conflicts only
+    - this is detected from `vendor/composer/installed.php`, so it requires installed dependencies
 
 ### Dev dependencies in production code
   - For libraries, this is risky as your users might not have those installed

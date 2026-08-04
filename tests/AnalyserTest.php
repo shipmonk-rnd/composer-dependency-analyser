@@ -689,6 +689,37 @@ class AnalyserTest extends TestCase
         $this->assertResultsWithoutUsages(self::createAnalysisResult(2, []), $result);
     }
 
+    public function testPackagesInstallingNoFilesAreNeverUnused(): void
+    {
+        $vendorDir = realpath(__DIR__ . '/data/not-autoloaded/composer-installed/vendor');
+        self::assertNotFalse($vendorDir);
+
+        $config = new Configuration();
+
+        $detector = new Analyser(
+            $this->getStopwatchMock(),
+            $vendorDir,
+            [$vendorDir => $this->getClassLoaderMock()],
+            $config,
+            [
+                'regular/package' => false,
+                'psr/log-implementation' => false,
+                'some/metapackage' => false,
+                'illuminate/log' => false,
+                'never/installed' => false,
+            ],
+        );
+        $result = $detector->run();
+
+        $this->assertResultsWithoutUsages(self::createAnalysisResult(0, [
+            ErrorType::UNUSED_DEPENDENCY => [
+                'illuminate/log',
+                'never/installed',
+                'regular/package',
+            ],
+        ]), $result);
+    }
+
     public function testPharSupport(): void
     {
         $canCreatePhar = ini_set('phar.readonly', '0');
