@@ -22,3 +22,15 @@ UnknownClass::CONSTANT;
 self::FOO;
 static::bar();
 parent::__construct();
+
+// Test for issue #278: unqualified instantiation in global scope
+new UnknownInstance();
+new UnknownInstance;
+new /* comment */ UnknownInstance();
+
+// `new` on a name that this file declares is not a dependency, even when the declaration
+// follows the usage (e.g. rectorphp/rector-src bin/rector.php).
+// The static access form keeps the pre-existing behaviour and is still reported.
+new SameFileClass();
+SameFileClass::create();
+final class SameFileClass {}

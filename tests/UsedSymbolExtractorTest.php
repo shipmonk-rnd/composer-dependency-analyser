@@ -133,10 +133,13 @@ class UsedSymbolExtractorTest extends TestCase
             [
                 SymbolKind::CLASSLIKE => [
                     'DateTimeImmutable' => [3],
+                    'DateTime' => [4], // issue #278: unqualified instantiation in global scope
                     'PHPUnit\Framework\Error' => [5],
                     'UnknownClass' => [17, 18, 19], // issue #224: unqualified static access in global scope
                     'self' => [22], // filtered by Analyser via ignoredSymbols
                     'parent' => [24], // filtered by Analyser via ignoredSymbols
+                    'UnknownInstance' => [27, 28, 29], // issue #278: unqualified instantiation in global scope
+                    'SameFileClass' => [35], // line 34 `new SameFileClass()` is dropped, this file declares the class
                 ],
                 SymbolKind::FUNCTION => [
                     'PHPUnit\Framework\assertSame' => [7],
