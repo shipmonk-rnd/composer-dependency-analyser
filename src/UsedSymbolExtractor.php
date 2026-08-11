@@ -73,6 +73,8 @@ class UsedSymbolExtractor
         $usedSymbols = [];
         $useStatements = [];
         $useStatementKinds = [];
+        $declaredNames = []; // lowercase classlike name => true
+        $unqualifiedNames = []; // name => true, registered only by the global scope fallback below
 
         $level = 0; // {, }, {$, ${
         $squareLevel = 0; // [, ], #[
@@ -93,6 +95,11 @@ class UsedSymbolExtractor
                 case T_ENUM:
                     if (!$this->isKeywordUsedAsConstantName()) {
                         $inClassLevel = $level + 1;
+                        $declaredNameToken = $this->getTokenAfter($this->pointer);
+
+                        if ($declaredNameToken->id === T_STRING) {
+                            $declaredNames[strtolower($declaredNameToken->text)] = true;
+                        }
                     }
 
                     break;
@@ -176,9 +183,10 @@ class UsedSymbolExtractor
                             || $this->getTokenBefore($pointerBeforeName)->id === T_NEW
                         )
                     ) {
-                        // unqualified static access (e.g., Foo::class, Foo::method(), Foo::CONSTANT) in global scope
-                        // register to allow detection of classes not in $knownSymbols
+                        // unqualified static access (e.g. Foo::class, Foo::method()) or instantiation (new Foo)
+                        // in global scope; register to allow detection of classes not in $knownSymbols
                         $usedSymbols[SymbolKind::CLASSLIKE][$name][] = $token->line;
+                        $unqualifiedNames[$name] = true;
                     }
 
                     break;
@@ -212,6 +220,18 @@ class UsedSymbolExtractor
                     $squareLevel--;
                     break;
             }
+        }
+
+        // an unqualified name that the same file declares always refers to that declaration,
+        // even when the declaration follows the usage (e.g. bootstrap scripts)
+        foreach ($unqualifiedNames as $name => $_) {
+            if (isset($declaredNames[strtolower($name)])) {
+                unset($usedSymbols[SymbolKind::CLASSLIKE][$name]);
+            }
+        }
+
+        if (isset($usedSymbols[SymbolKind::CLASSLIKE]) && $usedSymbols[SymbolKind::CLASSLIKE] === []) {
+            unset($usedSymbols[SymbolKind::CLASSLIKE]);
         }
 
         return $usedSymbols;

@@ -27,3 +27,9 @@ parent::__construct();
 new UnknownInstance();
 new UnknownInstance;
 new /* comment */ UnknownInstance();
+
+// A name declared by this file is never a dependency, even when declared after the usage
+// (e.g. rectorphp/rector-src bin/rector.php)
+new SameFileClass();
+SameFileClass::create();
+final class SameFileClass {}
