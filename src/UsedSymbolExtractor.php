@@ -74,7 +74,7 @@ class UsedSymbolExtractor
         $useStatements = [];
         $useStatementKinds = [];
         $declaredNames = []; // lowercase classlike name => true
-        $unqualifiedNames = []; // name => true, registered only by the global scope fallback below
+        $instantiationLines = []; // name => [line => true], usages registered by the `new Foo` fallback below
 
         $level = 0; // {, }, {$, ${
         $squareLevel = 0; // [, ], #[
@@ -176,17 +176,20 @@ class UsedSymbolExtractor
 
                         $usedSymbols[$kind][$symbolName][] = $token->line;
 
-                    } elseif (
-                        $inGlobalScope
-                        && (
-                            $this->getTokenAfter($pointerAfterName)->id === T_DOUBLE_COLON
-                            || $this->getTokenBefore($pointerBeforeName)->id === T_NEW
-                        )
-                    ) {
-                        // unqualified static access (e.g. Foo::class, Foo::method()) or instantiation (new Foo)
-                        // in global scope; register to allow detection of classes not in $knownSymbols
-                        $usedSymbols[SymbolKind::CLASSLIKE][$name][] = $token->line;
-                        $unqualifiedNames[$name] = true;
+                    } elseif ($inGlobalScope) {
+                        // unqualified static access (e.g. Foo::class, Foo::method(), Foo::CONSTANT) or
+                        // instantiation (new Foo) in global scope
+                        // register to allow detection of classes not in $knownSymbols
+                        $isStaticAccess = $this->getTokenAfter($pointerAfterName)->id === T_DOUBLE_COLON;
+                        $isInstantiation = !$isStaticAccess && $this->getTokenBefore($pointerBeforeName)->id === T_NEW;
+
+                        if ($isStaticAccess || $isInstantiation) {
+                            $usedSymbols[SymbolKind::CLASSLIKE][$name][] = $token->line;
+                        }
+
+                        if ($isInstantiation) {
+                            $instantiationLines[$name][$token->line] = true;
+                        }
                     }
 
                     break;
@@ -222,11 +225,26 @@ class UsedSymbolExtractor
             }
         }
 
-        // an unqualified name that the same file declares always refers to that declaration,
-        // even when the declaration follows the usage (e.g. bootstrap scripts)
-        foreach ($unqualifiedNames as $name => $_) {
-            if (isset($declaredNames[strtolower($name)])) {
+        // `new Foo` refers to a declaration in the same file when that file declares Foo,
+        // because PHP refuses a duplicate declaration; bootstrap scripts even declare Foo
+        // after the instantiation, so this runs once the whole file is known
+        foreach ($instantiationLines as $name => $lines) {
+            if (!isset($declaredNames[strtolower($name)])) {
+                continue;
+            }
+
+            $keptLines = [];
+
+            foreach ($usedSymbols[SymbolKind::CLASSLIKE][$name] ?? [] as $line) {
+                if (!isset($lines[$line])) {
+                    $keptLines[] = $line;
+                }
+            }
+
+            if ($keptLines === []) {
                 unset($usedSymbols[SymbolKind::CLASSLIKE][$name]);
+            } else {
+                $usedSymbols[SymbolKind::CLASSLIKE][$name] = $keptLines;
             }
         }
 

@@ -28,8 +28,9 @@ new UnknownInstance();
 new UnknownInstance;
 new /* comment */ UnknownInstance();
 
-// A name declared by this file is never a dependency, even when declared after the usage
-// (e.g. rectorphp/rector-src bin/rector.php)
+// `new` on a name that this file declares is not a dependency, even when the declaration
+// follows the usage (e.g. rectorphp/rector-src bin/rector.php).
+// The static access form keeps the pre-existing behaviour and is still reported.
 new SameFileClass();
 SameFileClass::create();
 final class SameFileClass {}
