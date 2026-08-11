@@ -171,7 +171,10 @@ class UsedSymbolExtractor
 
                     } elseif (
                         $inGlobalScope
-                        && $this->getTokenAfter($pointerAfterName)->id === T_DOUBLE_COLON
+                        && (
+                            $this->getTokenAfter($pointerAfterName)->id === T_DOUBLE_COLON
+                            || $this->getTokenBefore($pointerBeforeName)->id === T_NEW
+                        )
                     ) {
                         // unqualified static access (e.g., Foo::class, Foo::method(), Foo::CONSTANT) in global scope
                         // register to allow detection of classes not in $knownSymbols

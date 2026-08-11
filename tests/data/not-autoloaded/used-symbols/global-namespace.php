@@ -22,3 +22,8 @@ UnknownClass::CONSTANT;
 self::FOO;
 static::bar();
 parent::__construct();
+
+// Test for issue #278: unqualified instantiation in global scope
+new UnknownInstance();
+new UnknownInstance;
+new /* comment */ UnknownInstance();
