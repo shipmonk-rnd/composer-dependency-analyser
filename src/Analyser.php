@@ -132,10 +132,12 @@ class Analyser
         array $composerJsonDependencies,
     )
     {
+        $vendorDirs = array_keys($classLoaders + [$defaultVendorDir => null]);
+
         $this->stopwatch = $stopwatch;
         $this->config = $config;
-        $this->composerJsonDependencies = $this->filterDependencies($composerJsonDependencies, $config);
-        $this->vendorDirs = array_keys($classLoaders + [$defaultVendorDir => null]);
+        $this->composerJsonDependencies = $this->filterDependencies($composerJsonDependencies, $config, new ComposerInstalled($vendorDirs));
+        $this->vendorDirs = $vendorDirs;
         $this->classLoaders = array_values($classLoaders);
 
         $this->initExistingSymbols($config);
@@ -621,6 +623,7 @@ class Analyser
     private function filterDependencies(
         array $dependencies,
         Configuration $config,
+        ComposerInstalled $composerInstalled,
     ): array
     {
         $filtered = [];
@@ -628,6 +631,10 @@ class Analyser
         foreach ($dependencies as $dependency => $isDevDependency) {
             if (!$config->shouldAnalyseExtensions() && strpos($dependency, 'ext-') === 0) {
                 continue;
+            }
+
+            if ($composerInstalled->installsNoFiles($dependency)) {
+                continue; // no files means no symbols, such dependency can never be detected as used
             }
 
             $filtered[$dependency] = $isDevDependency;
