@@ -9,6 +9,7 @@ use ShipMonk\ComposerDependencyAnalyser\Config\PathToScan;
 use ShipMonk\ComposerDependencyAnalyser\Exception\AbortException;
 use ShipMonk\ComposerDependencyAnalyser\Exception\InvalidConfigException;
 use ShipMonk\ComposerDependencyAnalyser\Result\ConsoleFormatter;
+use ShipMonk\ComposerDependencyAnalyser\Result\JsonFormatter;
 use ShipMonk\ComposerDependencyAnalyser\Result\JunitFormatter;
 use function count;
 use function dirname;
@@ -158,6 +159,10 @@ class InitializerTest extends TestCase
         $optionsFormatConsole->format = 'console';
         self::assertInstanceOf(ConsoleFormatter::class, $initializer->initFormatter($optionsFormatConsole));
 
+        $optionsFormatJson = new CliOptions();
+        $optionsFormatJson->format = 'json';
+        self::assertInstanceOf(JsonFormatter::class, $initializer->initFormatter($optionsFormatJson));
+
         $optionsFormatJunit = new CliOptions();
         $optionsFormatJunit->format = 'junit';
         self::assertInstanceOf(JunitFormatter::class, $initializer->initFormatter($optionsFormatJunit));
@@ -183,12 +188,21 @@ class InitializerTest extends TestCase
      */
     public static function provideInitFormatterFailures(): iterable
     {
+        $jsonWithDumpUsages = new CliOptions();
+        $jsonWithDumpUsages->format = 'json';
+        $jsonWithDumpUsages->dumpUsages = 'symfony/*';
+
         $junitWithDumpUsages = new CliOptions();
         $junitWithDumpUsages->format = 'junit';
         $junitWithDumpUsages->dumpUsages = 'symfony/*';
 
         $unknownFormat = new CliOptions();
         $unknownFormat->format = 'unknown';
+
+        yield 'json with dump-usages' => [
+            $jsonWithDumpUsages,
+            "Cannot use 'json' format with '--dump-usages' option.",
+        ];
 
         yield 'junit with dump-usages' => [
             $junitWithDumpUsages,
@@ -197,7 +211,7 @@ class InitializerTest extends TestCase
 
         yield 'unknown format' => [
             $unknownFormat,
-            "Invalid format option provided, allowed are 'console' or 'junit'.",
+            "Invalid format option provided, allowed are 'console', 'json' or 'junit'.",
         ];
     }
 
