@@ -294,7 +294,7 @@ class JunitFormatter implements ResultFormatter
 
     private function prettyPrintXml(string $inputXml): string
     {
-        if (!extension_loaded('dom') || !extension_loaded('libxml')) {
+        if ($inputXml === '' || !extension_loaded('dom') || !extension_loaded('libxml')) {
             return $inputXml;
         }
 
